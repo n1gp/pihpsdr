@@ -3,20 +3,23 @@ GIT_VERSION := $(shell git --no-pager describe --tags --always --dirty)
 GIT_DATE := $(firstword $(shell git --no-pager show --date=short --format="%ai" --name-only))
 
 # uncomment the line below to include support for psk31
-PSK_INCLUDE=PSK
+#PSK_INCLUDE=PSK
 
 # uncomment the line to below include support for FreeDV codec2
-FREEDV_INCLUDE=FREEDV
+#FREEDV_INCLUDE=FREEDV
+
+# uncomment the line to below include support for sx1509 i2c expander
+SX1509_INCLUDE=sx1509
 
 #uncomment the line below for the platform being compiled on
-UNAME_N=raspberrypi
-#UNAME_N=odroid
+#UNAME_N=raspberrypi
+UNAME_N=odroid
 #UNAME_N=up
 #UNAME_N=pine64
 #UNAME_N=x86
 
 CC=gcc
-LINK=gcc
+LINK=g++
 
 # uncomment the line below for various debug facilities
 #DEBUG_OPTION=-D DEBUG
@@ -83,7 +86,12 @@ else
   GPIO_LIBS=-lwiringPi -lpigpio
   endif
   ifeq ($(UNAME_N),odroid)
+  GPIO_OPTIONS=-D GPIO
   GPIO_LIBS=-lwiringPi
+  endif
+  ifeq ($(SX1509_INCLUDE),sx1509)
+  GPIO_OPTIONS+=-D sx1509
+  GPIO_LIBS+=-lsx1509
   endif
   GPIO_SOURCES= \
   gpio.c

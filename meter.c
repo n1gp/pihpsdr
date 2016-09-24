@@ -207,8 +207,25 @@ void meter_update(int meter_type,double value,double reverse,double exciter,doub
   cairo_set_source_rgb (cr, 0, 0, 0);
   cairo_paint (cr);
 
+#ifdef odroid
+  // grab CPU temperature
+  FILE *fptr;
+  char sTemp[16];
+  static int iTemp, tempCnt = 0;
 
+  if (tempCnt++ == 0) {
+    fptr=fopen("/sys/class/thermal/thermal_zone0/temp","rt");
+    fscanf(fptr,"%[^\n]",sTemp);
+    fclose(fptr);
+    iTemp = (((atoi(sTemp) / 1000) * 9) / 5) + 32;
+  }
+  else if (tempCnt > 100)
+    tempCnt = 0;
+
+  sprintf(text,"Tmp: %dF Ver: %s %s", iTemp, build_date, build_version);
+#else
   sprintf(text,"Version: %s %s", build_date, build_version);
+#endif
   cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
   cairo_set_font_size(cr, 12);
   cairo_move_to(cr, 5, 15);
