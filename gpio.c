@@ -49,7 +49,7 @@ int ENABLE_AF_ENCODER=1;
 int ENABLE_AF_PULLUP=0;
 int AF_ENCODER_A=20;
 int AF_ENCODER_B=26;
-int AF_FUNCTION=25;
+int AF_FUNCTION=2; //RRK, was 25, disable i2c
 int ENABLE_RF_ENCODER=1;
 int ENABLE_RF_PULLUP=0;
 int RF_ENCODER_A=16;
@@ -59,7 +59,7 @@ int ENABLE_AGC_ENCODER=1;
 int ENABLE_AGC_PULLUP=0;
 int AGC_ENCODER_A=4;
 int AGC_ENCODER_B=21;
-int AGC_FUNCTION=7;
+int AGC_FUNCTION=3; //RRK, was 7, disable i2c
 int ENABLE_BAND_BUTTON=1;
 int BAND_BUTTON=13;
 int ENABLE_BANDSTACK_BUTTON=1;
@@ -78,6 +78,10 @@ int ENABLE_FUNCTION_BUTTON=1;
 int FUNCTION_BUTTON=22;
 int ENABLE_LOCK_BUTTON=1;
 int LOCK_BUTTON=25;
+// make sure to disable UART0 for next 2 gpios
+int ENABLE_CW_BUTTONS=1;
+int CWL_BUTTON=14;
+int CWR_BUTTON=15;
 
 #ifdef sx1509
 /* Hardware Hookup:
@@ -154,6 +158,8 @@ static volatile int noise_state;
 static volatile int agc_state;
 static volatile int mox_state;
 static volatile int lock_state;
+static volatile int cwl_state;
+static volatile int cwr_state;
 
 static void* rotary_encoder_thread(void *arg);
 static pthread_t rotary_encoder_thread_id;
@@ -229,6 +235,14 @@ static void moxAlert(int gpio, int level, uint32_t tick) {
 
 static void lockAlert(int gpio, int level, uint32_t tick) {
     lock_state=(level==0);
+}
+
+//RRK, TODO
+static void cwAlert(int gpio, int level, uint32_t tick) {
+    if (gpio == CWL_BUTTON)
+       cwl_state=(level==0);
+    else //CWR_BUTTON
+       cwr_state=(level==0);
 }
 
 static void vfoEncoderPulse(int gpio, int level, unsigned int tick) {
@@ -461,6 +475,12 @@ void gpio_restore_state() {
   if(value) ENABLE_LOCK_BUTTON=atoi(value);
   value=getProperty("LOCK_BUTTON");
   if(value) LOCK_BUTTON=atoi(value);
+  value=getProperty("ENABLE_CW_BUTTONS");
+  if(value) ENABLE_CW_BUTTONS=atoi(value);
+  value=getProperty("CWL_BUTTON");
+  if(value) CWL_BUTTON=atoi(value);
+  value=getProperty("CWR_BUTTON");
+  if(value) CWR_BUTTON=atoi(value);
 }
 
 void gpio_save_state() {
@@ -540,6 +560,12 @@ void gpio_save_state() {
   setProperty("ENABLE_LOCK_BUTTON",value);
   sprintf(value,"%d",LOCK_BUTTON);
   setProperty("LOCK_BUTTON",value);
+  sprintf(value,"%d",ENABLE_CW_BUTTONS);
+  setProperty("ENABLE_CW_BUTTONS",value);
+  sprintf(value,"%d",CWL_BUTTON);
+  setProperty("CWL_BUTTON",value);
+  sprintf(value,"%d",CWR_BUTTON);
+  setProperty("CWR_BUTTON",value);
 
   saveProperties("gpio.props");
 }
@@ -556,6 +582,8 @@ fprintf(stderr,"encoder_init\n");
   gpio_restore_state();
 #ifdef raspberrypi
 
+#define BUTTON_STEADY_TIME_US 25000
+
     fprintf(stderr,"encoder_init: VFO_ENCODER_A=%d VFO_ENCODER_B=%d\n",VFO_ENCODER_A,VFO_ENCODER_B);
 
     fprintf(stderr,"gpioInitialize\n");
@@ -568,6 +596,7 @@ fprintf(stderr,"encoder_init\n");
     gpioSetMode(FUNCTION_BUTTON, PI_INPUT);
     gpioSetPullUpDown(FUNCTION_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(FUNCTION_BUTTON, functionAlert);
+    gpioGlitchFilter(FUNCTION_BUTTON, BUTTON_STEADY_TIME_US);
   }
 
   if(ENABLE_VFO_ENCODER) {
@@ -589,6 +618,7 @@ fprintf(stderr,"encoder_init\n");
     gpioSetMode(AF_FUNCTION, PI_INPUT);
     gpioSetPullUpDown(AF_FUNCTION,PI_PUD_UP);
     gpioSetAlertFunc(AF_FUNCTION, afFunctionAlert);
+    gpioGlitchFilter(AF_FUNCTION, BUTTON_STEADY_TIME_US);
     afFunction=0;
 
   if(ENABLE_AF_ENCODER) {
@@ -609,6 +639,7 @@ fprintf(stderr,"encoder_init\n");
     gpioSetMode(RF_FUNCTION, PI_INPUT);
     gpioSetPullUpDown(RF_FUNCTION,PI_PUD_UP);
     gpioSetAlertFunc(RF_FUNCTION, rfFunctionAlert);
+    gpioGlitchFilter(RF_FUNCTION, BUTTON_STEADY_TIME_US);
     rfFunction=0;
 
   if(ENABLE_RF_ENCODER) {
@@ -629,6 +660,7 @@ fprintf(stderr,"encoder_init\n");
   gpioSetMode(AGC_FUNCTION, PI_INPUT);
   gpioSetPullUpDown(AGC_FUNCTION,PI_PUD_UP);
   gpioSetAlertFunc(AGC_FUNCTION, agcFunctionAlert);
+  gpioGlitchFilter(AGC_FUNCTION, BUTTON_STEADY_TIME_US);
   agcFunction=0;
 
   if(ENABLE_AGC_ENCODER) {
@@ -651,48 +683,67 @@ fprintf(stderr,"encoder_init\n");
     gpioSetMode(BAND_BUTTON, PI_INPUT);
     gpioSetPullUpDown(BAND_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(BAND_BUTTON, bandAlert);
+    gpioGlitchFilter(BAND_BUTTON, BUTTON_STEADY_TIME_US);
   }
  
   if(ENABLE_BANDSTACK_BUTTON) {
     gpioSetMode(BANDSTACK_BUTTON, PI_INPUT);
     gpioSetPullUpDown(BANDSTACK_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(BANDSTACK_BUTTON, bandstackAlert);
+    gpioGlitchFilter(BANDSTACK_BUTTON, BUTTON_STEADY_TIME_US);
   }
  
   if(ENABLE_MODE_BUTTON) {
     gpioSetMode(MODE_BUTTON, PI_INPUT);
     gpioSetPullUpDown(MODE_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(MODE_BUTTON, modeAlert);
+    gpioGlitchFilter(MODE_BUTTON, BUTTON_STEADY_TIME_US);
   }
  
   if(ENABLE_FILTER_BUTTON) {
     gpioSetMode(FILTER_BUTTON, PI_INPUT);
     gpioSetPullUpDown(FILTER_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(FILTER_BUTTON, filterAlert);
+    gpioGlitchFilter(FILTER_BUTTON, BUTTON_STEADY_TIME_US);
   }
  
   if(ENABLE_NOISE_BUTTON) {
     gpioSetMode(NOISE_BUTTON, PI_INPUT);
     gpioSetPullUpDown(NOISE_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(NOISE_BUTTON, noiseAlert);
+    gpioGlitchFilter(NOISE_BUTTON, BUTTON_STEADY_TIME_US);
   }
  
   if(ENABLE_AGC_BUTTON) {
     gpioSetMode(AGC_BUTTON, PI_INPUT);
     gpioSetPullUpDown(AGC_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(AGC_BUTTON, agcAlert);
+    gpioGlitchFilter(AGC_BUTTON, BUTTON_STEADY_TIME_US);
   }
  
   if(ENABLE_MOX_BUTTON) {
     gpioSetMode(MOX_BUTTON, PI_INPUT);
     gpioSetPullUpDown(MOX_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(MOX_BUTTON, moxAlert);
+    gpioGlitchFilter(MOX_BUTTON, BUTTON_STEADY_TIME_US);
   }
 
   if(ENABLE_LOCK_BUTTON) {
     gpioSetMode(LOCK_BUTTON, PI_INPUT);
     gpioSetPullUpDown(LOCK_BUTTON,PI_PUD_UP);
     gpioSetAlertFunc(LOCK_BUTTON, lockAlert);
+    gpioGlitchFilter(LOCK_BUTTON, BUTTON_STEADY_TIME_US);
+  }
+ 
+  if(ENABLE_CW_BUTTONS) {
+    gpioSetMode(CWL_BUTTON, PI_INPUT);
+    gpioSetPullUpDown(CWL_BUTTON,PI_PUD_UP);
+    gpioSetAlertFunc(CWL_BUTTON, cwAlert);
+    gpioGlitchFilter(CWL_BUTTON, BUTTON_STEADY_TIME_US);
+    gpioSetMode(CWR_BUTTON, PI_INPUT);
+    gpioSetPullUpDown(CWR_BUTTON,PI_PUD_UP);
+    gpioSetAlertFunc(CWR_BUTTON, cwAlert);
+    gpioGlitchFilter(CWR_BUTTON, BUTTON_STEADY_TIME_US);
   }
  
 #endif

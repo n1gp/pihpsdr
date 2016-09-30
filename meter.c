@@ -207,7 +207,7 @@ void meter_update(int meter_type,double value,double reverse,double exciter,doub
   cairo_set_source_rgb (cr, 0, 0, 0);
   cairo_paint (cr);
 
-#ifdef odroid
+#if defined raspberrypi || defined odroid
   // grab CPU temperature
   FILE *fptr;
   char sTemp[16];
