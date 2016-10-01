@@ -161,8 +161,8 @@ int audio_open_input() {
   int rate=48000;
   int dir=0;
 
-  if(n_selected_output_device<0 || n_selected_output_device>=n_output_devices) {
-    n_selected_output_device=-1;
+  if(n_selected_input_device<0 || n_selected_input_device>=n_input_devices) {
+    n_selected_input_device=-1;
     return -1;
   }
 
