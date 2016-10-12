@@ -18,7 +18,7 @@ blacklist i2c-bcm2708
 
 This gave me BCM GPIOs 2 & 3
 
-Added ported the iambic keyer FPGA code Phil Harman VK6PH did in
+Ported the iambic keyer FPGA code Phil Harman VK6PH did in
 the Verilog file iambic.v over to C and used nanosleep as a timing
 mechanism.
 
