@@ -1,5 +1,5 @@
 # pihpsdr
-Raspberry Pi 3 standalone code for HPSDR
+Raspberry Pi 3 standalone code for HPSDR, forked from G0ORX
 
 Supports both the old and new ethernet protocols.
 
@@ -34,5 +34,8 @@ speaker. It's not the greatest sounding but it is timed pretty well.
 
 NOTES
 =====
+Currently the iambic keyer only works using the NEW ethernet protocol.
+I'm hoping John G0ORX can suggest or get the OLD protocol working as well.
+
 I noticed sometimes that when I started pihpsdr all of the GPIO button alerts would fire.
 I've put in some experimental code using gpioGlitchFilter() and it seems to help.
