@@ -19,7 +19,12 @@ blacklist i2c-bcm2708
 This gave me BCM GPIOs 2 & 3
 
 Added an iambic keyer based on the verilog code Phil Harman VK6PH did in
-iambic.v.
+iambic.v. This only works using the NEW protocol for now. To use it make
+sure to unselect "cw keyer internal" and select the mode you prefer. The
+bug mode and straight key are implemented.
+
+If you want you can unsecel "cw breakin mode" and then you can use the "MOX"
+button and send CW staying in PTT mode. Press MOX again to release.
 
 I also needed two more GPIOs for the paddles so I disabled UART0 giving me
 BCM GPIOs 14 & 15.
