@@ -8,9 +8,6 @@ GIT_DATE := $(firstword $(shell git --no-pager show --date=short --format="%ai" 
 # uncomment the line to below include support for FreeDV codec2
 #FREEDV_INCLUDE=FREEDV
 
-# uncomment the line to below include support for sx1509 i2c expander
-#SX1509_INCLUDE=sx1509
-
 #uncomment the line below for the platform being compiled on
 UNAME_N=raspberrypi
 #UNAME_N=odroid
@@ -19,7 +16,7 @@ UNAME_N=raspberrypi
 #UNAME_N=x86
 
 CC=gcc
-LINK=g++
+LINK=gcc
 
 # uncomment the line below for various debug facilities
 #DEBUG_OPTION=-D DEBUG
@@ -86,12 +83,7 @@ else
   GPIO_LIBS=-lwiringPi -lpigpio
   endif
   ifeq ($(UNAME_N),odroid)
-  GPIO_OPTIONS=-D GPIO
   GPIO_LIBS=-lwiringPi
-  endif
-  ifeq ($(SX1509_INCLUDE),sx1509)
-  GPIO_OPTIONS+=-D sx1509
-  GPIO_LIBS+=-lsx1509
   endif
   GPIO_SOURCES= \
   gpio.c
@@ -123,6 +115,7 @@ configure.c \
 frequency.c \
 discovered.c \
 filter.c \
+iambic.c \
 main.c \
 menu.c \
 meter.c \
@@ -156,6 +149,7 @@ bandstack.h \
 channel.h \
 discovered.h \
 filter.h \
+iambic.h \
 menu.h \
 meter.h \
 mode.h \
@@ -184,6 +178,7 @@ configure.o \
 frequency.o \
 discovered.o \
 filter.o \
+iambic.o \
 version.o \
 main.o \
 menu.o \

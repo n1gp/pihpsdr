@@ -303,6 +303,7 @@ static void* wisdom_thread(void *arg) {
 gboolean main_delete (GtkWidget *widget) {
 #ifdef GPIO
   gpio_close();
+  keyer_close();
 #endif
   switch(protocol) {
     case ORIGINAL_PROTOCOL:
@@ -565,6 +566,8 @@ fprintf(stderr,"selected radio=%p device=%d\n",radio,radio->device);
   splash_status("Initializing GPIO ...");
 #ifdef GPIO
   gpio_init();
+  if (cw_keyer_internal == 0)
+    keyer_init();
 #endif
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);

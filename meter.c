@@ -226,6 +226,7 @@ void meter_update(int meter_type,double value,double reverse,double exciter,doub
 #else
   sprintf(text,"Version: %s %s", build_date, build_version);
 #endif
+
   cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
   cairo_set_font_size(cr, 12);
   cairo_move_to(cr, 5, 15);

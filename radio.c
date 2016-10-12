@@ -76,7 +76,7 @@ int updates_per_second=10;
 
 int display_panadapter=1;
 int panadapter_high=-60;
-int panadapter_low=-140;
+int panadapter_low=-160;
 
 int display_filled=1;
 int display_detector_mode=DETECTOR_MODE_AVERAGE;
@@ -146,7 +146,7 @@ int attenuation = 0; // 0dB
 int cw_keys_reversed=0; // 0=disabled 1=enabled
 int cw_keyer_speed=12; // 1-60 WPM
 int cw_keyer_mode=KEYER_STRAIGHT;
-int cw_keyer_weight=30; // 0-100
+int cw_keyer_weight=50; // 0-100
 int cw_keyer_spacing=0; // 0=on 1=off
 int cw_keyer_internal=1; // 0=external 1=internal
 int cw_keyer_sidetone_volume=127; // 0-127

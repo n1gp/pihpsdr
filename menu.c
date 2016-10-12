@@ -330,6 +330,7 @@ static gboolean exit_pressed_event_cb (GtkWidget *widget,
 {
 #ifdef GPIO
   gpio_close();
+  keyer_close();
 #endif
   switch(protocol) {
     case ORIGINAL_PROTOCOL:
@@ -1306,38 +1307,6 @@ static gboolean menu_pressed_event_cb (GtkWidget *widget,
     gtk_grid_attach(GTK_GRID(tx_grid),tx_out_of_band_b,0,7,4,1);
     g_signal_connect(tx_out_of_band_b,"toggled",G_CALLBACK(tx_out_of_band_cb),NULL);
 
-
-#ifdef DEBUG
-    int column=((i/6)*2)+2;
-
-    GtkWidget *scale_label=gtk_label_new("Mic Scale:");
-    gtk_widget_show(scale_label);
-    gtk_grid_attach(GTK_GRID(tx_grid),scale_label,column,0,1,1);
-    GtkWidget *scale_scale=gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL,0.0, 20.0, 0.1);
-    gtk_range_set_value (GTK_RANGE(scale_scale),scale);
-    gtk_widget_show(scale_scale);
-    gtk_grid_attach(GTK_GRID(tx_grid),scale_scale,column+1,0,30,1);
-    g_signal_connect(G_OBJECT(scale_scale),"value_changed",G_CALLBACK(scale_value_changed_cb),NULL);
-
-    GtkWidget *psk_scale_label=gtk_label_new("PSK Scale:");
-    gtk_widget_show(psk_scale_label);
-    gtk_grid_attach(GTK_GRID(tx_grid),psk_scale_label,column,1,1,1);
-    GtkWidget *psk_scale_scale=gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL,0.0, 20.0, 0.1);
-    gtk_range_set_value (GTK_RANGE(psk_scale_scale),psk_scale);
-    gtk_widget_show(psk_scale_scale);
-    gtk_grid_attach(GTK_GRID(tx_grid),psk_scale_scale,column+1,1,30,1);
-    g_signal_connect(G_OBJECT(psk_scale_scale),"value_changed",G_CALLBACK(psk_scale_value_changed_cb),NULL);
-
-    GtkWidget *freedv_scale_label=gtk_label_new("FREEDV Scale:");
-    gtk_widget_show(freedv_scale_label);
-    gtk_grid_attach(GTK_GRID(tx_grid),freedv_scale_label,column,2,1,1);
-    GtkWidget *freedv_scale_scale=gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL,0.0, 20.0, 0.1);
-    gtk_range_set_value (GTK_RANGE(freedv_scale_scale),freedv_scale);
-    gtk_widget_show(freedv_scale_scale);
-    gtk_grid_attach(GTK_GRID(tx_grid),freedv_scale_scale,column+1,2,30,1);
-    g_signal_connect(G_OBJECT(freedv_scale_scale),"value_changed",G_CALLBACK(freedv_scale_value_changed_cb),NULL);
-#endif
-
     id=gtk_notebook_append_page(GTK_NOTEBOOK(notebook),tx_grid,tx_label);
   }
 
@@ -1353,6 +1322,7 @@ static gboolean menu_pressed_event_cb (GtkWidget *widget,
     gtk_widget_show(cw_keyer_internal_b);
     gtk_grid_attach(GTK_GRID(cw_grid),cw_keyer_internal_b,0,0,1,1);
     g_signal_connect(cw_keyer_internal_b,"toggled",G_CALLBACK(cw_keyer_internal_cb),NULL);
+RRK
 */
     GtkWidget *cw_speed_label=gtk_label_new("CW Speed (WPM)");
     //gtk_widget_override_font(cw_speed_label, pango_font_description_from_string("Arial 18"));
@@ -1444,6 +1414,13 @@ static gboolean menu_pressed_event_cb (GtkWidget *widget,
     gtk_grid_attach(GTK_GRID(cw_grid),cw_keyer_weight_b,1,8,1,1);
     g_signal_connect(cw_keyer_weight_b,"value_changed",G_CALLBACK(cw_keyer_weight_value_changed_cb),NULL);
  
+    GtkWidget *cw_keyer_internal_b=gtk_check_button_new_with_label("CW Internal");
+    //gtk_widget_override_font(cw_keyer_internal_b, pango_font_description_from_string("Arial 18"));
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (cw_keyer_internal_b), cw_keyer_internal);
+    gtk_widget_show(cw_keyer_internal_b);
+    gtk_grid_attach(GTK_GRID(cw_grid),cw_keyer_internal_b,0,9,1,1);
+    g_signal_connect(cw_keyer_internal_b,"toggled",G_CALLBACK(cw_keyer_internal_cb),NULL);
+
     id=gtk_notebook_append_page(GTK_NOTEBOOK(notebook),cw_grid,cw_label);
   }
 
@@ -1600,6 +1577,44 @@ static gboolean menu_pressed_event_cb (GtkWidget *widget,
   gtk_grid_attach(GTK_GRID(exit_grid),shutdown_button,0,2,1,1);
 
   id=gtk_notebook_append_page(GTK_NOTEBOOK(notebook),exit_grid,exit_label);
+
+
+#ifdef DEBUG
+
+  GtkWidget *debug_label=gtk_label_new("Debug");
+  GtkWidget *debug_grid=gtk_grid_new();
+  gtk_grid_set_column_homogeneous(GTK_GRID(debug_grid),TRUE);
+
+  GtkWidget *scale_label=gtk_label_new("Scale:");
+  gtk_widget_show(scale_label);
+  gtk_grid_attach(GTK_GRID(debug_grid),scale_label,0,0,1,1);
+  GtkWidget *scale_scale=gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL,0.0, 20.0, 0.1);
+  gtk_range_set_value (GTK_RANGE(scale_scale),scale);
+  gtk_widget_show(scale_scale);
+  gtk_grid_attach(GTK_GRID(debug_grid),scale_scale,1,0,1,1);
+  g_signal_connect(G_OBJECT(scale_scale),"value_changed",G_CALLBACK(scale_value_changed_cb),NULL);
+
+  GtkWidget *psk_scale_label=gtk_label_new("PSK Scale:");
+  gtk_widget_show(psk_scale_label);
+  gtk_grid_attach(GTK_GRID(debug_grid),psk_scale_label,0,1,1,1);
+  GtkWidget *psk_scale_scale=gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL,0.0, 20.0, 0.1);
+  gtk_range_set_value (GTK_RANGE(psk_scale_scale),psk_scale);
+  gtk_widget_show(psk_scale_scale);
+  gtk_grid_attach(GTK_GRID(debug_grid),psk_scale_scale,1,1,1,1);
+  g_signal_connect(G_OBJECT(psk_scale_scale),"value_changed",G_CALLBACK(psk_scale_value_changed_cb),NULL);
+
+  GtkWidget *freedv_scale_label=gtk_label_new("FREEDV Scale:");
+  gtk_widget_show(freedv_scale_label);
+  gtk_grid_attach(GTK_GRID(debug_grid),freedv_scale_label,0,2,1,1);
+  GtkWidget *freedv_scale_scale=gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL,0.0, 20.0, 0.1);
+  gtk_range_set_value (GTK_RANGE(freedv_scale_scale),freedv_scale);
+  gtk_widget_show(freedv_scale_scale);
+  gtk_grid_attach(GTK_GRID(debug_grid),freedv_scale_scale,1,2,1,1);
+  g_signal_connect(G_OBJECT(freedv_scale_scale),"value_changed",G_CALLBACK(freedv_scale_value_changed_cb),NULL);
+
+  id=gtk_notebook_append_page(GTK_NOTEBOOK(notebook),debug_grid,debug_label);
+
+#endif
 
   gtk_container_add(GTK_CONTAINER(content),notebook);
 

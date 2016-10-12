@@ -97,6 +97,7 @@ waterfall_button_press_event_cb (GtkWidget      *widget,
                gpointer        data)
 {
   int x=(int)event->x;
+
   if (event->button == 1) {
     last_x=(int)event->x;
     has_moved=FALSE;
@@ -111,6 +112,7 @@ waterfall_button_release_event_cb (GtkWidget      *widget,
                gpointer        data)
 {
   int x=(int)event->x;
+
   if (event->button == 1) {
     if(has_moved) {
       // drag

@@ -171,17 +171,6 @@ int audio_open_input() {
   char *selected=input_devices[n_selected_input_device];
   fprintf(stderr,"audio_open_input: selected=%d:%s\n",n_selected_input_device,selected);
   
-  switch(protocol) {
-    case ORIGINAL_PROTOCOL:
-      mic_buffer_size = 720;
-      break;
-    case NEW_PROTOCOL:
-      mic_buffer_size = 64;
-      break;
-    default:
-      break;
-  }
-  
   i=0;
   while(selected[i]!=' ') {
     hw[i]=selected[i];
@@ -386,8 +375,8 @@ void audio_get_cards(int input) {
       
       snprintf(device_id, 64, "plughw:%d,%d %s", card, dev, snd_ctl_card_info_get_name(info));
       if(input) {
-fprintf(stderr,"input_device: %s\n",device_id);
         input_devices[n_input_devices++]=device_id;
+fprintf(stderr,"input_device: %s\n",device_id);
       } else {
         output_devices[n_output_devices++]=device_id;
 fprintf(stderr,"output_device: %s\n",device_id);
