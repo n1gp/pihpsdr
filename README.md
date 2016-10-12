@@ -25,12 +25,14 @@ I also needed two more GPIOs for the paddles so I disabled UART0 giving me
 BCM GPIOs 14 & 15.
 
 To disable edit /boot/cmdline.txt and remove the console=ttyAMA0
-and if you have an /etc/inittab comment out the following line like:
-#T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100
+and if you have an /etc/inittab comment out the following line:
+
+T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100
 
 I also repurposed the AF_FUNCTION GPIO for a sidetone output hooked to my internal
 speaker. It's not the greatest sounding but it is timed pretty well.
 
-NOTES:
+NOTES
+=====
 I noticed sometimes that when I started pihpsdr all of the GPIO button alerts would fire.
 I've put in some experimental code using gpioGlitchFilter() and it seems to help.
