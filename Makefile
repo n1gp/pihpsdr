@@ -115,6 +115,7 @@ configure.c \
 frequency.c \
 discovered.c \
 filter.c \
+beep.c \
 iambic.c \
 main.c \
 menu.c \
@@ -149,6 +150,7 @@ bandstack.h \
 channel.h \
 discovered.h \
 filter.h \
+beep.h \
 iambic.h \
 menu.h \
 meter.h \
@@ -178,6 +180,7 @@ configure.o \
 frequency.o \
 discovered.o \
 filter.o \
+beep.o \
 iambic.o \
 version.o \
 main.o \

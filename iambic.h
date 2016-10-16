@@ -5,7 +5,6 @@ extern int cwl_state;
 extern int cwr_state;
 extern int keyer_out;
 
-int keyer_init();
 void keyer_event(int gpio, int level);
 void keyer_update();
 void keyer_close();

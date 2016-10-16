@@ -567,7 +567,7 @@ fprintf(stderr,"selected radio=%p device=%d\n",radio,radio->device);
 #ifdef GPIO
   gpio_init();
   if (cw_keyer_internal == 0)
-    keyer_init();
+    keyer_update();
 #endif
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);

@@ -75,11 +75,13 @@
 #include "radio.h"
 #include "new_protocol.h"
 #include "iambic.h"
+#include "beep.h"
 
 static void* keyer_thread(void *arg);
 static pthread_t keyer_thread_id;
 
-#define SIDETONE_GPIO 8 // this is in wiringPi notation, really BCM 2
+// set to 0 to use the PI's audio out for sidetone
+#define SIDETONE_GPIO 0 // this is in wiringPi notation
 
 enum {
     CHECK = 0,
@@ -111,6 +113,9 @@ static sem_t cw_event;
 int keyer_out = 0;
 
 void keyer_update() {
+    if (!running)
+        keyer_init();
+
     dot_delay = 1200 / cw_keyer_speed;
     // will be 3 * dot length at standard weight
     dash_delay = (dot_delay * 3 * cw_keyer_weight) / 50;
@@ -122,6 +127,7 @@ void keyer_update() {
         kdot = &kcwl;
         kdash = &kcwr;
     }
+    beep_vol(cw_keyer_sidetone_volume);
 }
 
 void keyer_event(int gpio, int level) {
@@ -146,9 +152,15 @@ void set_keyer_out(int state) {
         keyer_out = state;
         if(protocol==NEW_PROTOCOL) schedule_high_priority(9);
         if (state)
-            softToneWrite (SIDETONE_GPIO, cw_keyer_sidetone_frequency);
+            if (SIDETONE_GPIO)
+                softToneWrite (SIDETONE_GPIO, cw_keyer_sidetone_frequency);
+            else
+                beep_freq = cw_keyer_sidetone_frequency;
         else
-            softToneWrite (SIDETONE_GPIO, 0);
+            if (SIDETONE_GPIO)
+                softToneWrite (SIDETONE_GPIO, 0);
+            else
+                beep_freq = 0;
     }
 }
 
@@ -322,6 +334,7 @@ static void* keyer_thread(void *arg) {
 
 void keyer_close() {
     running=0;
+    beep_close();
 }
 
 int keyer_init() {
@@ -329,14 +342,15 @@ int keyer_init() {
 
     fprintf(stderr,"keyer_init\n");
 
-    keyer_update();
-
     if (wiringPiSetup () < 0) {
         fprintf (stderr, "Unable to setup wiringPi: %s\n", strerror (errno));
         return 1;
     }
 
-    softToneCreate(SIDETONE_GPIO);
+    if (SIDETONE_GPIO)
+        softToneCreate(SIDETONE_GPIO);
+    else
+        beep_init();
 
     rc = sem_init(&cw_event, 0, 0);
     rc |= pthread_create(&keyer_thread_id, NULL, keyer_thread, NULL);

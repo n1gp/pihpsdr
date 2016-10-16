@@ -37,8 +37,9 @@ and if you have an /etc/inittab comment out the following line:
 
 T0:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100
 
-I also repurposed the AF_FUNCTION GPIO for a sidetone output hooked to my internal
-speaker. It's not the greatest sounding but it is timed pretty well.
+Added a sidetone using either the PI's audio ouput jack or a GPIO by
+utilizing wiringPi's softToneWrite(). In iambic.c set SIDETONE_GPIO = 0
+for PI audio out or to an actual GPIO value for the sofToneWrite().
 
 NOTES
 =====
