@@ -273,14 +273,14 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
 
 void beep_vol(long volume)
 {
-    long min, max;
+    long min, max, output;
     snd_mixer_selem_id_t *sid;
     snd_mixer_t *mhandle;
     const char *selem_name = "PCM";
     int do_once = 1;
     snd_mixer_elem_t* elem;
 
-    if (volume > 90) volume = 90; // sounds raspy any higher
+    if (volume > 100) volume = 100;
     if (volume < 0) volume = 0;
     snd_mixer_open(&mhandle, 0);
     snd_mixer_attach(mhandle, device);
@@ -290,9 +290,10 @@ void beep_vol(long volume)
     snd_mixer_selem_id_set_index(sid, 0);
     snd_mixer_selem_id_set_name(sid, selem_name);
     elem = snd_mixer_find_selem(mhandle, sid);
-
     snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
-    snd_mixer_selem_set_playback_volume_all(elem, volume * max / 100);
+    min = -2000; // PI's audio mixer range is broken
+    output = (((max - min) * volume) / 100) + min;
+    snd_mixer_selem_set_playback_volume_all(elem, output);
 
     snd_mixer_close(mhandle);
 }
