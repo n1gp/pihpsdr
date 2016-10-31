@@ -22,7 +22,7 @@ Ported the iambic keyer FPGA code Phil Harman VK6PH did in
 the Verilog file iambic.v over to C and used nanosleep as a timing
 mechanism.
 
-This only works using the NEW protocol for now. To use it make
+This only works using the NEW protocol for now (see below). To use it make
 sure to unselect "cw keyer internal" and select the mode you prefer. The
 bug mode and straight key are implemented.
 
@@ -44,7 +44,10 @@ for PI audio out or to an actual GPIO value for the sofToneWrite().
 NOTES
 =====
 Currently the iambic keyer only works using the NEW ethernet protocol.
-I'm hoping John G0ORX can suggest or get the OLD protocol working as well.
+The current OLD protocol Hermes FGPA firmware doesn't support external
+CW. I have modified the FPGA firmware to support it for use with this
+pihpsdr program, but currently it experimental and use at your own risk.
+Email me if you want to try it.
 
 I noticed sometimes that when I started pihpsdr all of the GPIO button alerts would fire.
 I've put in some experimental code using gpioGlitchFilter() and it seems to help.
