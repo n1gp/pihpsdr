@@ -47,6 +47,7 @@
 #include "radio.h"
 #include "signal.h"
 #include "toolbar.h"
+#include "iambic.h"
 #ifdef FREEDV
 #include "freedv.h"
 #endif
@@ -589,7 +590,8 @@ static void process_rx_buffer() {
     }
 #endif
     if(local_audio) {
-      audio_write(left_rx_sample,right_rx_sample);
+      if (!isTransmitting() && (mode!=modeCWL || mode!=modeCWU)) //RRK
+        audio_write(left_rx_sample,right_rx_sample);
     }
     left_tx_sample=0;
     right_tx_sample=0;
@@ -1020,7 +1022,7 @@ void ozy_send_buffer() {
       if(mode!=modeCWU && mode!=modeCWL) {
         // output_buffer[C1]|=0x00;
       } else {
-        if((tune==1) || (mox==1) || (cw_keyer_internal==0)) {
+        if(tune==1) { //RRK
           output_buffer[C1]|=0x00;
         } else {
           output_buffer[C1]|=0x01;
@@ -1046,11 +1048,15 @@ void ozy_send_buffer() {
       break;
   }
 
-  // set mox
   if(mode==modeCWU || mode==modeCWL) {
-    if(tune) {
+    // set mox
+    if(tune || (cw_breakin == 0 && getMox())) {
       output_buffer[C0]|=0x01;
     }
+    // RRK, below needs modified FPGA firmware to support CWX use of bit 7
+    output_buffer[C0] &= 0x7F;
+    if ((cw_breakin || isTransmitting()) && !tune)
+      output_buffer[C0] |= (keyer_out) ? 0x80 : 0;
   } else {
     if(isTransmitting()) {
       output_buffer[C0]|=0x01;

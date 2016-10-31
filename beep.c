@@ -35,18 +35,19 @@ Boston, MA  02110-1301, USA.
 #include <math.h>
 #include <alsa/asoundlib.h>
 
-double beep_freq = 0;                                   /* sinusoidal wave frequency in Hz */
+double beep_freq = 800;                                 /* sinusoidal wave frequency in Hz */
 
-static char *device = "default";
+static char *device = "hw:0";
 static snd_pcm_format_t format = SND_PCM_FORMAT_S16;    /* sample format */
 static unsigned int rate = 48000;                       /* stream rate */
-static unsigned int channels = 1;                       /* count of channels */
-static unsigned int buffer_time = 40000;                /* ring buffer length in us */
-static unsigned int period_time = 8000;                 /* period time in us */
+static unsigned int channels = 2;                       /* count of channels */
+static unsigned int buffer_time = 36000;                /* ring buffer length in us */
+static unsigned int period_time = 6000;                 /* period time in us */
 static int period_event = 0;                            /* produce poll event after each period */
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
 static snd_output_t *output = NULL;
+static snd_hctl_t *hctl;
 
 static void* beep_thread(void *arg);
 static pthread_t beep_thread_id;
@@ -271,6 +272,32 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
         return 0;
 }
 
+void beep_mute(int mute)
+{
+    static int first = 1;
+    int err;
+    static snd_ctl_elem_id_t *id;
+    static snd_hctl_elem_t *elem;
+    static snd_ctl_elem_value_t *control;
+
+    if (first) {
+        first = 0;
+        err = snd_hctl_open(&hctl, device, 0);
+        err = snd_hctl_load(hctl);
+        snd_ctl_elem_id_alloca(&id);
+        snd_ctl_elem_id_set_interface(id, SND_CTL_ELEM_IFACE_MIXER);
+        snd_ctl_elem_id_set_name(id, "PCM Playback Switch");
+
+        elem = snd_hctl_find_elem(hctl, id);
+
+        snd_ctl_elem_value_alloca(&control);
+        snd_ctl_elem_value_set_id(control, id);   
+    }
+
+    snd_ctl_elem_value_set_integer(control, 0, mute);
+    err = snd_hctl_elem_write(elem, control);
+}
+
 void beep_vol(long volume)
 {
     long min, max, output;
@@ -280,7 +307,8 @@ void beep_vol(long volume)
     int do_once = 1;
     snd_mixer_elem_t* elem;
 
-    if (volume > 100) volume = 100;
+    beep_mute(1);
+    if (volume > 100) volume = 100; // sounds raspy any higher
     if (volume < 0) volume = 0;
     snd_mixer_open(&mhandle, 0);
     snd_mixer_attach(mhandle, device);
@@ -295,6 +323,7 @@ void beep_vol(long volume)
     output = (((max - min) * volume) / 100) + min;
     snd_mixer_selem_set_playback_volume_all(elem, output);
 
+    beep_mute(0);
     snd_mixer_close(mhandle);
 }
 
@@ -360,5 +389,8 @@ void beep_init() {
 }
 
 void beep_close() {
+    beep_vol(0);
+    beep_mute(1);
     pthread_cancel(beep_thread_id);
+    snd_hctl_close(hctl);
 }

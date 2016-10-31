@@ -1008,6 +1008,10 @@ static void process_rx_buffer() {
     }
 #endif
     if(local_audio) {
+      if (isTransmitting() && (mode==modeCWL || mode==modeCWU)) {
+        leftaudiosample=0;
+        rightaudiosample=0;
+      }
       audio_write(leftaudiosample,rightaudiosample);
     }
 

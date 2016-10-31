@@ -67,6 +67,8 @@
 #include <sched.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <time.h>
+#include <sys/mman.h>
 
 #include <wiringPi.h>
 #include <softTone.h>
@@ -80,8 +82,12 @@
 static void* keyer_thread(void *arg);
 static pthread_t keyer_thread_id;
 
-// set to 0 to use the PI's audio out for sidetone
+// set to 0 to use the PI's hw:0 audio out for sidetone
 #define SIDETONE_GPIO 0 // this is in wiringPi notation
+
+#define MY_PRIORITY (90)
+#define MAX_SAFE_STACK (8*1024)
+#define NSEC_PER_SEC   (1000000000)
 
 enum {
     CHECK = 0,
@@ -112,6 +118,18 @@ static sem_t cw_event;
 
 int keyer_out = 0;
 
+// using clock_nanosleep of librt
+extern int clock_nanosleep(clockid_t __clock_id, int __flags,
+      __const struct timespec *__req,
+      struct timespec *__rem);
+
+void stack_prefault(void) {
+        unsigned char dummy[MAX_SAFE_STACK];
+
+        memset(dummy, 0, MAX_SAFE_STACK);
+        return;
+}
+
 void keyer_update() {
     if (!running)
         keyer_init();
@@ -128,6 +146,7 @@ void keyer_update() {
         kdash = &kcwr;
     }
     beep_vol(cw_keyer_sidetone_volume);
+    beep_freq = cw_keyer_sidetone_frequency;
 }
 
 void keyer_event(int gpio, int level) {
@@ -155,21 +174,19 @@ void set_keyer_out(int state) {
             if (SIDETONE_GPIO)
                 softToneWrite (SIDETONE_GPIO, cw_keyer_sidetone_frequency);
             else
-                beep_freq = cw_keyer_sidetone_frequency;
+                beep_mute(1);
         else
             if (SIDETONE_GPIO)
                 softToneWrite (SIDETONE_GPIO, 0);
             else
-                beep_freq = 0;
+                beep_mute(0);
     }
 }
 
 static void* keyer_thread(void *arg) {
     int pos;
     struct timespec loop_delay;
-
-    loop_delay.tv_sec  = 0 ;
-    loop_delay.tv_nsec = 1000000;
+    int interval = 1000000; // 1 ms
 
     while(running) {
         sem_wait(&cw_event);
@@ -327,7 +344,14 @@ static void* keyer_thread(void *arg) {
                 key_state = EXITLOOP;
 
             }
-            nanosleep (&loop_delay, NULL);
+
+            clock_gettime(CLOCK_MONOTONIC, &loop_delay);
+            loop_delay.tv_nsec += interval;
+            while (loop_delay.tv_nsec >= NSEC_PER_SEC) {
+                loop_delay.tv_nsec -= NSEC_PER_SEC;
+                loop_delay.tv_sec++;
+            }
+            clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &loop_delay, NULL);
         }
     }
 }
@@ -339,6 +363,20 @@ void keyer_close() {
 
 int keyer_init() {
     int rc;
+    struct sched_param param;
+
+    param.sched_priority = MY_PRIORITY;
+    if(sched_setscheduler(0, SCHED_FIFO, &param) == -1) {
+            perror("sched_setscheduler failed");
+            running = 0;
+    }
+
+    if(mlockall(MCL_CURRENT|MCL_FUTURE) == -1) {
+            perror("mlockall failed");
+            running = 0;
+    }
+
+    stack_prefault();
 
     fprintf(stderr,"keyer_init\n");
 
@@ -349,8 +387,10 @@ int keyer_init() {
 
     if (SIDETONE_GPIO)
         softToneCreate(SIDETONE_GPIO);
-    else
+    else {
         beep_init();
+        beep_vol(cw_keyer_sidetone_volume);
+    }
 
     rc = sem_init(&cw_event, 0, 0);
     rc |= pthread_create(&keyer_thread_id, NULL, keyer_thread, NULL);
