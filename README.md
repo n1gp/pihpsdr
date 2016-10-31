@@ -45,8 +45,8 @@ NOTES
 =====
 Currently the iambic keyer only works using the NEW ethernet protocol.
 The current OLD protocol Hermes FGPA firmware doesn't support external
-CW. I have modified the FPGA firmware to support it for use with this
-pihpsdr program, but currently it experimental and use at your own risk.
+CW. I have modified the OLD FPGA firmware to support it for use with this
+pihpsdr program, but currently it's experimental and use at your own risk.
 Email me if you want to try it.
 
 I noticed sometimes that when I started pihpsdr all of the GPIO button alerts would fire.
