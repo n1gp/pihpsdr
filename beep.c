@@ -47,7 +47,6 @@ static int period_event = 0;                            /* produce poll event af
 static snd_pcm_sframes_t buffer_size;
 static snd_pcm_sframes_t period_size;
 static snd_output_t *output = NULL;
-static snd_hctl_t *hctl;
 
 static void* beep_thread(void *arg);
 static pthread_t beep_thread_id;
@@ -274,28 +273,27 @@ static int set_swparams(snd_pcm_t *handle, snd_pcm_sw_params_t *swparams)
 
 void beep_mute(int mute)
 {
-    static int first = 1;
     int err;
-    static snd_ctl_elem_id_t *id;
-    static snd_hctl_elem_t *elem;
-    static snd_ctl_elem_value_t *control;
+    snd_ctl_elem_id_t *id;
+    snd_hctl_elem_t *elem;
+    snd_ctl_elem_value_t *control;
+    snd_hctl_t *hctl;
 
-    if (first) {
-        first = 0;
-        err = snd_hctl_open(&hctl, device, 0);
-        err = snd_hctl_load(hctl);
-        snd_ctl_elem_id_alloca(&id);
-        snd_ctl_elem_id_set_interface(id, SND_CTL_ELEM_IFACE_MIXER);
-        snd_ctl_elem_id_set_name(id, "PCM Playback Switch");
+    err = snd_hctl_open(&hctl, device, 0);
+    err = snd_hctl_load(hctl);
+    snd_ctl_elem_id_alloca(&id);
+    snd_ctl_elem_id_set_interface(id, SND_CTL_ELEM_IFACE_MIXER);
+    snd_ctl_elem_id_set_name(id, "PCM Playback Switch");
 
-        elem = snd_hctl_find_elem(hctl, id);
+    elem = snd_hctl_find_elem(hctl, id);
 
-        snd_ctl_elem_value_alloca(&control);
-        snd_ctl_elem_value_set_id(control, id);   
-    }
+    snd_ctl_elem_value_alloca(&control);
+    snd_ctl_elem_value_set_id(control, id);   
 
     snd_ctl_elem_value_set_integer(control, 0, mute);
     err = snd_hctl_elem_write(elem, control);
+    snd_hctl_close(hctl);
+    if (err) fprintf(stderr, "ERROR beep_mute()\n");
 }
 
 void beep_vol(long volume)
@@ -389,8 +387,7 @@ void beep_init() {
 }
 
 void beep_close() {
-    beep_vol(0);
+//    beep_vol(0);
     beep_mute(1);
     pthread_cancel(beep_thread_id);
-    snd_hctl_close(hctl);
 }
