@@ -1024,7 +1024,7 @@ void ozy_send_buffer() {
       } else {
         if(tune==1) { //RRK
           output_buffer[C1]|=0x00;
-        } else {
+        } else if(cw_keyer_internal == 0) {
           output_buffer[C1]|=0x01;
         }
       }
