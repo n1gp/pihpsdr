@@ -101,17 +101,14 @@ static void calc_tx_buffer_size() {
 }
 
 void setRXMode(int rx,int m) {
-fprintf(stderr,"SetRXAMode: rx=%d mode=%d\n",rx,m);
   SetRXAMode(rx, m);
 }
 
 void setTXMode(int tx,int m) {
-fprintf(stderr,"SetTXAMode: tx=%d mode=%d\n",tx,m);
   SetTXAMode(tx, m);
 }
 
 void setMode(int m) {
-fprintf(stderr,"setMode: mode=%d m=%d\n",mode,m);
 int local_mode=m;
 #ifdef FREEDV
     if(mode!=modeFREEDV && m==modeFREEDV) {
@@ -131,9 +128,7 @@ int local_mode=m;
       show_waterfall();
     }
 #endif
-fprintf(stderr,"setMode: %d mode=%d\n",receiver,mode);
     setRXMode(receiver,local_mode);
-fprintf(stderr,"setMode: %d mode=%d\n",CHANNEL_TX,mode);
     setTXMode(CHANNEL_TX,local_mode);
     mode=m;
 }
@@ -143,7 +138,6 @@ int getMode() {
 }
 
 void setFilter(int low,int high) {
-fprintf(stderr,"setFilter: %d %d\n",low,high);
     if(mode==modeCWL) {
         filterLow=-cw_keyer_sidetone_frequency-low;
         filterHigh=-cw_keyer_sidetone_frequency+high;
@@ -155,12 +149,10 @@ fprintf(stderr,"setFilter: %d %d\n",low,high);
         filterHigh=high;
     }
 
-fprintf(stderr,"setFilter: filterLow=%d filterHigh=%d\n",filterLow,filterHigh);
 
     double fl=filterLow+ddsOffset;
     double fh=filterHigh+ddsOffset;
 
-fprintf(stderr,"setFilter: fl=%f fh=%f\n",fl,fh);
     RXANBPSetFreqs(receiver,(double)filterLow,(double)filterHigh);
     SetRXABandpassFreqs(receiver, fl,fh);
     SetRXASNBAOutputBandwidth(receiver, (double)filterLow, (double)filterHigh);
@@ -277,6 +269,8 @@ static void setupRX(int rx) {
     SetRXAANRRun(rx, nr);
     SetRXAANFRun(rx, anf);
     SetRXASNBARun(rx, snb);
+
+    SetRXAPanelGain1(rx, volume);
 }
 
 static void setupTX(int tx) {
@@ -302,7 +296,11 @@ static void setupTX(int tx) {
     SetTXAPostGenToneFreq(tx, 0.0);
     SetTXAPostGenRun(tx, 0);
 
-    SetChannelState(tx,1,0);
+    SetTXAPanelRun(tx, 1);
+    double gain=pow(10.0, mic_gain / 20.0);
+    SetTXAPanelGain1(tx,gain);
+
+    //SetChannelState(tx,1,0);
 }
 
 void wdsp_init(int rx,int pixels,int protocol) {
@@ -338,7 +336,7 @@ void wdsp_init(int rx,int pixels,int protocol) {
                 dspRate,
                 outputRate,
                 0, // receive
-                1, // run
+                0, // run
                 0.010, 0.025, 0.0, 0.010, 0);
 
 
@@ -362,7 +360,7 @@ void wdsp_init(int rx,int pixels,int protocol) {
                 micDspRate,
                 micOutputRate,
                 1, // transmit
-                1, // run
+                0, // run
                 0.010, 0.025, 0.0, 0.010, 0);
 
     while (gtk_events_pending ())
