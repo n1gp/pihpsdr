@@ -53,7 +53,9 @@
 #include "vfo.h"
 #include "toolbar.h"
 #include "wdsp_init.h"
+#ifdef LOCALCW
 #include "iambic.h"
+#endif
 #ifdef FREEDV
 #include "freedv.h"
 #endif
@@ -216,9 +218,11 @@ void tuner_changed() {
 */
 
 void cw_changed() {
+#ifdef LOCALCW
     // update the iambic keyer params
     if (cw_keyer_internal == 0)
         keyer_update();
+#endif
 }
 
 void new_protocol_init(int rx,int pixels) {
@@ -314,11 +318,13 @@ static void new_protocol_high_priority(int run) {
       if(tune) {
         buffer[4]|=0x02;
       }
+#ifdef LOCALCW
       if (cw_keyer_internal == 0) {
         // set the ptt if we're not in breakin mode and mox is on
         if(cw_breakin == 0 && getMox()) buffer[4]|=0x02;
         buffer[5]|=(keyer_out) ? 0x01 : 0;
       }
+#endif
     } else {
       if(isTransmitting()) {
         buffer[4]|=0x02;
@@ -892,7 +898,8 @@ static void process_mic_data(unsigned char *buffer) {
                 micsample  = (int)((signed char) buffer[b++]) << 8;
                 micsample  |= (int)((unsigned char)buffer[b++] & 0xFF);
                 if(freedv_samples==0) { // 48K to 8K
-                    int modem_samples=mod_sample_freedv(micsample);
+                    int sample=(int)((double)micsample*pow(10.0, mic_gain / 20.0));
+                    int modem_samples=mod_sample_freedv(sample);
                     if(modem_samples!=0) {
                       for(s=0;s<modem_samples;s++) {
                         for(j=0;j<freedv_resample;j++) {  // 8K to 48K

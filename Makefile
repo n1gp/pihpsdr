@@ -8,6 +8,9 @@ GIT_DATE := $(firstword $(shell git --no-pager show --date=short --format="%ai" 
 # uncomment the line to below include support for FreeDV codec2
 #FREEDV_INCLUDE=FREEDV
 
+# uncomment the line to below include support local CW keyer
+LOCALCW_INCLUDE=LOCALCW
+
 #uncomment the line below for the platform being compiled on
 UNAME_N=raspberrypi
 #UNAME_N=odroid
@@ -65,6 +68,19 @@ FREEDV_OBJS= \
 freedv.o
 endif
 
+ifeq ($(LOCALCW_INCLUDE),LOCALCW)
+LOCALCW_OPTIONS=-D LOCALCW
+LOCALCW_SOURCES= \
+beep.c \
+iambic.c
+LOCALCW_HEADERS= \
+beep.h \
+iambic.h
+LOCALCW_OBJS= \
+beep.o \
+iambic.o
+endif
+
 #required for MRAA GPIO
 #MRAA_INCLUDE=MRAA
 
@@ -101,7 +117,7 @@ GTKLIBS=`pkg-config --libs gtk+-3.0`
 
 AUDIO_LIBS=-lasound
 
-OPTIONS=-g -D $(UNAME_N) $(GPIO_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O3
+OPTIONS=-g -D $(UNAME_N) $(GPIO_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(LOCALCW_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O3
 
 LIBS=-lrt -lm -lwdsp -lpthread $(AUDIO_LIBS) -lpulse $(PSKLIBS) $(GTKLIBS) $(GPIO_LIBS) $(SOAPYSDRLIBS) $(FREEDVLIBS)
 INCLUDES=$(GTKINCLUDES)
@@ -117,8 +133,6 @@ configure.c \
 frequency.c \
 discovered.c \
 filter.c \
-beep.c \
-iambic.c \
 main.c \
 menu.c \
 meter.c \
@@ -152,8 +166,6 @@ bandstack.h \
 channel.h \
 discovered.h \
 filter.h \
-beep.h \
-iambic.h \
 menu.h \
 meter.h \
 mode.h \
@@ -182,8 +194,6 @@ configure.o \
 frequency.o \
 discovered.o \
 filter.o \
-beep.o \
-iambic.o \
 version.o \
 main.o \
 menu.o \
@@ -205,13 +215,13 @@ vfo.o \
 waterfall.o \
 wdsp_init.o
 
-all: prebuild $(PROGRAM) $(HEADERS) $(LIMESDR_HEADERS) $(FREEDV_HEADERS) $(GPIO_HEADERS) $(PSK_HEADERS) $(SOURCES) $(LIMESDR_SOURCES) $(FREEDV_SOURCES) $(GPIO_SOURCES) $(PSK_SOURCES)
+all: prebuild $(PROGRAM) $(HEADERS) $(LIMESDR_HEADERS) $(FREEDV_HEADERS) $(LOCALCW_HEADERS) $(GPIO_HEADERS) $(PSK_HEADERS) $(SOURCES) $(LIMESDR_SOURCES) $(FREEDV_SOURCES) $(LOCALCW_SOURCES) $(GPIO_SOURCES) $(PSK_SOURCES)
 
 prebuild:
 	rm -f version.o
 
 $(PROGRAM): $(OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(GPIO_OBJS) $(PSK_OBJS)
-	$(LINK) -o $(PROGRAM) $(OBJS) $(GPIO_OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(PSK_OBJS) $(LIBS)
+	$(LINK) -o $(PROGRAM) $(OBJS) $(GPIO_OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(LOCALCW_OBJS) $(PSK_OBJS) $(LIBS)
 
 .c.o:
 	$(COMPILE) -c -o $@ $<

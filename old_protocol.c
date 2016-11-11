@@ -47,7 +47,9 @@
 #include "radio.h"
 #include "signal.h"
 #include "toolbar.h"
+#ifdef LOCALCW
 #include "iambic.h"
+#endif
 #ifdef FREEDV
 #include "freedv.h"
 #endif
@@ -454,7 +456,8 @@ static void process_ozy_input_buffer(char  *buffer) {
 #ifdef FREEDV
         if(mode==modeFREEDV && !tune) {
           if(freedv_samples==0) {
-            int modem_samples=mod_sample_freedv(mic_sample);
+            int sample=(int)((double)mic_sample*pow(10.0, mic_gain / 20.0));
+            int modem_samples=mod_sample_freedv(sample);
             if(modem_samples!=0) {
               int s;
               for(s=0;s<modem_samples;s++) {
@@ -1033,9 +1036,11 @@ void ozy_send_buffer() {
     if(tune || (cw_breakin == 0 && getMox())) {
       output_buffer[C0]|=0x01;
     }
+#ifdef LOCALCW
     // RRK, below needs modified FPGA firmware to support CWX use of bit 7
     if ((cw_breakin || isTransmitting()) && !tune)
       output_buffer[C0] |= (keyer_out) ? 0x80 : 0;
+#endif
   } else {
     if(isTransmitting()) {
       output_buffer[C0]|=0x01;
