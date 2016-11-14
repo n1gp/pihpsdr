@@ -61,13 +61,13 @@ ifeq ($(FREEDV_INCLUDE),FREEDV)
 FREEDV_OPTIONS=-D FREEDV
 FREEDVLIBS=-lcodec2
 FREEDV_SOURCES= \
-freedv.c
+freedv.c \
 freedv_menu.c
 FREEDV_HEADERS= \
-freedv.h
+freedv.h \
 freedv_menu.h
 FREEDV_OBJS= \
-freedv.o
+freedv.o \
 freedv_menu.o
 endif
 
@@ -253,7 +253,7 @@ all: prebuild $(PROGRAM) $(HEADERS) $(LIMESDR_HEADERS) $(FREEDV_HEADERS) $(LOCAL
 prebuild:
 	rm -f version.o
 
-$(PROGRAM): $(OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(GPIO_OBJS) $(PSK_OBJS)
+$(PROGRAM): $(OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(LOCALCW_OBJS) $(GPIO_OBJS) $(PSK_OBJS)
 	$(LINK) -o $(PROGRAM) $(OBJS) $(GPIO_OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(LOCALCW_OBJS) $(PSK_OBJS) $(LIBS)
 
 .c.o:
