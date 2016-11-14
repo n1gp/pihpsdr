@@ -17,7 +17,9 @@
 *
 */
 
-char build_date[]=GIT_DATE;
-char build_version[]=GIT_VERSION;
+#include <gtk/gtk.h>
+#include <semaphore.h>
+#include <stdio.h>
+#include <string.h>
 
-char version[]="1.0.0";
+extern void pa_menu(GtkWidget *parent);

@@ -17,7 +17,4 @@
 *
 */
 
-char build_date[]=GIT_DATE;
-char build_version[]=GIT_VERSION;
-
-char version[]="1.0.0";
+extern void freedv_menu(GtkWidget *parent);

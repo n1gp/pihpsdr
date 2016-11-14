@@ -18,6 +18,7 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "bandstack.h"
 #include "band.h"
@@ -186,27 +187,27 @@ BANDSTACK bandstackGEN={3,1,bandstack_entriesGEN};
 BANDSTACK bandstackWWV={5,1,bandstack_entriesWWV};
 
 BAND bands[BANDS] = 
-    {{"160",&bandstack160,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"80",&bandstack80,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"60",&bandstack60,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"40",&bandstack40,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"30",&bandstack30,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"20",&bandstack20,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"18",&bandstack18,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"15",&bandstack15,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"12",&bandstack12,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"10",&bandstack10,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"50",&bandstack50,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
+    {{"160",&bandstack160,0,0,0,0,0,ALEX_ATTENUATION_0dB,42.0},
+     {"80",&bandstack80,0,0,0,0,0,ALEX_ATTENUATION_0dB,42.5},
+     {"60",&bandstack60,0,0,0,0,0,ALEX_ATTENUATION_0dB,42.5},
+     {"40",&bandstack40,0,0,0,0,0,ALEX_ATTENUATION_0dB,42.5},
+     {"30",&bandstack30,0,0,0,0,0,ALEX_ATTENUATION_0dB,41.3},
+     {"20",&bandstack20,0,0,0,0,0,ALEX_ATTENUATION_0dB,40.5},
+     {"18",&bandstack18,0,0,0,0,0,ALEX_ATTENUATION_0dB,40.0},
+     {"15",&bandstack15,0,0,0,0,0,ALEX_ATTENUATION_0dB,39.6},
+     {"12",&bandstack12,0,0,0,0,0,ALEX_ATTENUATION_0dB,39.0},
+     {"10",&bandstack10,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"50",&bandstack50,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
 #ifdef LIMESDR
-     {"70",&bandstack70,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"144",&bandstack144,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"220",&bandstack144,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"430",&bandstack430,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"902",&bandstack430,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"1240",&bandstack1240,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"2300",&bandstack2300,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"3400",&bandstack3400,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
-     {"AIR",&bandstackAIR,0,0,0,0,0,ALEX_ATTENUATION_0dB,30},
+     {"70",&bandstack70,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"144",&bandstack144,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"220",&bandstack144,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"430",&bandstack430,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"902",&bandstack430,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"1240",&bandstack1240,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"2300",&bandstack2300,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"3400",&bandstack3400,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
+     {"AIR",&bandstackAIR,0,0,0,0,0,ALEX_ATTENUATION_0dB,38.8},
 #endif
      {"GEN",&bandstackGEN,0,0,0,0,0,ALEX_ATTENUATION_0dB,0},
      {"WWV",&bandstackWWV,0,0,0,0,0,ALEX_ATTENUATION_0dB,0}};
@@ -338,7 +339,7 @@ void bandSaveState() {
         sprintf(name,"band.%d.alexAttenuation",b);
         setProperty(name,value);
 
-        sprintf(value,"%d",bands[b].pa_calibration);
+        sprintf(value,"%f",bands[b].pa_calibration);
         sprintf(name,"band.%d.pa_calibration",b);
         setProperty(name,value);
 
@@ -391,7 +392,6 @@ void bandSaveState() {
 
 void bandRestoreState() {
     char* value;
-
     int b;
     int stack;
     char name[128];
@@ -429,7 +429,12 @@ void bandRestoreState() {
 
         sprintf(name,"band.%d.pa_calibration",b);
         value=getProperty(name);
-        if(value) bands[b].pa_calibration=atoi(value);
+        if(value) {
+          bands[b].pa_calibration=strtod(value,NULL);
+          if(bands[b].pa_calibration<38.8 || bands[b].pa_calibration>100.0) {
+            bands[b].pa_calibration=38.8;
+          }
+        }
 
         sprintf(name,"band.%d.OCrx",b);
         value=getProperty(name);

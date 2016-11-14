@@ -97,7 +97,6 @@ waterfall_button_press_event_cb (GtkWidget      *widget,
                gpointer        data)
 {
   int x=(int)event->x;
-
   if (event->button == 1) {
     last_x=(int)event->x;
     has_moved=FALSE;
@@ -111,18 +110,19 @@ waterfall_button_release_event_cb (GtkWidget      *widget,
                GdkEventButton *event,
                gpointer        data)
 {
-  int x=(int)event->x;
-
-  if (event->button == 1) {
-    if(has_moved) {
-      // drag
-      vfo_move((int)((float)(x-last_x)*hz_per_pixel));
-    } else {
-      // move to this frequency
-      vfo_move_to((int)((float)(x-(display_width/2))*hz_per_pixel));
+  if(pressed) {
+    int x=(int)event->x;
+    if (event->button == 1) {
+      if(has_moved) {
+        // drag
+        vfo_move((int)((float)(x-last_x)*hz_per_pixel));
+      } else {
+        // move to this frequency
+        vfo_move_to((int)((float)(x-(display_width/2))*hz_per_pixel));
+      }
+      last_x=x;
+      pressed=FALSE;
     }
-    last_x=x;
-    pressed=FALSE;
   }
   return TRUE;
 }
