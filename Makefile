@@ -9,14 +9,14 @@ GIT_DATE := $(firstword $(shell git --no-pager show --date=short --format="%ai" 
 #FREEDV_INCLUDE=FREEDV
 
 # uncomment the line to below include support local CW keyer
-LOCALCW_INCLUDE=LOCALCW
+#LOCALCW_INCLUDE=LOCALCW
 
 #uncomment the line below for the platform being compiled on
-UNAME_N=raspberrypi
+#UNAME_N=raspberrypi
 #UNAME_N=odroid
 #UNAME_N=up
 #UNAME_N=pine64
-#UNAME_N=x86
+UNAME_N=x86
 
 CC=gcc
 LINK=gcc
@@ -137,7 +137,6 @@ frequency.c \
 discovered.c \
 filter.c \
 main.c \
-menu.c \
 new_menu.c \
 exit_menu.c \
 general_menu.c \
@@ -180,7 +179,6 @@ bandstack.h \
 channel.h \
 discovered.h \
 filter.h \
-menu.h \
 new_menu.h \
 exit_menu.h \
 general_menu.h \
@@ -221,7 +219,6 @@ discovered.o \
 filter.o \
 version.o \
 main.o \
-menu.o \
 new_menu.o \
 exit_menu.o \
 general_menu.o \
