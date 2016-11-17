@@ -8,12 +8,15 @@ GIT_DATE := $(firstword $(shell git --no-pager show --date=short --format="%ai" 
 # uncomment the line to below include support for FreeDV codec2
 #FREEDV_INCLUDE=FREEDV
 
+# uncomment the line to below include support for sx1509 i2c expander
+SX1509_INCLUDE=sx1509
+
 # uncomment the line to below include support local CW keyer
-LOCALCW_INCLUDE=LOCALCW
+#LOCALCW_INCLUDE=LOCALCW
 
 #uncomment the line below for the platform being compiled on
-UNAME_N=raspberrypi
-#UNAME_N=odroid
+#UNAME_N=raspberrypi
+UNAME_N=odroid
 #UNAME_N=up
 #UNAME_N=pine64
 #UNAME_N=x86
@@ -102,7 +105,12 @@ else
   GPIO_LIBS=-lwiringPi -lpigpio
   endif
   ifeq ($(UNAME_N),odroid)
+  GPIO_OPTIONS=-D GPIO
   GPIO_LIBS=-lwiringPi
+  endif
+  ifeq ($(SX1509_INCLUDE),sx1509)
+  GPIO_OPTIONS+=-D sx1509
+  GPIO_LIBS+=-lsx1509
   endif
   GPIO_SOURCES= \
   gpio.c
