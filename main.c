@@ -309,7 +309,9 @@ static void* wisdom_thread(void *arg) {
 gboolean main_delete (GtkWidget *widget) {
 #ifdef GPIO
   gpio_close();
+#ifdef LOCALCW
   keyer_close();
+#endif
 #endif
   switch(protocol) {
     case ORIGINAL_PROTOCOL:
