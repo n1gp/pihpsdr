@@ -155,6 +155,7 @@ dsp_menu.c \
 pa_menu.c \
 cw_menu.c \
 oc_menu.c \
+xvtr_menu.c \
 rit.c \
 meter.c \
 mode.c \
@@ -197,6 +198,7 @@ dsp_menu.h \
 pa_menu.h \
 cw_menu.h \
 oc_menu.h \
+xvtr_menu.h \
 rit.h \
 meter.h \
 mode.h \
@@ -237,6 +239,7 @@ dsp_menu.o \
 pa_menu.o \
 cw_menu.o \
 oc_menu.o \
+xvtr_menu.o \
 rit.o \
 meter.o \
 mode.o \

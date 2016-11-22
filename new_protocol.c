@@ -66,7 +66,6 @@
 
 int data_socket;
 
-static int receiver;
 static int running;
 
 sem_t response_sem;
@@ -89,8 +88,8 @@ static int audio_addr_length;
 static struct sockaddr_in iq_addr;
 static int iq_addr_length;
 
-static struct sockaddr_in data_addr;
-static int data_addr_length;
+static struct sockaddr_in data_addr[RECEIVERS];
+static int data_addr_length[RECEIVERS];
 
 static pthread_t new_protocol_thread_id;
 static pthread_t new_protocol_timer_thread_id;
@@ -133,10 +132,10 @@ static int send_high_priority=0;
 static sem_t send_general_sem;
 static int send_general=0;
 
-static int samples=0;
+static int samples[RECEIVERS];
 static int outputsamples=BUFFER_SIZE;
 
-static double iqinputbuffer[BUFFER_SIZE*2];
+static double iqinputbuffer[RECEIVERS][BUFFER_SIZE*2];
 static double audiooutputbuffer[BUFFER_SIZE*2];
 
 static int leftaudiosample;
@@ -161,7 +160,7 @@ static int psk_resample=6;  // convert from 48000 to 8000
 static void new_protocol_high_priority(int run);
 static void* new_protocol_thread(void* arg);
 static void* new_protocol_timer_thread(void* arg);
-static void  process_iq_data(unsigned char *buffer);
+static void  process_iq_data(int rx,unsigned char *buffer);
 static void  process_command_response(unsigned char *buffer);
 static void  process_high_priority(unsigned char *buffer);
 static void  process_mic_data(unsigned char *buffer);
@@ -225,12 +224,11 @@ void cw_changed() {
 #endif
 }
 
-void new_protocol_init(int rx,int pixels) {
+void new_protocol_init(int pixels) {
     int rc;
-    receiver=rx;
     spectrumWIDTH=pixels;
 
-    fprintf(stderr,"new_protocol_init: %d\n",rx);
+    fprintf(stderr,"new_protocol_init\n");
 
     if(local_audio) {
       if(audio_open_output()!=0) {
@@ -254,7 +252,7 @@ void new_protocol_init(int rx,int pixels) {
 
     rc=pthread_create(&new_protocol_thread_id,NULL,new_protocol_thread,NULL);
     if(rc != 0) {
-        fprintf(stderr,"pthread_create failed on new_protocol_thread for receiver %d: rc=%d\n", receiver, rc);
+        fprintf(stderr,"pthread_create failed on new_protocol_thread: rc=%d\n", rc);
         exit(-1);
     }
 
@@ -301,6 +299,7 @@ static void new_protocol_general() {
 }
 
 static void new_protocol_high_priority(int run) {
+    int r;
     unsigned char buffer[1444];
     BAND *band=band_get_current_band();
 
@@ -338,10 +337,13 @@ static void new_protocol_high_priority(int run) {
     long phase=(long)((4294967296.0*(double)rxFrequency)/122880000.0);
 
 // rx
-    buffer[9]=phase>>24;
-    buffer[10]=phase>>16;
-    buffer[11]=phase>>8;
-    buffer[12]=phase;
+
+    for(r=0;r<receivers;r++) {
+      buffer[9+(r*4)]=phase>>24;
+      buffer[10+(r*4)]=phase>>16;
+      buffer[11+(r*4)]=phase>>8;
+      buffer[12+(r*4)]=phase;
+    }
 
 // tx (no split yet)
     long long txFrequency=ddsFrequency;
@@ -615,11 +617,15 @@ static void new_protocol_receive_specific() {
     buffer[4]=2; // 2 ADCs
     buffer[5]=0; // dither off
     if(lt2208Dither) {
-        buffer[5]=0x01<<receiver;
+      for(i=0;i<receivers;i++) {
+        buffer[5]|=0x01<<i;
+      }
     }
     buffer[6]=0; // random off
     if(lt2208Random) {
-        buffer[6]=0x01<<receiver;
+      for(i=0;i<receivers;i++) {
+        buffer[6]|=0x01<<i;
+      }
     }
     buffer[7]=0x00;
     for(i=0;i<receivers;i++) {
@@ -639,7 +645,7 @@ static void new_protocol_receive_specific() {
     buffer[28]=24;
 
     if(sendto(data_socket,buffer,sizeof(buffer),0,(struct sockaddr*)&receiver_addr,receiver_addr_length)<0) {
-        fprintf(stderr,"sendto socket failed for start: receiver=%d\n",receiver);
+        fprintf(stderr,"sendto socket failed for start\n");
         exit(1);
     }
 
@@ -673,14 +679,14 @@ double calibrate(int v) {
 
 void* new_protocol_thread(void* arg) {
 
-
+    int i;
     struct sockaddr_in addr;
     int length;
     unsigned char buffer[2048];
     int bytesread;
     short sourceport;
 
-fprintf(stderr,"new_protocol_thread: receiver=%d\n", receiver);
+fprintf(stderr,"new_protocol_thread\n");
 
     micsamples=0;
     iqindex=4;
@@ -689,7 +695,7 @@ fprintf(stderr,"new_protocol_thread: receiver=%d\n", receiver);
 fprintf(stderr,"outputsamples=%d\n", outputsamples);
     data_socket=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP);
     if(data_socket<0) {
-        fprintf(stderr,"metis: create socket failed for data_socket: receiver=%d\n",receiver);
+        fprintf(stderr,"metis: create socket failed for data_socket\n");
         exit(-1);
     }
 
@@ -698,7 +704,7 @@ fprintf(stderr,"outputsamples=%d\n", outputsamples);
 
     // bind to the interface
     if(bind(data_socket,(struct sockaddr*)&radio->info.network.interface_address,radio->info.network.interface_length)<0) {
-        fprintf(stderr,"metis: bind socket failed for data_socket: receiver=%d\n",receiver);
+        fprintf(stderr,"metis: bind socket failed for data_socket\n");
         exit(-1);
     }
 
@@ -726,11 +732,14 @@ fprintf(stderr,"outputsamples=%d\n", outputsamples);
     iq_addr_length=radio->info.network.address_length;
     iq_addr.sin_port=htons(TX_IQ_FROM_HOST_PORT);
 
-    memcpy(&data_addr,&radio->info.network.address,radio->info.network.address_length);
-    data_addr_length=radio->info.network.address_length;
-    data_addr.sin_port=htons(RX_IQ_TO_HOST_PORT+receiver);
+   
+    for(i=0;i<RECEIVERS;i++) {
+        memcpy(&data_addr[i],&radio->info.network.address,radio->info.network.address_length);
+        data_addr_length[i]=radio->info.network.address_length;
+        data_addr[i].sin_port=htons(RX_IQ_TO_HOST_PORT_0+i);
+        samples[i]=0;
+    }
 
-    samples=0;
     audioindex=4; // leave space for sequence
     audiosequence=0L;
 
@@ -741,7 +750,7 @@ fprintf(stderr,"outputsamples=%d\n", outputsamples);
     while(running) {
         bytesread=recvfrom(data_socket,buffer,sizeof(buffer),0,(struct sockaddr*)&addr,&length);
         if(bytesread<0) {
-            fprintf(stderr,"recvfrom socket failed for new_protocol_thread: receiver=%d", receiver);
+            fprintf(stderr,"recvfrom socket failed for new_protocol_thread");
             exit(1);
         }
 
@@ -750,8 +759,11 @@ fprintf(stderr,"outputsamples=%d\n", outputsamples);
 //fprintf(stderr,"received packet length %d from port %d\n",bytesread,sourceport);
 
         switch(sourceport) {
-            case RX_IQ_TO_HOST_PORT:
-              process_iq_data(buffer);
+            case RX_IQ_TO_HOST_PORT_0:
+              process_iq_data(0,buffer);
+              break;
+            case RX_IQ_TO_HOST_PORT_1:
+              process_iq_data(1,buffer);
               break;
             case COMMAND_RESPONCE_TO_HOST_PORT:
               process_command_response(buffer);
@@ -789,7 +801,7 @@ fprintf(stderr,"outputsamples=%d\n", outputsamples);
     close(data_socket);
 }
 
-static void process_iq_data(unsigned char *buffer) {
+static void process_iq_data(int rx,unsigned char *buffer) {
     long sequence;
     long long timestamp;
     int bitspersample;
@@ -820,13 +832,13 @@ static void process_iq_data(unsigned char *buffer) {
             leftsampledouble=(double)leftsample/8388607.0; // for 24 bits
             rightsampledouble=(double)rightsample/8388607.0; // for 24 bits
 
-            iqinputbuffer[samples*2]=leftsampledouble;
-            iqinputbuffer[(samples*2)+1]=rightsampledouble;
+            iqinputbuffer[rx][samples[rx]*2]=leftsampledouble;
+            iqinputbuffer[rx][(samples[rx]*2)+1]=rightsampledouble;
 
-            samples++;
-            if(samples==BUFFER_SIZE) {
-                full_rx_buffer();
-                samples=0;
+            samples[rx]++;
+            if(samples[rx]==BUFFER_SIZE) {
+                full_rx_buffer(rx);
+                samples[rx]=0;
             }
        }
   //}
@@ -1047,33 +1059,35 @@ static void process_rx_buffer() {
   }
 }
 
-static void full_rx_buffer() {
+static void full_rx_buffer(int rx) {
   int j;
   int error;
 
-  fexchange0(CHANNEL_RX0, iqinputbuffer, audiooutputbuffer, &error);
-if(error!=0) {
-fprintf(stderr,"full_rx_buffer: fexchange0: error=%d\n",error);
-}
-  switch(mode) {
-#ifdef PSK
-    case modePSK:
-      break;
-#endif
-    default:
-      Spectrum0(1, CHANNEL_RX0, 0, 0, iqinputbuffer);
-      break;
+if(rx==0) {
+  fexchange0(CHANNEL_RX0, iqinputbuffer[rx], audiooutputbuffer, &error);
+  if(error!=0) {
+    fprintf(stderr,"full_rx_buffer: fexchange0: error=%d\n",error);
   }
-
-  switch(mode) {
-#ifdef FREEDV
-    case modeFREEDV:
-      process_freedv_rx_buffer();
-      break;
+    switch(mode) {
+#ifdef PSK
+      case modePSK:
+        break;
 #endif
-    default:
-      process_rx_buffer();
-      break;
+      default:
+        Spectrum0(1, CHANNEL_RX0, 0, 0, iqinputbuffer[rx]);
+        break;
+    }
+
+    switch(mode) {
+#ifdef FREEDV
+      case modeFREEDV:
+        process_freedv_rx_buffer();
+        break;
+#endif
+      default:
+        process_rx_buffer();
+        break;
+    }
   }
 }
 

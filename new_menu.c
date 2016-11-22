@@ -34,6 +34,7 @@
 #ifdef FREEDV
 #include "freedv_menu.h"
 #endif
+#include "xvtr_menu.h"
 #include "radio.h"
 
 static GtkWidget *parent_window=NULL;
@@ -124,6 +125,13 @@ static gboolean freedv_cb (GtkWidget *widget, GdkEventButton *event, gpointer da
 }
 #endif
 
+static gboolean xvtr_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+  gtk_widget_destroy(dialog);
+  dialog=NULL;
+  xvtr_menu(parent_window);
+  return TRUE;
+}
+
 static gboolean new_menu_pressed_event_cb (GtkWidget *widget,
                GdkEventButton *event,
                gpointer        data)
@@ -202,6 +210,11 @@ static gboolean new_menu_pressed_event_cb (GtkWidget *widget,
     g_signal_connect (freedv_b, "button-press-event", G_CALLBACK(freedv_cb), NULL);
     gtk_grid_attach(GTK_GRID(grid),freedv_b,3,2,1,1);
 #endif
+/*
+    GtkWidget *xvtr_b=gtk_button_new_with_label("XVTR");
+    g_signal_connect (xvtr_b, "button-press-event", G_CALLBACK(xvtr_cb), NULL);
+    gtk_grid_attach(GTK_GRID(grid),xvtr_b,4,2,1,1);
+*/
 
     gtk_container_add(GTK_CONTAINER(content),grid);
 
