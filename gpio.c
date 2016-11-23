@@ -247,7 +247,7 @@ static void lockAlert(int gpio, int level, uint32_t tick) {
 
 static void cwAlert(int gpio, int level, uint32_t tick) {
     if (cw_keyer_internal == 0)
-       keyer_event(gpio, level);
+       keyer_event(gpio, cw_active_level == 0 ? level : (level==0));
 }
 
 static void vfoEncoderPulse(int gpio, int level, unsigned int tick) {
@@ -587,7 +587,7 @@ fprintf(stderr,"encoder_init\n");
   gpio_restore_state();
 #ifdef raspberrypi
 
-#define BUTTON_STEADY_TIME_US 25000
+#define BUTTON_STEADY_TIME_US 5000
 
   void setup_button(int button, gpioAlertFunc_t pAlert) {
     gpioSetMode(button, PI_INPUT);
@@ -726,8 +726,12 @@ fprintf(stderr,"encoder_init\n");
   }
  
   if(ENABLE_CW_BUTTONS) {
-    setup_button(CWL_BUTTON, cwAlert);
-    setup_button(CWR_BUTTON, cwAlert);
+    gpioSetMode(CWL_BUTTON, PI_INPUT);
+    gpioSetAlertFunc(CWL_BUTTON, cwAlert);
+    gpioSetMode(CWR_BUTTON, PI_INPUT);
+    gpioSetAlertFunc(CWR_BUTTON, cwAlert);
+    gpioGlitchFilter(CWL_BUTTON, 5000);
+    gpioGlitchFilter(CWR_BUTTON, 5000);
   }
  
 #endif

@@ -9,14 +9,14 @@ GIT_DATE := $(firstword $(shell git --no-pager show --date=short --format="%ai" 
 #FREEDV_INCLUDE=FREEDV
 
 # uncomment the line to below include support for sx1509 i2c expander
-SX1509_INCLUDE=sx1509
+#SX1509_INCLUDE=sx1509
 
 # uncomment the line to below include support local CW keyer
-#LOCALCW_INCLUDE=LOCALCW
+LOCALCW_INCLUDE=LOCALCW
 
 #uncomment the line below for the platform being compiled on
-#UNAME_N=raspberrypi
-UNAME_N=odroid
+UNAME_N=raspberrypi
+#UNAME_N=odroid
 #UNAME_N=up
 #UNAME_N=pine64
 #UNAME_N=x86
