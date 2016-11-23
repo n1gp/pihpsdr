@@ -20,6 +20,7 @@
 #include <gtk/gtk.h>
 #include <semaphore.h>
 #include <stdio.h>
+#include <string.h>
 #ifdef GPIO
 #include "gpio.h"
 #endif
@@ -28,6 +29,7 @@
 #include "filter.h"
 #include "frequency.h"
 #include "bandstack.h"
+#include "xvtr.h"
 #include "band.h"
 #include "discovered.h"
 #include "new_protocol.h"
@@ -150,6 +152,7 @@ static void band_select_cb(GtkWidget *widget, gpointer data) {
 }
 
 void band_cb(GtkWidget *widget, gpointer data) {
+  BAND* band;
   int show=1;
   if(last_dialog!=NULL) {
     if(strcmp(gtk_window_get_title(GTK_WINDOW(last_dialog)),"Band")==0) {
@@ -166,7 +169,7 @@ void band_cb(GtkWidget *widget, gpointer data) {
     gtk_grid_set_row_homogeneous(GTK_GRID(grid),TRUE);
     GtkWidget *b;
     int i;
-    for(i=0;i<BANDS;i++) {
+    for(i=0;i<BANDS+XVTRS;i++) {
 #ifdef LIMESDR
       if(protocol!=LIMESDR_PROTOCOL) {
         if(i>=band70 && i<=band3400) {
@@ -174,19 +177,26 @@ void band_cb(GtkWidget *widget, gpointer data) {
         }
       }
 #endif
-      BAND* band=band_get_band(i);
-      GtkWidget *b=gtk_button_new_with_label(band->title);
-      set_button_text_color(b,"black");
-      //gtk_widget_override_font(b, pango_font_description_from_string("Arial 20"));
-      if(i==band_get_current()) {
-        set_button_text_color(b,"orange");
-        last_band=b;
+      
+      if(i<BANDS) {
+        band=band_get_band(i);
+      } else {
+        band=(BAND*)band_get_xvtr(i-BANDS);
       }
-      gtk_widget_show(b);
-      gtk_grid_attach(GTK_GRID(grid),b,i%5,i/5,1,1);
-      g_signal_connect(b,"clicked",G_CALLBACK(band_select_cb),(gpointer *)i);
+      if(strlen(band->title)>0) {
+        GtkWidget *b=gtk_button_new_with_label(band->title);
+        set_button_text_color(b,"black");
+        //gtk_widget_override_font(b, pango_font_description_from_string("Arial 20"));
+        if(i==band_get_current()) {
+          set_button_text_color(b,"orange");
+          last_band=b;
+        }
+        gtk_widget_show(b);
+        gtk_grid_attach(GTK_GRID(grid),b,i%5,i/5,1,1);
+        g_signal_connect(b,"clicked",G_CALLBACK(band_select_cb),(gpointer *)i);
+      }
     }
-  
+
     gtk_container_add(GTK_CONTAINER(content),grid);
 
     GtkWidget *close_button=gtk_dialog_add_button(GTK_DIALOG(dialog),"Close",GTK_RESPONSE_OK);
