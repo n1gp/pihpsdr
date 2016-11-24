@@ -54,7 +54,6 @@ int AF_ENCODER_B=26;
 #ifdef sx1509
 int AF_FUNCTION=25;
 #else
-//RRK, using below for a CW sidetone output in iambic.c
 int AF_FUNCTION=2; //RRK, was 25 now taken by waveshare LCD TS, disable i2c
 #endif
 int ENABLE_RF_ENCODER=1;
@@ -634,12 +633,8 @@ fprintf(stderr,"encoder_init\n");
   }
 
 
-#if defined sx1509
-    setup_button(AF_FUNCTION, afFunctionAlert);
-#else
-//RRK    setup_button(AF_FUNCTION, afFunctionAlert);
-#endif
-    afFunction=0;
+  setup_button(AF_FUNCTION, afFunctionAlert);
+  afFunction=0;
 
   if(ENABLE_AF_ENCODER) {
     gpioSetMode(AF_ENCODER_A, PI_INPUT);
@@ -674,7 +669,7 @@ fprintf(stderr,"encoder_init\n");
     rfEncoderPos=0;
   }
 
-//RRK  setup_button(AGC_FUNCTION, agcFunctionAlert);
+  setup_button(AGC_FUNCTION, agcFunctionAlert);
   agcFunction=0;
 
   if(ENABLE_AGC_ENCODER) {
