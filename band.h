@@ -22,7 +22,6 @@
 
 #include <gtk/gtk.h>
 #include "bandstack.h"
-#include "xvtr.h"
 
 #define band160 0
 #define band80 1
@@ -46,25 +45,18 @@
 #define bandAIR 19
 #define bandGen 20
 #define bandWWV 21
-#define BANDS 22
-#define HAM_BANDS 19
+#define band136 22
+#define band472 23
+#define BANDS 24
 #else
 #define bandGen 11
 #define bandWWV 12
-#define BANDS 13
-#define HAM_BANDS 11
+#define band136 13
+#define band472 14
+#define BANDS 15
 #endif
 
-/* --------------------------------------------------------------------------*/
-/**
-* @brief Bandlimit definition
-*/
-struct _BAND_LIMITS {
-    long long minFrequency;
-    long long maxFrequency;
-};
-
-typedef struct _BAND_LIMITS BAND_LIMITS;
+#define XVTRS 8
 
 /* --------------------------------------------------------------------------*/
 /**
@@ -80,6 +72,10 @@ struct _BAND {
     int alexTxAntenna;
     int alexAttenuation;
     double pa_calibration;
+    long long frequencyMin;
+    long long frequencyMax;
+    long long frequencyLO;
+    int disablePA;
 };
 
 typedef struct _BAND BAND;
@@ -95,9 +91,5 @@ BAND *band_set_current(int b);
 BANDSTACK_ENTRY *bandstack_entry_next();
 BANDSTACK_ENTRY *bandstack_entry_previous();
 BANDSTACK_ENTRY *bandstack_entry_get_current();
-
-BAND_LIMITS* getBandLimits(long long minDisplay,long long maxDisplay);
-
-XVTR* getXvtr(int i);
 
 #endif
