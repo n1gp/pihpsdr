@@ -55,6 +55,7 @@ int AF_ENCODER_B=26;
 int AF_FUNCTION=25;
 #else
 int AF_FUNCTION=2; //RRK, was 25 now taken by waveshare LCD TS, disable i2c
+int LOCK_BUTTON=2; //temporarily in flux upstream
 #endif
 int ENABLE_RF_ENCODER=1;
 int ENABLE_RF_PULLUP=0;
@@ -87,7 +88,6 @@ int MOX_BUTTON=27;
 int ENABLE_FUNCTION_BUTTON=1;
 int FUNCTION_BUTTON=22;
 int ENABLE_LOCK_BUTTON=1;
-int LOCK_BUTTON=25;
 int ENABLE_CW_BUTTONS=1;
 // make sure to disable UART0 for next 2 gpios
 int CWL_BUTTON=15;
@@ -1064,7 +1064,6 @@ static int mox_pressed(void *data) {
 }
 
 static int lock_pressed(void *data) {
-fprintf(stderr,"lock_pressed\n");
   lock_cb((GtkWidget *)NULL, (gpointer)NULL);
   return 0;
 }
