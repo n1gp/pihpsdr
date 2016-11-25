@@ -332,7 +332,9 @@ fprintf(stderr,"start_cb: %p\n",data);
 }
 
 static gboolean gpio_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+#ifdef GPIO
   configure_gpio(discovery_dialog);
+#endif
   return TRUE;
 }
 
