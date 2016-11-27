@@ -1,6 +1,7 @@
 # Get git commit version and date
-GIT_VERSION := $(shell git --no-pager describe --tags --always --dirty)
+#GIT_VERSION := $(shell git --no-pager describe --tags --always --dirty)
 GIT_DATE := $(firstword $(shell git --no-pager show --date=short --format="%ai" --name-only))
+GIT_VERSION := $(shell git describe --abbrev=0 --tags)
 
 # uncomment the line below to include support for psk31
 #PSK_INCLUDE=PSK
@@ -128,7 +129,7 @@ GTKLIBS=`pkg-config --libs gtk+-3.0`
 
 AUDIO_LIBS=-lasound
 
-OPTIONS=-g -D $(UNAME_N) $(GPIO_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(LOCALCW_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O3
+OPTIONS=-D $(UNAME_N) $(GPIO_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(LOCALCW_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O4
 
 LIBS=-lrt -lm -lwdsp -lpthread $(AUDIO_LIBS) -lpulse $(PSKLIBS) $(GTKLIBS) $(GPIO_LIBS) $(SOAPYSDRLIBS) $(FREEDVLIBS)
 INCLUDES=$(GTKINCLUDES)
@@ -156,6 +157,7 @@ pa_menu.c \
 cw_menu.c \
 oc_menu.c \
 xvtr_menu.c \
+equalizer_menu.c \
 rit.c \
 meter.c \
 mode.c \
@@ -167,6 +169,7 @@ new_protocol_programmer.c \
 panadapter.c \
 property.c \
 radio.c \
+rigctl.c \
 signal.c \
 splash.c \
 toolbar.c \
@@ -199,6 +202,7 @@ pa_menu.h \
 cw_menu.h \
 oc_menu.h \
 xvtr_menu.h \
+equalizer_menu.h \
 rit.h \
 meter.h \
 mode.h \
@@ -209,6 +213,7 @@ new_protocol.h \
 panadapter.h \
 property.h \
 radio.h \
+rigctl.h \
 signal.h \
 splash.h \
 toolbar.h \
@@ -239,6 +244,7 @@ pa_menu.o \
 cw_menu.o \
 oc_menu.o \
 xvtr_menu.o \
+equalizer_menu.o \
 rit.o \
 meter.o \
 mode.o \
@@ -250,6 +256,7 @@ new_protocol_programmer.o \
 panadapter.o \
 property.o \
 radio.o \
+rigctl.o \
 signal.o \
 splash.o \
 toolbar.o \
@@ -277,5 +284,6 @@ clean:
 install:
 	cp pihpsdr ../pihpsdr
 	cp pihpsdr ./release/pihpsdr
+	cd release; tar cvf pihpsdr_$(GIT_VERSION).tar pihpsdr
 	cd release; tar cvf pihpsdr.tar pihpsdr
 

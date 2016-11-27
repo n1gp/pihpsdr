@@ -56,6 +56,7 @@
 #include "toolbar.h"
 #include "sliders.h"
 #include "radio.h"
+#include "rigctl.h"
 #include "wdsp_init.h"
 #include "version.h"
 #include "mode.h"
@@ -712,6 +713,8 @@ fprintf(stderr,"toolbar_height=%d\n",TOOLBAR_HEIGHT);
   }
 #endif
 
+  launch_rigctl();
+
   g_idle_add(vfo_update,(gpointer)NULL);
 
 }
@@ -895,7 +898,7 @@ gint init(void* arg) {
 int main (int   argc, char *argv[]) {
   gtk_init (&argc, &argv);
 
-  fprintf(stderr,"Build: %s %s\n",build_date,build_version);
+  fprintf(stderr,"Build: %s %s\n",build_date,version);
 
   uname(&unameData);
   fprintf(stderr,"sysname: %s\n",unameData.sysname);
