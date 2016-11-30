@@ -327,7 +327,7 @@ fprintf(stderr,"mic_read_thread: mic_buffer_size=%d\n",mic_buffer_size);
                   snd_strerror (rc));
           running=FALSE;
         } else {
-          fprintf(stderr,"mic_read_thread: read %d",rc);
+          fprintf(stderr,"mic_read_thread: read %d\n",rc);
         }
       }
     } else {
