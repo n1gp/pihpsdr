@@ -37,6 +37,7 @@
 #include <math.h>
 
 #include "agc.h"
+#include "band.h"
 #include "alex.h"
 #include "new_protocol.h"
 #include "channel.h"
@@ -149,43 +150,15 @@ void setFilter(int low,int high) {
         filterHigh=high;
     }
 
-
     double fl=filterLow+ddsOffset;
     double fh=filterHigh+ddsOffset;
 
-    RXANBPSetFreqs(receiver,(double)filterLow,(double)filterHigh);
-    SetRXABandpassFreqs(receiver, fl,fh);
-    SetRXASNBAOutputBandwidth(receiver, (double)filterLow, (double)filterHigh);
+    //RXANBPSetFreqs(receiver,(double)filterLow,(double)filterHigh);
+    //SetRXABandpassFreqs(receiver, fl,fh);
+    //SetRXASNBAOutputBandwidth(receiver, (double)filterLow, (double)filterHigh);
+    RXASetPassband(receiver,fl,fh);
 
     SetTXABandpassFreqs(CHANNEL_TX, fl,fh);
-/*
-    switch(mode) {
-        case modeCWL:
-        case modeLSB:
-        case modeDIGL:
-            SetTXABandpassFreqs(CHANNEL_TX, -(double)tx_filter_high,-(double)tx_filter_low);
-            break;
-        case modeCWU:
-        case modeUSB:
-        case modeDIGU:
-#ifdef FREEDV
-        case modeFREEDV:
-#endif
-            SetTXABandpassFreqs(CHANNEL_TX, (double)tx_filter_low,(double)tx_filter_high);
-            break;
-        case modeDSB:
-        case modeAM:
-        case modeSAM:
-            SetTXABandpassFreqs(CHANNEL_TX, -(double)tx_filter_high,(double)tx_filter_high);
-            break;
-        case modeFMN:
-            SetTXABandpassFreqs(CHANNEL_TX, -8000.0,8000);
-            break;
-        case modeDRM:
-            SetTXABandpassFreqs(CHANNEL_TX, 7000.0,17000);
-            break;
-    }
-*/
 }
 
 int getFilterLow() {
@@ -233,15 +206,25 @@ void wdsp_set_agc(int rx, int agc) {
 }
 
 void wdsp_set_offset(long long offset) {
-    if(offset==0) {
-      SetRXAShiftFreq(receiver, (double)offset);
-      SetRXAShiftRun(receiver, 0);
-    } else {
-      SetRXAShiftFreq(receiver, (double)offset);
-      SetRXAShiftRun(receiver, 1);
-    }
+  if(offset==0) {
+    SetRXAShiftFreq(receiver, (double)offset);
+    RXANBPSetShiftFrequency(receiver, (double)offset);
+    SetRXAShiftRun(receiver, 0);
+  } else {
+    SetRXAShiftFreq(receiver, (double)offset);
+    RXANBPSetShiftFrequency(receiver, (double)offset);
+    SetRXAShiftRun(receiver, 1);
+  }
 
-    setFilter(filterLow,filterHigh);
+/*
+  BAND *band=band_get_current_band();
+  BANDSTACK_ENTRY* entry=bandstack_entry_get_current();
+  setFrequency(entry->frequencyA);
+  setMode(entry->mode);
+  FILTER* band_filters=filters[entry->mode];
+  FILTER* band_filter=&band_filters[entry->filter];
+  setFilter(band_filter->low,band_filter->high);
+*/
 }
 
 void wdsp_set_input_rate(double rate) {
@@ -252,6 +235,7 @@ static void setupRX(int rx) {
     setRXMode(rx,mode);
     SetRXABandpassFreqs(rx, (double)filterLow, (double)filterHigh);
     
+    SetRXAFMDeviation(rx,(double)deviation);
     //SetRXAAGCMode(rx, agc);
     //SetRXAAGCTop(rx,agc_gain);
     wdsp_set_agc(rx, agc);
@@ -287,6 +271,9 @@ static void setupTX(int tx) {
     SetTXABandpassWindow(tx, 1);
     SetTXABandpassRun(tx, 1);
 
+    SetTXAFMDeviation(tx,(double)deviation);
+    SetTXAFMEmphPosition(tx,pre_emphasize);
+
     SetTXACFIRRun(tx, protocol==NEW_PROTOCOL?1:0); // turned in if new protocol
     if(enable_tx_equalizer) {
       SetTXAGrphEQ(tx, tx_equalizer);
@@ -318,11 +305,9 @@ static void setupTX(int tx) {
     SetTXAPostGenToneFreq(tx, 0.0);
     SetTXAPostGenRun(tx, 0);
 
-    if(protocol==NEW_PROTOCOL) {
-      double gain=pow(10.0, mic_gain / 20.0);
-      SetTXAPanelGain1(tx,gain);
-      //SetTXAPanelRun(tx, protocol==NEW_PROTOCOL?1:0);
-    }
+    double gain=pow(10.0, mic_gain / 20.0);
+    SetTXAPanelGain1(tx,gain);
+    SetTXAPanelRun(tx, 1);
 
     //SetChannelState(tx,1,0);
 }
@@ -443,6 +428,15 @@ void wdsp_new_sample_rate(int rate) {
   SetChannelState(receiver,0,0);
   SetInputSamplerate(receiver,rate);
   SetChannelState(receiver,1,0);
+}
+
+void wdsp_set_deviation(double deviation) {
+  SetRXAFMDeviation(CHANNEL_RX0, deviation);
+  SetTXAFMDeviation(CHANNEL_TX, deviation);
+}
+
+void wdsp_set_pre_emphasize(int state) {
+  SetTXAFMEmphPosition(CHANNEL_TX,state);
 }
 
 static void initAnalyzer(int channel,int buffer_size) {

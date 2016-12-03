@@ -158,6 +158,15 @@ cw_menu.c \
 oc_menu.c \
 xvtr_menu.c \
 equalizer_menu.c \
+step_menu.c \
+meter_menu.c \
+band_menu.c \
+bandstack_menu.c \
+mode_menu.c \
+filter_menu.c \
+noise_menu.c \
+agc_menu.c \
+fm_menu.c \
 rit.c \
 meter.c \
 mode.c \
@@ -177,7 +186,8 @@ sliders.c \
 version.c \
 vfo.c \
 waterfall.c \
-wdsp_init.c
+wdsp_init.c \
+button_text.c
 
 
 HEADERS= \
@@ -203,6 +213,15 @@ cw_menu.h \
 oc_menu.h \
 xvtr_menu.h \
 equalizer_menu.h \
+step_menu.h \
+meter_menu.h \
+band_menu.h \
+bandstack_menu.h \
+mode_menu.h \
+filter_menu.h \
+noise_menu.h \
+agc_menu.h \
+fm_menu.h \
 rit.h \
 meter.h \
 mode.h \
@@ -221,7 +240,8 @@ sliders.h \
 version.h \
 vfo.h \
 waterfall.h \
-wdsp_init.h
+wdsp_init.h \
+button_text.h
 
 
 OBJS= \
@@ -245,6 +265,15 @@ cw_menu.o \
 oc_menu.o \
 xvtr_menu.o \
 equalizer_menu.o \
+step_menu.o \
+meter_menu.o \
+band_menu.o \
+bandstack_menu.o \
+mode_menu.o \
+filter_menu.o \
+noise_menu.o \
+agc_menu.o \
+fm_menu.o \
 rit.o \
 meter.o \
 mode.o \
@@ -263,7 +292,8 @@ toolbar.o \
 sliders.o \
 vfo.o \
 waterfall.o \
-wdsp_init.o
+wdsp_init.o \
+button_text.o
 
 all: prebuild $(PROGRAM) $(HEADERS) $(LIMESDR_HEADERS) $(FREEDV_HEADERS) $(LOCALCW_HEADERS) $(GPIO_HEADERS) $(PSK_HEADERS) $(SOURCES) $(LIMESDR_SOURCES) $(FREEDV_SOURCES) $(LOCALCW_SOURCES) $(GPIO_SOURCES) $(PSK_SOURCES)
 
