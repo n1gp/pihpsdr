@@ -20,7 +20,10 @@
 #ifndef _SLIDERS_H
 #define _SLIDERS_H
 
-int update_af_gain(void *data);
+extern int update_agc_gain(void *);
+extern int update_af_gain(void *);
+extern int update_mic_gain(void *);
+extern int update_drive(void *);
 
 void set_agc_gain(double value);
 void set_af_gain(double value);
