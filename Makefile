@@ -131,7 +131,7 @@ AUDIO_LIBS=-lasound
 
 OPTIONS=-D $(UNAME_N) $(GPIO_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(LOCALCW_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O3
 
-LIBS=-lrt -lm -lwdsp -lpthread $(AUDIO_LIBS) -lpulse $(PSKLIBS) $(GTKLIBS) $(GPIO_LIBS) $(SOAPYSDRLIBS) $(FREEDVLIBS)
+LIBS=-lrt -lm -lwdsp -lpthread $(AUDIO_LIBS) $(PSKLIBS) $(GTKLIBS) $(GPIO_LIBS) $(SOAPYSDRLIBS) $(FREEDVLIBS)
 INCLUDES=$(GTKINCLUDES)
 
 COMPILE=$(CC) $(OPTIONS) $(INCLUDES)
@@ -167,6 +167,7 @@ filter_menu.c \
 noise_menu.c \
 agc_menu.c \
 fm_menu.c \
+vox_menu.c \
 test_menu.c \
 rit.c \
 meter.c \
@@ -188,7 +189,8 @@ version.c \
 vfo.c \
 waterfall.c \
 wdsp_init.c \
-button_text.c
+button_text.c \
+vox.c
 
 
 HEADERS= \
@@ -223,6 +225,7 @@ filter_menu.h \
 noise_menu.h \
 agc_menu.h \
 fm_menu.h \
+vox_menu.h \
 test_menu.h \
 rit.h \
 meter.h \
@@ -243,7 +246,8 @@ version.h \
 vfo.h \
 waterfall.h \
 wdsp_init.h \
-button_text.h
+button_text.h \
+vox.h
 
 
 OBJS= \
@@ -276,6 +280,7 @@ filter_menu.o \
 noise_menu.o \
 agc_menu.o \
 fm_menu.o \
+vox_menu.o \
 test_menu.o \
 rit.o \
 meter.o \
@@ -296,7 +301,8 @@ sliders.o \
 vfo.o \
 waterfall.o \
 wdsp_init.o \
-button_text.o
+button_text.o \
+vox.o
 
 all: prebuild $(PROGRAM) $(HEADERS) $(LIMESDR_HEADERS) $(FREEDV_HEADERS) $(LOCALCW_HEADERS) $(GPIO_HEADERS) $(PSK_HEADERS) $(SOURCES) $(LIMESDR_SOURCES) $(FREEDV_SOURCES) $(LOCALCW_SOURCES) $(GPIO_SOURCES) $(PSK_SOURCES)
 
