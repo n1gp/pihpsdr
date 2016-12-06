@@ -221,7 +221,8 @@ int vfo_update(void *data) {
                     version,
                     inet_ntoa(radio->info.network.address.sin_addr));
               break;
-#ifdef LIMESDR
+#if defined LIMESDR || defined RTLSDR
+            case RTLSDR_PROTOCOL:
             case LIMESDR_PROTOCOL:
               sprintf(text,"%s\n",
                     radio->name);

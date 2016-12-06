@@ -36,6 +36,10 @@
 #include "gpio.h"
 #include "old_discovery.h"
 #include "new_discovery.h"
+#ifdef RTLSDR
+#include "rtl_discovery.h"
+#include "rtl_protocol.h"
+#endif
 #ifdef LIMESDR
 #include "lime_discovery.h"
 #endif
@@ -317,6 +321,11 @@ gboolean main_delete (GtkWidget *widget) {
       lime_protocol_stop();
       break;
 #endif
+#ifdef RTLSDR
+    case RTLSDR_PROTOCOL:
+      rtl_protocol_stop();
+      break;
+#endif
   }
   radioSaveState();
   _exit(0);
@@ -363,6 +372,10 @@ static void discover_devices() {
 #ifdef LIMESDR
       splash_status("LimeSDR ... Discovering Devices");
       lime_discovery();
+#endif
+#ifdef RTLSDR
+      splash_status("RTLSDR ... Discovering Devices");
+      rtl_discovery();
 #endif
       splash_status("Discovery");
       if(devices==0) {
@@ -484,7 +497,8 @@ fprintf(stderr,"%p protocol=%d name=%s\n",d,d->protocol,d->name);
                         d->info.network.mac_address[5],
                         d->info.network.interface_name);
                   break;
-#ifdef LIMESDR
+#if defined LIMESDR || defined RTLSDR
+                case RTLSDR_PROTOCOL:
                 case LIMESDR_PROTOCOL:
 /*
                   sprintf(text,"%s (%s %s)\n",
@@ -572,6 +586,11 @@ fprintf(stderr,"start: selected radio=%p device=%d\n",radio,radio->device);
       sprintf(property_path,"limesdr.props");
       break;
 #endif
+#ifdef RTLSDR
+    case RTLSDR_PROTOCOL:
+      sprintf(property_path,"rtlsdr.props");
+      break;
+#endif
   }
 
   radioRestoreState();
@@ -602,6 +621,12 @@ fprintf(stderr,"start: selected radio=%p device=%d\n",radio,radio->device);
     case LIMESDR_PROTOCOL:
       splash_status("Initializing lime protocol ...");
       lime_protocol_init(0,display_width);
+      break;
+#endif
+#ifdef RTLSDR
+    case RTLSDR_PROTOCOL:
+      splash_status("Initializing RTL protocol ...");
+      rtl_protocol_init(0,display_width);
       break;
 #endif
   }

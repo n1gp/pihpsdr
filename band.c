@@ -30,7 +30,7 @@
 
 #define LINESDR
 
-int band=band20;
+int band=band12;
 int xvtr_band=BANDS;
 
 /* --------------------------------------------------------------------------*/
@@ -38,6 +38,7 @@ int xvtr_band=BANDS;
 * @brief bandstack
 */
 /* ----------------------------------------------------------------------------*/
+#if !defined RTLSDR
 BANDSTACK_ENTRY bandstack_entries136[] =
     {{135800,135800,modeCWL,filterF4,-2800,-200,-2800,-200},
      {137100,137100,modeCWL,filterF4,-2800,-200,-2800,-200}};
@@ -88,6 +89,7 @@ BANDSTACK_ENTRY bandstack_entries15[] =
     {{21001000LL,21001000LL,modeCWU,filterF0,200,2800,200,2800},
      {21255000LL,21001000LL,modeUSB,filterF5,200,2800,200,2800},
      {21300000LL,21001000LL,modeUSB,filterF5,200,2800,200,2800}};
+#endif
 
 BANDSTACK_ENTRY bandstack_entries12[] =
     {{24895000LL,24895000LL,modeCWU,filterF0,200,2800,200,2800},
@@ -104,7 +106,7 @@ BANDSTACK_ENTRY bandstack_entries50[] =
      {50125000LL,50010000LL,modeUSB,filterF5,200,2800,200,2800},
      {50200000LL,50010000LL,modeUSB,filterF5,200,2800,200,2800}};
 
-#ifdef LIMESDR
+#if defined LIMESDR || defined RTLSDR
 BANDSTACK_ENTRY bandstack_entries70[] =
     {{70010000LL,70010000LL,modeCWU,filterF0,200,2800,200,2800},
      {70200000LL,70010000LL,modeUSB,filterF5,200,2800,200,2800},
@@ -133,6 +135,16 @@ BANDSTACK_ENTRY bandstack_entries902[] =
      {902100000LL,902010000LL,modeUSB,filterF5,200,2800,200,2800},
      {902300000LL,902010000LL,modeUSB,filterF5,200,2800,200,2800}};
 
+BANDSTACK_ENTRY bandstack_entriesAIR[] =
+    {{118800000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
+     {120000000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
+     {121700000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
+     {124100000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
+     {126600000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
+     {136500000LL,118800000LL,modeAM,filterF1,200,2800,200,2800}};
+#endif
+
+#ifdef LIMESDR
 BANDSTACK_ENTRY bandstack_entries1240[] =
     {{1240010000LL,1240010000LL,modeCWU,filterF0,200,2800,200,2800},
      {1240100000LL,1240010000LL,modeUSB,filterF5,200,2800,200,2800},
@@ -147,16 +159,9 @@ BANDSTACK_ENTRY bandstack_entries3400[] =
     {{3400010000LL,3400010000LL,modeCWU,filterF0,200,2800,200,2800},
      {3400100000LL,3400010000LL,modeUSB,filterF5,200,2800,200,2800},
      {3400300000LL,3400010000LL,modeUSB,filterF5,200,2800,200,2800}};
-
-BANDSTACK_ENTRY bandstack_entriesAIR[] =
-    {{118800000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
-     {120000000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
-     {121700000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
-     {124100000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
-     {126600000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
-     {136500000LL,118800000LL,modeAM,filterF1,200,2800,200,2800}};
 #endif
 
+#ifndef RTLSDR
 BANDSTACK_ENTRY bandstack_entriesGEN[] =
     {{909000LL,909000LL,modeAM,filterF6,-6000,6000,-6000,60000},
      {5975000LL,909000LL,modeAM,filterF6,-6000,6000,-6000,60000},
@@ -168,7 +173,9 @@ BANDSTACK_ENTRY bandstack_entriesWWV[] =
      {10000000LL,2500000LL,modeSAM,filterF6,200,2800,200,2800},
      {15000000LL,2500000LL,modeSAM,filterF6,200,2800,200,2800},
      {20000000LL,2500000LL,modeSAM,filterF6,200,2800,200,2800}};
+#endif
 
+#ifndef RTLSDR
 BANDSTACK bandstack160={3,1,bandstack_entries160};
 BANDSTACK bandstack80={3,1,bandstack_entries80};
 BANDSTACK bandstack60={5,1,bandstack_entries60};
@@ -177,24 +184,29 @@ BANDSTACK bandstack30={3,1,bandstack_entries30};
 BANDSTACK bandstack20={4,1,bandstack_entries20};
 BANDSTACK bandstack18={3,1,bandstack_entries18};
 BANDSTACK bandstack15={3,1,bandstack_entries15};
+#endif
 BANDSTACK bandstack12={3,1,bandstack_entries12};
 BANDSTACK bandstack10={3,1,bandstack_entries10};
 BANDSTACK bandstack50={3,1,bandstack_entries50};
-#ifdef LIMESDR
+#if defined LIMESDR || defined RTLSDR
 BANDSTACK bandstack70={3,1,bandstack_entries70};
 BANDSTACK bandstack144={6,1,bandstack_entries144};
 BANDSTACK bandstack220={3,1,bandstack_entries220};
 BANDSTACK bandstack430={3,1,bandstack_entries430};
 BANDSTACK bandstack902={3,1,bandstack_entries902};
+BANDSTACK bandstackAIR={6,1,bandstack_entriesAIR};
+#endif
+#ifdef LIMESDR
 BANDSTACK bandstack1240={3,1,bandstack_entries1240};
 BANDSTACK bandstack2300={3,1,bandstack_entries2300};
 BANDSTACK bandstack3400={3,1,bandstack_entries3400};
-BANDSTACK bandstackAIR={6,1,bandstack_entriesAIR};
 #endif
+#ifndef RTLSDR
 BANDSTACK bandstackGEN={3,1,bandstack_entriesGEN};
 BANDSTACK bandstackWWV={5,1,bandstack_entriesWWV};
 BANDSTACK bandstack136={2,0,bandstack_entries136};
 BANDSTACK bandstack472={2,0,bandstack_entries472};
+#endif
 
 /* --------------------------------------------------------------------------*/
 /**
@@ -231,6 +243,7 @@ BANDSTACK bandstack_xvtr_7={1,0,bandstack_entries_xvtr_7};
 
 
 BAND bands[BANDS+XVTRS] = 
+#ifndef RTLSDR
     {{"160",&bandstack160,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,1800000LL,1800000LL,0LL,0},
      {"80",&bandstack80,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,3500000LL,3500000LL,0LL,0},
      {"60",&bandstack60,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,5330500LL,5403500LL,0LL,0},
@@ -240,23 +253,30 @@ BAND bands[BANDS+XVTRS] =
      {"18",&bandstack18,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,18068000LL,18168000LL,0LL,0},
      {"15",&bandstack15,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,21000000LL,21450000LL,0LL,0},
      {"12",&bandstack12,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,24890000LL,24990000LL,0LL,0},
+#else
+    {{"12",&bandstack12,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,24890000LL,24990000LL,0LL,0},
+#endif
      {"10",&bandstack10,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,28000000LL,29700000LL,0LL,0},
      {"50",&bandstack50,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,50000000LL,54000000LL,0LL,0},
-#ifdef LIMESDR
+#if defined LIMESDR || RTLSDR
      {"70",&bandstack70,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
      {"144",&bandstack144,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,144000000LL,148000000LL,0LL,0},
      {"220",&bandstack144,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,222000000LL,224980000LL,0LL,0},
      {"430",&bandstack430,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,420000000LL,450000000LL,0LL,0},
      {"902",&bandstack430,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,902000000LL,928000000LL,0LL,0},
+#endif
+#ifdef LIMESDR
      {"1240",&bandstack1240,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,1240000000LL,1300000000LL,0LL,0},
      {"2300",&bandstack2300,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,2300000000LL,2450000000LL,0LL,0},
      {"3400",&bandstack3400,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,3400000000LL,3410000000LL,0LL,0},
      {"AIR",&bandstackAIR,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
 #endif
+#ifndef RTLSDR
      {"GEN",&bandstackGEN,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
      {"WWV",&bandstackWWV,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
      {"136kHz",&bandstack136,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,135700LL,137800LL,0LL,0},
      {"472kHz",&bandstack472,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,472000LL,479000LL,0LL,0},
+#endif
 // XVTRS
      {"",&bandstack_xvtr_0,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
      {"",&bandstack_xvtr_1,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},

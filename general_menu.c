@@ -257,7 +257,7 @@ void general_menu(GtkWidget *parent) {
   GtkWidget *sample_rate_label=gtk_label_new("Sample Rate:");
   gtk_grid_attach(GTK_GRID(grid),sample_rate_label,0,1,1,1);
 
-  if(protocol==ORIGINAL_PROTOCOL || protocol==NEW_PROTOCOL) {
+  if(protocol==ORIGINAL_PROTOCOL || protocol==NEW_PROTOCOL || protocol==RTLSDR_PROTOCOL) {
     GtkWidget *sample_rate_48=gtk_radio_button_new_with_label(NULL,"48000");
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (sample_rate_48), sample_rate==48000);
     gtk_grid_attach(GTK_GRID(grid),sample_rate_48,0,2,1,1);

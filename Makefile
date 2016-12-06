@@ -13,20 +13,38 @@ GIT_VERSION := $(shell git describe --abbrev=0 --tags)
 #SX1509_INCLUDE=sx1509
 
 # uncomment the line to below include support local CW keyer
-LOCALCW_INCLUDE=LOCALCW
+#LOCALCW_INCLUDE=LOCALCW
 
 #uncomment the line below for the platform being compiled on
-UNAME_N=raspberrypi
+#UNAME_N=raspberrypi
 #UNAME_N=odroid
 #UNAME_N=up
 #UNAME_N=pine64
-#UNAME_N=x86
+UNAME_N=x86
 
 CC=gcc
 LINK=gcc
 
 # uncomment the line below for various debug facilities
 #DEBUG_OPTION=-D DEBUG
+
+# uncomment the line below for LimeSDR (uncomment line below)
+# this really should be combined w/ lime in to a SOAPYSDR
+RTLSDR_INCLUDE=RTLSDR
+
+ifeq ($(RTLSDR_INCLUDE),RTLSDR)
+RTLSDR_OPTIONS=-D RTLSDR
+SOAPYSDRLIBS=-lSoapySDR
+RTLSDR_SOURCES= \
+rtl_discovery.c \
+rtl_protocol.c
+RTLSDR_HEADERS= \
+rtl_discovery.h \
+rtl_protocol.h
+RTLSDR_OBJS= \
+rtl_discovery.o \
+rtl_protocol.o
+endif
 
 # uncomment the line below for LimeSDR (uncomment line below)
 #LIMESDR_INCLUDE=LIMESDR
@@ -129,7 +147,7 @@ GTKLIBS=`pkg-config --libs gtk+-3.0`
 
 AUDIO_LIBS=-lasound
 
-OPTIONS=-D $(UNAME_N) $(GPIO_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(LOCALCW_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O3
+OPTIONS=-D $(UNAME_N) $(GPIO_OPTIONS) $(RTLSDR_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(LOCALCW_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O3
 
 LIBS=-lrt -lm -lwdsp -lpthread $(AUDIO_LIBS) $(PSKLIBS) $(GTKLIBS) $(GPIO_LIBS) $(SOAPYSDRLIBS) $(FREEDVLIBS)
 INCLUDES=$(GTKINCLUDES)
@@ -304,13 +322,13 @@ wdsp_init.o \
 button_text.o \
 vox.o
 
-all: prebuild $(PROGRAM) $(HEADERS) $(LIMESDR_HEADERS) $(FREEDV_HEADERS) $(LOCALCW_HEADERS) $(GPIO_HEADERS) $(PSK_HEADERS) $(SOURCES) $(LIMESDR_SOURCES) $(FREEDV_SOURCES) $(LOCALCW_SOURCES) $(GPIO_SOURCES) $(PSK_SOURCES)
+all: prebuild $(PROGRAM) $(HEADERS) $(RTLSDR_HEADERS) $(LIMESDR_HEADERS) $(FREEDV_HEADERS) $(LOCALCW_HEADERS) $(GPIO_HEADERS) $(PSK_HEADERS) $(SOURCES) $(LIMESDR_SOURCES) $(FREEDV_SOURCES) $(LOCALCW_SOURCES) $(GPIO_SOURCES) $(PSK_SOURCES)
 
 prebuild:
 	rm -f version.o
 
-$(PROGRAM): $(OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(LOCALCW_OBJS) $(GPIO_OBJS) $(PSK_OBJS)
-	$(LINK) -o $(PROGRAM) $(OBJS) $(GPIO_OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(LOCALCW_OBJS) $(PSK_OBJS) $(LIBS)
+$(PROGRAM): $(OBJS) $(RTLSDR_OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(LOCALCW_OBJS) $(GPIO_OBJS) $(PSK_OBJS)
+	$(LINK) -o $(PROGRAM) $(OBJS) $(GPIO_OBJS) $(RTLSDR_OBJS) $(LIMESDR_OBJS) $(FREEDV_OBJS) $(LOCALCW_OBJS) $(PSK_OBJS) $(LIBS)
 
 .c.o:
 	$(COMPILE) -c -o $@ $<

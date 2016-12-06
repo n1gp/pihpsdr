@@ -1032,8 +1032,8 @@ void sim_band_cb(GtkWidget *widget, gpointer data) {
       if(b>=BANDS) {
         b=0;
       }
-#ifdef LIMESDR
-      if(protocol!=LIMESDR_PROTOCOL) {
+#if defined LIMESDR || defined RTLSDR
+      if(protocol!=LIMESDR_PROTOCOL && protocol!=RTLSDR_PROTOCOL) {
         if(b==band70) { 
           b=bandGen;
         }

@@ -23,6 +23,7 @@
 #include <gtk/gtk.h>
 #include "bandstack.h"
 
+#ifndef RTLSDR
 #define band160 0
 #define band80 1
 #define band60 2
@@ -34,7 +35,30 @@
 #define band12 8
 #define band10 9
 #define band6 10
-#ifdef LIMESDR
+#endif
+#if defined RTLSDR
+#define band160 -1
+#define band80 -1
+#define band60 -1
+#define band40 -1
+#define band30 -1
+#define band20 -1
+#define band17 -1
+#define band15 -1
+#define bandGen -1
+#define bandWWV -1
+#define band136 -1
+#define band472 -1
+#define band12 0
+#define band10 1
+#define band6 2
+#define band70 3
+#define band220 4
+#define band430 5
+#define band902 6
+#define bandAIR 7
+#define BANDS 8
+#elif defined LIMESDR
 #define band70 11
 #define band220 13
 #define band430 14

@@ -21,7 +21,7 @@
 #define _DISCOVERED_H
 
 #include <netinet/in.h>
-#ifdef LIMESDR
+#if defined LIMESDR || defined RTLSDR
 #include <SoapySDR/Device.h>
 #endif
 
@@ -42,6 +42,10 @@
 #define NEW_DEVICE_ORION2 5
 #define NEW_DEVICE_HERMES_LITE 6
 
+#ifdef RTLSDR
+#define RTLSDR_USB_DEVICE 0
+#endif
+
 #ifdef LIMESDR
 #define LIMESDR_USB_DEVICE 0
 #endif
@@ -51,9 +55,8 @@
 
 #define ORIGINAL_PROTOCOL 0
 #define NEW_PROTOCOL 1
-#ifdef LIMESDR
 #define LIMESDR_PROTOCOL 2
-#endif
+#define RTLSDR_PROTOCOL 3
 
 struct _DISCOVERED {
     int protocol;
@@ -71,7 +74,7 @@ struct _DISCOVERED {
         struct sockaddr_in interface_netmask;
         char interface_name[64];
       } network;
-#ifdef LIMESDR
+#if defined LIMESDR || defined RTLSDR
       struct soapy {
         SoapySDRKwargs *args;
       } soapy;

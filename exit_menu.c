@@ -57,6 +57,11 @@ static gboolean exit_cb (GtkWidget *widget, GdkEventButton *event, gpointer data
       lime_protocol_stop();
       break;
 #endif
+#ifdef RTLSDR
+    case RTLSDR_PROTOCOL:
+      rtl_protocol_stop();
+      break;
+#endif
   }
   radioSaveState();
   _exit(0);
@@ -76,6 +81,11 @@ static gboolean reboot_cb (GtkWidget *widget, GdkEventButton *event, gpointer da
 #ifdef LIMESDR
     case LIMESDR_PROTOCOL:
       lime_protocol_stop();
+      break;
+#endif
+#ifdef RTLSDR
+    case RTLSDR_PROTOCOL:
+      rtl_protocol_stop();
       break;
 #endif
   }
@@ -98,6 +108,11 @@ static gboolean shutdown_cb (GtkWidget *widget, GdkEventButton *event, gpointer 
 #ifdef LIMESDR
     case LIMESDR_PROTOCOL:
       lime_protocol_stop();
+      break;
+#endif
+#ifdef RTLSDR
+    case RTLSDR_PROTOCOL:
+      rtl_protocol_stop();
       break;
 #endif
   }

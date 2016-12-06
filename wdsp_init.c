@@ -331,7 +331,7 @@ void wdsp_init(int rx,int pixels,int protocol) {
                 fft_size,
                 sample_rate,
                 dspRate,
-                outputRate,
+                (protocol==RTLSDR_PROTOCOL)?outputRate/2:outputRate,
                 0, // receive
                 0, // run
                 0.010, 0.025, 0.0, 0.010, 0);

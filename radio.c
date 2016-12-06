@@ -33,6 +33,9 @@
 #include "band.h"
 #include "property.h"
 #include "new_protocol.h"
+#ifdef RTLSDR
+#include "rtl_protocol.h"
+#endif
 #ifdef LIMESDR
 #include "lime_protocol.h"
 #endif
@@ -361,7 +364,8 @@ void setFrequency(long long f) {
         entry->frequencyA=f;
       }
       break;
-#ifdef LIMESDR
+#if defined LIMESDR || defined RTLSDR
+    case RTLSDR_PROTOCOL:
     case LIMESDR_PROTOCOL:
       {
       long long minf=entry->frequencyA-(long long)(sample_rate/2);
@@ -388,6 +392,13 @@ void setFrequency(long long f) {
     case ORIGINAL_PROTOCOL:
       schedule_frequency_changed();
       break;
+#ifdef RTLSDR
+    case RTLSDR_PROTOCOL:
+      rtl_protocol_set_frequency(f);
+      ddsOffset=0;
+      wdsp_set_offset(ddsOffset);
+      break;
+#endif
 #ifdef LIMESDR
     case LIMESDR_PROTOCOL:
       lime_protocol_set_frequency(f);
@@ -460,6 +471,11 @@ void set_attenuation(int value) {
       case NEW_PROTOCOL:
         schedule_high_priority(8);
         break;
+#ifdef RTLSDR
+      case RTLSDR_PROTOCOL:
+        rtl_protocol_set_attenuation(value);
+        break;
+#endif
 #ifdef LIMESDR
       case LIMESDR_PROTOCOL:
         lime_protocol_set_attenuation(value);
