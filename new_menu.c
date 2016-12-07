@@ -150,6 +150,11 @@ static gboolean equalizer_cb (GtkWidget *widget, GdkEventButton *event, gpointer
   return TRUE;
 }
 
+void start_freqent() {
+  cleanup();
+  freqent_menu(parent_window);
+}
+
 void start_step() {
   cleanup();
   step_menu(parent_window);

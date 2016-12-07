@@ -177,6 +177,7 @@ oc_menu.c \
 xvtr_menu.c \
 equalizer_menu.c \
 step_menu.c \
+freqent_menu.c \
 meter_menu.c \
 band_menu.c \
 bandstack_menu.c \
@@ -235,6 +236,7 @@ oc_menu.h \
 xvtr_menu.h \
 equalizer_menu.h \
 step_menu.h \
+freqent_menu.h \
 meter_menu.h \
 band_menu.h \
 bandstack_menu.h \
@@ -290,6 +292,7 @@ oc_menu.o \
 xvtr_menu.o \
 equalizer_menu.o \
 step_menu.o \
+freqent_menu.o \
 meter_menu.o \
 band_menu.o \
 bandstack_menu.o \
