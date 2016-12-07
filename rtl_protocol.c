@@ -15,7 +15,7 @@
 static double bandwidth=0.0;
 
 static size_t receiver;
-static SoapySDRDevice *rtl_device;
+static SoapySDRDevice *rtl_device=NULL;
 static SoapySDRStream *stream;
 static int display_width;
 static int buffer_size=BUFFER_SIZE;
@@ -85,6 +85,14 @@ void rtl_protocol_init(int rx,int pixels) {
         _exit(-1);
     }
 
+    if(saved_frequency!=0LL) {
+        fprintf(stderr,"rtl_protocol: setting save_frequency: %lld\n",saved_frequency);
+        rtl_protocol_set_frequency(saved_frequency);
+    } else {
+        fprintf(stderr,"rtl_protocol: setting initial frequency: %lld\n",100000000);
+        rtl_protocol_set_frequency(100000000);
+    }
+
     fprintf(stderr,"rtl_protocol: setting samplerate=%f\n",(double)RTL_RATE);
     rc=SoapySDRDevice_setSampleRate(rtl_device,SOAPY_SDR_RX,receiver,(double)RTL_RATE);
     if(rc!=0) {
@@ -98,11 +106,6 @@ void rtl_protocol_init(int rx,int pixels) {
     rc=SoapySDRDevice_setBandwidth(rtl_device,SOAPY_SDR_RX,receiver,bandwidth);
     if(rc!=0) {
         fprintf(stderr,"rtl_protocol: SoapySDRDevice_setBandwidth(%f) failed: %s\n",bandwidth,SoapySDRDevice_lastError());
-    }
-
-    if(saved_frequency!=0LL) {
-        fprintf(stderr,"rtl_protocol: setting save_frequency: %lld\n",saved_frequency);
-        rtl_protocol_set_frequency(saved_frequency);
     }
 
     fprintf(stderr,"setting Gain LNA=30.0\n");
@@ -238,18 +241,19 @@ static void *receive_thread(void *arg) {
         }
     }
 
+    fprintf(stderr,"rtl_protocol: receive_thread: SoapySDRDevice_deactivateStream\n");
     SoapySDRDevice_deactivateStream(rtl_device, stream, 0, 0);
     fprintf(stderr,"rtl_protocol: receive_thread: SoapySDRDevice_closeStream\n");
     SoapySDRDevice_closeStream(rtl_device,stream);
     fprintf(stderr,"rtl_protocol: receive_thread: SoapySDRDevice_unmake\n");
     SoapySDRDevice_unmake(rtl_device);
+    rtl_device = NULL;
 
 }
 
-
 void rtl_protocol_stop() {
     running=0;
-    sleep(1);
+    while(rtl_device != NULL) sleep(1);
     free(buffer);
     audio_close_output();
 }
@@ -261,15 +265,14 @@ void rtl_protocol_set_frequency(long long f) {
     if(rtl_device!=NULL) {
         SoapySDRKwargs args;
         args.size=0;
-        fprintf(stderr,"rtl_protocol: setFrequency: %lld\n",f);
+        //fprintf(stderr,"rtl_protocol: setFrequency: %lld\n",f);
         //rc=SoapySDRDevice_setFrequencyComponent(rtl_device,SOAPY_SDR_RX,receiver,"RF",(double)f,&args);
         rc=SoapySDRDevice_setFrequency(rtl_device,SOAPY_SDR_RX,receiver,(double)f,&args);
         if(rc!=0) {
             fprintf(stderr,"rtl_protocol: SoapySDRDevice_setFrequency() failed: %s\n",SoapySDRDevice_lastError());
-        }
+        } else saved_frequency=f;
     } else {
         fprintf(stderr,"rtl_protocol: setFrequency: %lld device is NULL\n",f);
-        saved_frequency=f;
     }
 }
 

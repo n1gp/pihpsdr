@@ -28,9 +28,11 @@
 #include "alex.h"
 #include "property.h"
 
-#define LINESDR
-
+#ifdef RTLSDR
 int band=band12;
+#else
+int band=band20;
+#endif
 int xvtr_band=BANDS;
 
 /* --------------------------------------------------------------------------*/
@@ -142,6 +144,10 @@ BANDSTACK_ENTRY bandstack_entriesAIR[] =
      {124100000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
      {126600000LL,118800000LL,modeAM,filterF1,200,2800,200,2800},
      {136500000LL,118800000LL,modeAM,filterF1,200,2800,200,2800}};
+
+BANDSTACK_ENTRY bandstack_entriesWX[] =
+    {{162400000LL,162475000LL,modeFMN,filterF1,200,2800,200,2800},
+     {162500000LL,162550000LL,modeFMN,filterF1,200,2800,200,2800}};
 #endif
 
 #ifdef LIMESDR
@@ -195,6 +201,7 @@ BANDSTACK bandstack220={3,1,bandstack_entries220};
 BANDSTACK bandstack430={3,1,bandstack_entries430};
 BANDSTACK bandstack902={3,1,bandstack_entries902};
 BANDSTACK bandstackAIR={6,1,bandstack_entriesAIR};
+BANDSTACK bandstackWX={2,1,bandstack_entriesWX};
 #endif
 #ifdef LIMESDR
 BANDSTACK bandstack1240={3,1,bandstack_entries1240};
@@ -261,15 +268,16 @@ BAND bands[BANDS+XVTRS] =
 #if defined LIMESDR || RTLSDR
      {"70",&bandstack70,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
      {"144",&bandstack144,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,144000000LL,148000000LL,0LL,0},
-     {"220",&bandstack144,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,222000000LL,224980000LL,0LL,0},
+     {"220",&bandstack220,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,222000000LL,224980000LL,0LL,0},
      {"430",&bandstack430,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,420000000LL,450000000LL,0LL,0},
-     {"902",&bandstack430,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,902000000LL,928000000LL,0LL,0},
+     {"902",&bandstack902,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,902000000LL,928000000LL,0LL,0},
+     {"AIR",&bandstackAIR,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
+     {"WX",&bandstackWX,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
 #endif
 #ifdef LIMESDR
      {"1240",&bandstack1240,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,1240000000LL,1300000000LL,0LL,0},
      {"2300",&bandstack2300,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,2300000000LL,2450000000LL,0LL,0},
      {"3400",&bandstack3400,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,3400000000LL,3410000000LL,0LL,0},
-     {"AIR",&bandstackAIR,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
 #endif
 #ifndef RTLSDR
      {"GEN",&bandstackGEN,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},

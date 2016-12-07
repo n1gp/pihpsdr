@@ -76,8 +76,13 @@ int filter_board=ALEX;
 int updates_per_second=10;
 
 int display_panadapter=1;
+#ifdef RTLSDR
+int panadapter_high=-50;
+int panadapter_low=-110;
+#else
 int panadapter_high=-60;
 int panadapter_low=-160;
+#endif
 
 int display_filled=1;
 int display_detector_mode=DETECTOR_MODE_AVERAGE;
@@ -352,6 +357,7 @@ void setFrequency(long long f) {
   switch(protocol) {
     case NEW_PROTOCOL:
     case ORIGINAL_PROTOCOL:
+    case RTLSDR_PROTOCOL:
       if(ctun) {
         long long minf=entry->frequencyA-(long long)(sample_rate/2);
         long long maxf=entry->frequencyA+(long long)(sample_rate/2);
@@ -364,7 +370,8 @@ void setFrequency(long long f) {
         entry->frequencyA=f;
       }
       break;
-#if defined LIMESDR || defined RTLSDR
+//#if defined LIMESDR || defined RTLSDR
+#if defined LIMESDR
     case RTLSDR_PROTOCOL:
     case LIMESDR_PROTOCOL:
       {
@@ -374,7 +381,7 @@ void setFrequency(long long f) {
       if(f>maxf) f=maxf;
       ddsOffset=f-entry->frequencyA;
       wdsp_set_offset(ddsOffset);
-      return;
+//      return;
       }
       break;
 #endif
@@ -395,8 +402,8 @@ void setFrequency(long long f) {
 #ifdef RTLSDR
     case RTLSDR_PROTOCOL:
       rtl_protocol_set_frequency(f);
-      ddsOffset=0;
-      wdsp_set_offset(ddsOffset);
+//      ddsOffset=0;
+//      wdsp_set_offset(ddsOffset);
       break;
 #endif
 #ifdef LIMESDR

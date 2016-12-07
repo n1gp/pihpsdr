@@ -324,7 +324,7 @@ void wdsp_init(int rx,int pixels,int protocol) {
                 fft_size,
                 sample_rate,
                 dspRate,
-                outputRate);
+                (protocol==RTLSDR_PROTOCOL)?outputRate/2:outputRate);
 
     OpenChannel(rx,
                 buffer_size,

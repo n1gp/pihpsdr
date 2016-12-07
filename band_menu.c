@@ -116,6 +116,13 @@ void band_menu(GtkWidget *parent) {
       }
     }
 #endif
+#ifdef RTLSDR
+    if(protocol!=RTLSDR_PROTOCOL) {
+      if(i>=band70 && i<=band902) {
+        continue;
+      }
+    }
+#endif
 
     band=(BAND*)band_get_band(i);
     if(strlen(band->title)>0) {

@@ -250,6 +250,7 @@ struct frequency_info frequencyInfo[]=
         {146610000LL, 147389999LL, "2M FM Repeater",                -1, TRUE},
         {147390000LL, 147599999LL, "2M FM Simplex",                 -1, TRUE},
         {147600000LL, 147999999LL, "2M FM Repeater",                -1, TRUE},
+        {162400000LL, 162550000LL, "NOAA WX Radio",                 -1, TRUE},
 
         {222000000LL, 222024999LL, "125M EME/Weak Signal",          -1, TRUE},
         {222025000LL, 222049999LL, "125M Weak Signal",              -1, TRUE},

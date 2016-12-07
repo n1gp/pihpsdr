@@ -160,8 +160,13 @@ static void rx_preamp_cb(GtkWidget *widget, gpointer data) {
 static void sample_rate_cb(GtkWidget *widget, gpointer data) {
   if(protocol==ORIGINAL_PROTOCOL) {
     old_protocol_new_sample_rate((int)data);
-  } else {
+  } else if(protocol==NEW_PROTOCOL) {
     new_protocol_new_sample_rate((int)data);
+  } else if(protocol==RTLSDR_PROTOCOL) {
+    rtl_protocol_stop();
+    sample_rate = (int)data;
+    wdsp_new_sample_rate(sample_rate);
+    rtl_protocol_init(0,gtk_widget_get_allocated_width (parent_window));
   }
 }
 
