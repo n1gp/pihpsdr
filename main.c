@@ -365,10 +365,6 @@ static void discover_devices() {
       gdk_window_set_cursor(splash_window,cursor_watch);
       selected_device=0;
       devices=0;
-#ifdef RTLSDR
-      splash_status("RTLSDR ... Discovering Devices");
-      rtl_discovery();
-#else
       splash_status("Old Protocol ... Discovering Devices");
       old_discovery();
       splash_status("New Protocol ... Discovering Devices");
@@ -377,6 +373,9 @@ static void discover_devices() {
       splash_status("LimeSDR ... Discovering Devices");
       lime_discovery();
 #endif
+#ifdef RTLSDR
+      splash_status("RTLSDR ... Discovering Devices");
+      rtl_discovery();
 #endif
       splash_status("Discovery");
       if(devices==0) {
