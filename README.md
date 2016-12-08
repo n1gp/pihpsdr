@@ -41,13 +41,21 @@ Added a sidetone using either the PI's audio ouput jack or a GPIO by
 utilizing wiringPi's softToneWrite(). In iambic.c set SIDETONE_GPIO = 0
 for PI audio out or to an actual GPIO value for the sofToneWrite().
 
+12/8/16 Update:
+Added support for the RTL USB Dongle
+Added a Frequency Entry Dialog, click or touch on the vfo 'Mhz' area
+
 NOTES
 =====
 Currently the iambic keyer only works using the NEW ethernet protocol.
 The current OLD protocol Hermes FGPA firmware doesn't support external
-CW. I have modified the OLD FPGA firmware to support it for use with this
+CW.
+
+I've modified the OLD FPGA firmware to support it for use with this
 pihpsdr program, but currently it's experimental and use at your own risk.
 Email me if you want to try it.
+Here's a short video of my mini PiHPSDR using capacitive touch sensors for paddles:
+[video](https://www.dropbox.com/s/8e10oey35zy95cq/mini_pihpsdr_cw.avi?dl=0)
 
 I noticed sometimes that when I started pihpsdr all of the GPIO button alerts would fire.
 I've put in some experimental code using gpioGlitchFilter() and it seems to help.
