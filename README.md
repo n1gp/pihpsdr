@@ -42,8 +42,8 @@ utilizing wiringPi's softToneWrite(). In iambic.c set SIDETONE_GPIO = 0
 for PI audio out or to an actual GPIO value for the sofToneWrite().
 
 12/8/16 Update:
-Added support for the RTL USB Dongle
-Added a Frequency Entry Dialog, click or touch on the vfo 'Mhz' area
+Added support for the RTL USB Dongle  
+Added a Frequency Entry Dialog, click or touch on the vfo 'Mhz' area  
 
 NOTES
 =====
