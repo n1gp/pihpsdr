@@ -51,9 +51,9 @@ Currently the iambic keyer only works using the NEW ethernet protocol.
 The current OLD protocol Hermes FGPA firmware doesn't support external
 CW.
 
-I've modified the OLD FPGA firmware to support it for use with this
-pihpsdr program, but currently it's experimental and use at your own risk.
-Email me if you want to try it.
+I've modified the OLD FPGA firmware to support it for use with this  
+pihpsdr program, but currently it's experimental and use at your own risk.  
+Email me if you want to try it.  
 Here's a short video of my mini PiHPSDR using capacitive touch sensors for paddles:
 [video](https://www.dropbox.com/s/8e10oey35zy95cq/mini_pihpsdr_cw.avi?dl=0)
 
