@@ -283,7 +283,7 @@ void general_menu(GtkWidget *parent) {
     gtk_grid_attach(GTK_GRID(grid),sample_rate_384,0,5,1,1);
     g_signal_connect(sample_rate_384,"pressed",G_CALLBACK(sample_rate_cb),(gpointer *)384000);
 
-    if(protocol==NEW_PROTOCOL) {
+    if(protocol==NEW_PROTOCOL || protocol==RTLSDR_PROTOCOL) {
       GtkWidget *sample_rate_768=gtk_radio_button_new_with_label_from_widget(GTK_RADIO_BUTTON(sample_rate_384),"768000");
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (sample_rate_768), sample_rate==768000);
       gtk_grid_attach(GTK_GRID(grid),sample_rate_768,0,6,1,1);

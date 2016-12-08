@@ -370,9 +370,7 @@ void setFrequency(long long f) {
         entry->frequencyA=f;
       }
       break;
-//#if defined LIMESDR || defined RTLSDR
 #if defined LIMESDR
-    case RTLSDR_PROTOCOL:
     case LIMESDR_PROTOCOL:
       {
       long long minf=entry->frequencyA-(long long)(sample_rate/2);
@@ -381,7 +379,7 @@ void setFrequency(long long f) {
       if(f>maxf) f=maxf;
       ddsOffset=f-entry->frequencyA;
       wdsp_set_offset(ddsOffset);
-//      return;
+      return;
       }
       break;
 #endif

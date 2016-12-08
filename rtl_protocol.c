@@ -89,8 +89,8 @@ void rtl_protocol_init(int rx,int pixels) {
         fprintf(stderr,"rtl_protocol: setting save_frequency: %lld\n",saved_frequency);
         rtl_protocol_set_frequency(saved_frequency);
     } else {
-        fprintf(stderr,"rtl_protocol: setting initial frequency: %lld\n",100000000);
-        rtl_protocol_set_frequency(100000000);
+        fprintf(stderr,"rtl_protocol: setting initial frequency: %lld\n",(long long)100000000);
+        rtl_protocol_set_frequency((long long)100000000);
     }
 
     fprintf(stderr,"rtl_protocol: setting samplerate=%f\n",(double)RTL_RATE);
@@ -149,11 +149,6 @@ void rtl_protocol_init(int rx,int pixels) {
     }
 
 
-    if(saved_frequency!=0LL) {
-        fprintf(stderr,"rtl_protocol: setting save_frequency: %lld\n",saved_frequency);
-        rtl_protocol_set_frequency(saved_frequency);
-    }
-
     fprintf(stderr,"rtl_protocol_init: audio_open_output\n");
     if(audio_open_output()!=0) {
         local_audio=false;
@@ -175,7 +170,7 @@ static void *receive_thread(void *arg) {
     int elements;
     int flags=0;
     long long timeNs=0;
-    long timeoutUs=10000L;
+    long timeoutNs=1000000;
     int i,j;
     int leftaudiosample;
     int rightaudiosample;
@@ -183,8 +178,12 @@ static void *receive_thread(void *arg) {
     running=1;
     fprintf(stderr,"rtl_protocol: receive_thread\n");
     while(running) {
-        elements=SoapySDRDevice_readStream(rtl_device,stream,(void *)&buffer,max_samples,&flags,&timeNs,timeoutUs);
-//fprintf(stderr,"read %d elements\n",elements);
+        elements=SoapySDRDevice_readStream(rtl_device,stream,(void *)&buffer,max_samples,&flags,&timeNs,timeoutNs);
+        if (elements < 0) {
+            fprintf(stderr,"SoapySDRDevice_readStream returned:%d\n",elements);
+            continue;
+        }
+
         if(actual_rate!=sample_rate) {
             for(i=0; i<elements; i++) {
                 resamples[i*2]=(double)buffer[i*2];

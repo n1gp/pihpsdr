@@ -15,7 +15,7 @@ fprintf(stderr,"rtl_discovery: length=%ld devs->size=%ld\n",length,devs->size);
 
   for(i=0;i<devs->size;i++) {
 fprintf(stderr,"rtl_discovery:device key=%s val=%s\n",devs->keys[i], devs->vals[i]);
-    if(strcmp(devs->keys[i],"driver")==0) {
+    if(strcmp(devs->keys[i],"driver")==0 && strstr("rtlsdr", devs->vals[i])) {
       discovered[devices].protocol=RTLSDR_PROTOCOL;
       discovered[devices].device=RTLSDR_USB_DEVICE;
       strcpy(discovered[devices].name,devs->vals[i]);
@@ -25,5 +25,5 @@ fprintf(stderr,"rtl_discovery:device key=%s val=%s\n",devs->keys[i], devs->vals[
     }
   }
 
-  fprintf(stderr,"rtl_discovery found %d devices\n",length);
+  fprintf(stderr,"rtl_discovery found %d devices\n",(int)length);
 }
