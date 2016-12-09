@@ -23,6 +23,9 @@
 #include <stdlib.h>
 
 #include "new_menu.h"
+#include "band.h"
+#include "filter.h"
+#include "mode.h"
 #include "radio.h"
 #include "vfo.h"
 
@@ -103,12 +106,29 @@ static gboolean freqent_select_cb (GtkWidget *widget, gpointer data) {
             default :
                 mult = 10.0;
             }
-            //f = (long long)atof(buffer)*mult;
             f = ((long long)(atof(buffer)*mult)+5)/10;
-fprintf(stderr, "BUFFER=%s\n", buffer);
             sprintf(output, "<big>%lld</big>", f);
             gtk_label_set_markup (GTK_LABEL (label), output);
+            int b=get_band_from_frequency(f);
+            if(b<0) {
+              fprintf(stderr,"get_band_from_frequency: failed for f=%lld\n",f);
+              b=bandGen;
+            }
+            if(b!=band_get_current()) {
+              BAND *band=band_set_current(b);
+              BANDSTACK_ENTRY *entry=bandstack_entry_get_current();
+              setMode(entry->mode);
+              FILTER* band_filters=filters[entry->mode];
+              FILTER* band_filter=&band_filters[entry->filter];
+              setFilter(band_filter->low,band_filter->high);
+              set_alex_rx_antenna(band->alexRxAntenna);
+              set_alex_tx_antenna(band->alexTxAntenna);
+              set_alex_attenuation(band->alexAttenuation);
+
+            }
             setFrequency(f);
+            vfo_update(NULL);
+      
             set = 1;
         }
     }

@@ -45,7 +45,6 @@
 #define band20 -1
 #define band17 -1
 #define band15 -1
-#define bandGen -1
 #define bandWWV -1
 #define band136 -1
 #define band472 -1
@@ -57,9 +56,10 @@
 #define band220 5
 #define band430 6
 #define band902 7
-#define bandAIR 8
-#define bandWX 9
-#define BANDS 10
+#define bandGen 8
+#define bandAIR 9
+#define bandWX 10
+#define BANDS 11
 #elif defined LIMESDR
 #define band70 11
 #define band144 12
@@ -115,6 +115,7 @@ int band_get_current();
 BAND *band_get_current_band();
 BAND *band_get_band(int b);
 BAND *band_set_current(int b);
+int get_band_from_frequency(long long f);
 
 BANDSTACK_ENTRY *bandstack_entry_next();
 BANDSTACK_ENTRY *bandstack_entry_previous();

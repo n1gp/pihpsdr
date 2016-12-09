@@ -376,11 +376,11 @@ vfo_press_event_cb (GtkWidget *widget,
                gpointer        data)
 {
 
-  if((int)event->x < (my_width/4))
+  if((int)event->x < (my_width/4)) {
     lock_cb(NULL,NULL);
-  else if((int)event->x < (my_width/2) && (int)event->x > (my_width/4))
+  } else if((int)event->x < (my_width/2) && (int)event->x > (my_width/4)) {
     start_freqent();
-  else {
+  } else {
     start_step();
 /*
     GtkWidget *dialog=gtk_dialog_new_with_buttons("Step",GTK_WINDOW(parent_window),GTK_DIALOG_DESTROY_WITH_PARENT,NULL,NULL);

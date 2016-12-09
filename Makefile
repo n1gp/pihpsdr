@@ -147,7 +147,7 @@ GTKLIBS=`pkg-config --libs gtk+-3.0`
 
 AUDIO_LIBS=-lasound
 
-OPTIONS=-ggdb -D $(UNAME_N) $(GPIO_OPTIONS) $(RTLSDR_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(LOCALCW_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O3
+OPTIONS=-D $(UNAME_N) $(GPIO_OPTIONS) $(RTLSDR_OPTIONS) $(LIMESDR_OPTIONS) $(FREEDV_OPTIONS) $(LOCALCW_OPTIONS) $(PSK_OPTIONS) $(SHORT_FRAMES) -D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION) -O3
 
 LIBS=-lrt -lm -lwdsp -lpthread $(AUDIO_LIBS) $(PSKLIBS) $(GTKLIBS) $(GPIO_LIBS) $(SOAPYSDRLIBS) $(FREEDVLIBS)
 INCLUDES=$(GTKINCLUDES)
@@ -177,7 +177,6 @@ oc_menu.c \
 xvtr_menu.c \
 equalizer_menu.c \
 step_menu.c \
-freqent_menu.c \
 meter_menu.c \
 band_menu.c \
 bandstack_menu.c \
@@ -187,6 +186,8 @@ noise_menu.c \
 agc_menu.c \
 fm_menu.c \
 vox_menu.c \
+diversity_menu.c \
+freqent_menu.c \
 test_menu.c \
 rit.c \
 meter.c \
@@ -236,7 +237,6 @@ oc_menu.h \
 xvtr_menu.h \
 equalizer_menu.h \
 step_menu.h \
-freqent_menu.h \
 meter_menu.h \
 band_menu.h \
 bandstack_menu.h \
@@ -246,6 +246,8 @@ noise_menu.h \
 agc_menu.h \
 fm_menu.h \
 vox_menu.h \
+diversity_menu.h \
+freqent_menu.h \
 test_menu.h \
 rit.h \
 meter.h \
@@ -292,7 +294,6 @@ oc_menu.o \
 xvtr_menu.o \
 equalizer_menu.o \
 step_menu.o \
-freqent_menu.o \
 meter_menu.o \
 band_menu.o \
 bandstack_menu.o \
@@ -302,6 +303,8 @@ noise_menu.o \
 agc_menu.o \
 fm_menu.o \
 vox_menu.o \
+diversity_menu.o \
+freqent_menu.o \
 test_menu.o \
 rit.o \
 meter.o \

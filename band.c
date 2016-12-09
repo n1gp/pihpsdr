@@ -167,7 +167,10 @@ BANDSTACK_ENTRY bandstack_entries3400[] =
      {3400300000LL,3400010000LL,modeUSB,filterF5,200,2800,200,2800}};
 #endif
 
-#ifndef RTLSDR
+#ifdef RTLSDR
+BANDSTACK_ENTRY bandstack_entriesGEN[] =
+    {{24000000LL,1766000000LL,modeFMN,filterF1,200,2800,200,2800}};
+#else
 BANDSTACK_ENTRY bandstack_entriesGEN[] =
     {{909000LL,909000LL,modeAM,filterF6,-6000,6000,-6000,60000},
      {5975000LL,909000LL,modeAM,filterF6,-6000,6000,-6000,60000},
@@ -208,7 +211,9 @@ BANDSTACK bandstack1240={3,1,bandstack_entries1240};
 BANDSTACK bandstack2300={3,1,bandstack_entries2300};
 BANDSTACK bandstack3400={3,1,bandstack_entries3400};
 #endif
-#ifndef RTLSDR
+#ifdef RTLSDR
+BANDSTACK bandstackGEN={1,1,bandstack_entriesGEN};
+#else
 BANDSTACK bandstackGEN={3,1,bandstack_entriesGEN};
 BANDSTACK bandstackWWV={5,1,bandstack_entriesWWV};
 BANDSTACK bandstack136={2,0,bandstack_entries136};
@@ -280,11 +285,11 @@ BAND bands[BANDS+XVTRS] =
      {"3400",&bandstack3400,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,3400000000LL,3410000000LL,0LL,0},
 #endif
 #ifndef RTLSDR
-     {"GEN",&bandstackGEN,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
      {"WWV",&bandstackWWV,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
      {"136kHz",&bandstack136,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,135700LL,137800LL,0LL,0},
      {"472kHz",&bandstack472,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,472000LL,479000LL,0LL,0},
 #endif
+     {"GEN",&bandstackGEN,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
 // XVTRS
      {"",&bandstack_xvtr_0,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
      {"",&bandstack_xvtr_1,0,0,0,0,0,ALEX_ATTENUATION_0dB,53.0,0LL,0LL,0LL,0},
@@ -563,3 +568,17 @@ fprintf(stderr,"bandRestoreState: restore bands\n");
     if(value) band=atoi(value);
 }
 
+int get_band_from_frequency(long long f) {
+  int b;
+  int found=-1;
+  for(b=0;b<BANDS+XVTRS;b++) {
+    BAND *band=band_get_band(b);
+    if(strlen(band->title)>0) {
+      if(f>=band->frequencyMin && f<=band->frequencyMax) {
+        found=b;
+        break;
+      }
+    }
+  }
+  return found;
+}
