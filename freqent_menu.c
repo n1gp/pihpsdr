@@ -94,7 +94,7 @@ static gboolean freqent_select_cb (GtkWidget *widget, gpointer data) {
         } else if (strcmp (str, "CR") == 0) {
             strcpy (buffer, "0");
             sprintf(output, "<big>%s</big>", buffer);
-            gtk_label_set_markup (GTK_LABEL (label), buffer);
+            gtk_label_set_markup (GTK_LABEL (label), output);
         } else if (str[1] == 'Z') {
             switch(str[0]) {
             case 'M':
@@ -127,8 +127,6 @@ static gboolean freqent_select_cb (GtkWidget *widget, gpointer data) {
 
             }
             setFrequency(f);
-            vfo_update(NULL);
-      
             set = 1;
         }
     }
