@@ -13,14 +13,14 @@ GIT_VERSION := $(shell git describe --abbrev=0 --tags)
 #SX1509_INCLUDE=sx1509
 
 # uncomment the line to below include support local CW keyer
-#LOCALCW_INCLUDE=LOCALCW
+LOCALCW_INCLUDE=LOCALCW
 
 #uncomment the line below for the platform being compiled on
-#UNAME_N=raspberrypi
+UNAME_N=raspberrypi
 #UNAME_N=odroid
 #UNAME_N=up
 #UNAME_N=pine64
-UNAME_N=x86
+#UNAME_N=x86
 
 CC=gcc
 LINK=gcc
@@ -30,7 +30,7 @@ LINK=gcc
 
 # uncomment the line below for LimeSDR (uncomment line below)
 # this really should be combined w/ lime in to a SOAPYSDR
-RTLSDR_INCLUDE=RTLSDR
+#RTLSDR_INCLUDE=RTLSDR
 
 ifeq ($(RTLSDR_INCLUDE),RTLSDR)
 RTLSDR_OPTIONS=-D RTLSDR
@@ -124,10 +124,10 @@ else
   GPIO_LIBS=-lwiringPi -lpigpio
   endif
   ifeq ($(UNAME_N),odroid)
-  GPIO_OPTIONS=-D GPIO
   GPIO_LIBS=-lwiringPi
   endif
   ifeq ($(SX1509_INCLUDE),sx1509)
+  GPIO_OPTIONS=-D GPIO
   GPIO_OPTIONS+=-D sx1509
   GPIO_LIBS+=-lsx1509
   endif

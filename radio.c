@@ -101,6 +101,7 @@ int toolbar_dialog_buttons=1;
 
 double volume=0.2;
 double mic_gain=0.0;
+int binaural=0;
 
 int rx_dither=0;
 int rx_random=0;
@@ -168,7 +169,7 @@ int cw_keyer_sidetone_frequency=400; // Hz
 int cw_breakin=1; // 0=disabled 1=enabled
 int cw_active_level=1; // 0=active_low 1=active_high
 
-int vfo_encoder_divisor=15;
+int vfo_encoder_divisor=2;
 
 int protocol;
 int device;
@@ -233,7 +234,7 @@ int pre_emphasize=0;
 
 int vox_enabled=0;
 double vox_threshold=0.001;
-double vox_gain=1;
+double vox_gain=10.0;
 double vox_hang=250.0;
 int vox=0;
 
@@ -638,6 +639,8 @@ fprintf(stderr,"radioRestoreState: %s\n",property_path);
     if(value) cw_keyer_spacing=atoi(value);
     value=getProperty("cw_keyer_internal");
     if(value) cw_keyer_internal=atoi(value);
+    value=getProperty("cw_active_level");
+    if(value) cw_active_level=atoi(value);
     value=getProperty("cw_keyer_sidetone_volume");
     if(value) cw_keyer_sidetone_volume=atoi(value);
     value=getProperty("cw_keyer_ptt_delay");
@@ -712,10 +715,15 @@ fprintf(stderr,"radioRestoreState: %s\n",property_path);
     if(value) vox_enabled=atoi(value);
     value=getProperty("vox_threshold");
     if(value) vox_threshold=atof(value);
+/*
     value=getProperty("vox_gain");
     if(value) vox_gain=atof(value);
+*/
     value=getProperty("vox_hang");
     if(value) vox_hang=atof(value);
+
+    value=getProperty("binaural");
+    if(value) binaural=atoi(value);
 
     bandRestoreState();
 
@@ -830,6 +838,8 @@ void radioSaveState() {
     setProperty("cw_keyer_spacing",value);
     sprintf(value,"%d",cw_keyer_internal);
     setProperty("cw_keyer_internal",value);
+    sprintf(value,"%d",cw_active_level);
+    setProperty("cw_active_level",value);
     sprintf(value,"%d",cw_keyer_sidetone_volume);
     setProperty("cw_keyer_sidetone_volume",value);
     sprintf(value,"%d",cw_keyer_ptt_delay);
@@ -905,10 +915,15 @@ void radioSaveState() {
     setProperty("vox_enabled",value);
     sprintf(value,"%f",vox_threshold);
     setProperty("vox_threshold",value);
+/*
     sprintf(value,"%f",vox_gain);
     setProperty("vox_gain",value);
+*/
     sprintf(value,"%f",vox_hang);
     setProperty("vox_hang",value);
+
+    sprintf(value,"%d",binaural);
+    setProperty("binaural",value);
 
     bandSaveState();
 

@@ -25,13 +25,18 @@
 #include "new_menu.h"
 #include "audio_menu.h"
 #include "audio.h"
+#include "channel.h"
 #include "radio.h"
+#include "wdsp.h"
 
 static GtkWidget *parent_window=NULL;
 
 static GtkWidget *menu_b=NULL;
 
 static GtkWidget *dialog=NULL;
+
+GtkWidget *linein_b;
+GtkWidget *micboost_b;
 
 static gboolean close_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   if(dialog!=NULL) {
@@ -40,6 +45,11 @@ static gboolean close_cb (GtkWidget *widget, GdkEventButton *event, gpointer dat
     sub_menu=NULL;
   }
   return TRUE;
+}
+
+static void binaural_cb(GtkWidget *widget, gpointer data) {
+  binaural=gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+  SetRXAPanelBinaural(CHANNEL_RX0, binaural);
 }
 
 static void micboost_cb(GtkWidget *widget, gpointer data) {
@@ -82,14 +92,20 @@ fprintf(stderr,"local_microphone_cb: %d\n",local_microphone);
   if(gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget))) {
     if(audio_open_input()==0) {
       local_microphone=1;
+      gtk_widget_hide(linein_b);
+      gtk_widget_hide(micboost_b);
     } else {
       local_microphone=0;
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget), FALSE);
+      gtk_widget_show(linein_b);
+      gtk_widget_show(micboost_b);
     }
   } else {
     if(local_microphone) {
       local_microphone=0;
       audio_close_input();
+      gtk_widget_show(linein_b);
+      gtk_widget_show(micboost_b);
     }
   }
 }
@@ -135,21 +151,26 @@ void audio_menu(GtkWidget *parent) {
   g_signal_connect (close_b, "pressed", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid),close_b,0,0,1,1);
 
+  GtkWidget *binaural_b=gtk_check_button_new_with_label("Binaural");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (binaural_b), binaural);
+  gtk_grid_attach(GTK_GRID(grid),binaural_b,1,0,1,1);
+  g_signal_connect(binaural_b,"toggled",G_CALLBACK(binaural_cb),NULL);
+
   int row=0;
 
   if(protocol==ORIGINAL_PROTOCOL || protocol==NEW_PROTOCOL) {
-    GtkWidget *linein_b=gtk_check_button_new_with_label("Mic Line In (ACC connector)");
+    linein_b=gtk_check_button_new_with_label("Mic Line In (ACC connector)");
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (linein_b), mic_linein);
-    gtk_widget_show(linein_b);
     gtk_grid_attach(GTK_GRID(grid),linein_b,0,++row,1,1);
     g_signal_connect(linein_b,"toggled",G_CALLBACK(linein_cb),NULL);
 
-    GtkWidget *micboost_b=gtk_check_button_new_with_label("Mic Boost (radio only)");
+    micboost_b=gtk_check_button_new_with_label("Mic Boost (radio only)");
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (micboost_b), mic_boost);
-    gtk_widget_show(micboost_b);
     gtk_grid_attach(GTK_GRID(grid),micboost_b,0,++row,1,1);
     g_signal_connect(micboost_b,"toggled",G_CALLBACK(micboost_cb),NULL);
+
   }
+
 
 
   if(n_input_devices>0) {
@@ -206,5 +227,9 @@ void audio_menu(GtkWidget *parent) {
 
   gtk_widget_show_all(dialog);
 
+  if(local_microphone && (protocol==ORIGINAL_PROTOCOL || protocol==NEW_PROTOCOL)) {
+    gtk_widget_hide(linein_b);
+    gtk_widget_hide(micboost_b);
+  }
 }
 

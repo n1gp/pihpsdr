@@ -146,9 +146,7 @@ x1-x5 (spare buttons)
 const uint8_t SX1509_ADDRESS=0x3E;
 struct SX1509* pSX1509;
 
-#ifdef odroid
 int SX1509_INT_PIN=0;
-#endif
 #endif
 
 static volatile int vfoEncoderPos;
@@ -477,8 +475,10 @@ void gpio_restore_state() {
   if(value) MOX_BUTTON=atoi(value);
   value=getProperty("ENABLE_LOCK_BUTTON");
   if(value) ENABLE_LOCK_BUTTON=atoi(value);
+#ifndef sx1509
   value=getProperty("LOCK_BUTTON");
   if(value) LOCK_BUTTON=atoi(value);
+#endif
   value=getProperty("ENABLE_CW_BUTTONS");
   if(value) ENABLE_CW_BUTTONS=atoi(value);
   value=getProperty("CWL_BUTTON");
@@ -562,8 +562,10 @@ void gpio_save_state() {
   setProperty("MOX_BUTTON",value);
   sprintf(value,"%d",ENABLE_LOCK_BUTTON);
   setProperty("ENABLE_LOCK_BUTTON",value);
+#ifndef sx1509
   sprintf(value,"%d",LOCK_BUTTON);
   setProperty("LOCK_BUTTON",value);
+#endif
   sprintf(value,"%d",ENABLE_CW_BUTTONS);
   setProperty("ENABLE_CW_BUTTONS",value);
   sprintf(value,"%d",CWL_BUTTON);
@@ -716,10 +718,12 @@ fprintf(stderr,"encoder_init\n");
     setup_button(MOX_BUTTON, moxAlert);
   }
 
+#ifndef sx1509
   if(ENABLE_LOCK_BUTTON) {
     setup_button(LOCK_BUTTON, lockAlert);
   }
- 
+#endif
+
   if(ENABLE_CW_BUTTONS) {
     gpioSetMode(CWL_BUTTON, PI_INPUT);
     gpioSetAlertFunc(CWL_BUTTON, cwAlert);

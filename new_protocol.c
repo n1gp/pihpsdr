@@ -59,6 +59,7 @@
 #ifdef FREEDV
 #include "freedv.h"
 #endif
+#include "vox.h"
 
 #define min(x,y) (x<y?x:y)
 
@@ -392,7 +393,15 @@ static void new_protocol_high_priority(int run) {
     } else {
       buffer[1401]=band->OCrx;
     }
-// alex HPF filters
+
+
+    long filters=0x00000000;
+
+    if(isTransmitting()) {
+      filters=0x08000000;
+    }
+
+// Alex RX HPF filters
 /*
 if              (frequency <  1800000) HPF <= 6'b100000;        // bypass
 else if (frequency <  6500000) HPF <= 6'b010000;        // 1.5MHz HPF   
@@ -402,15 +411,6 @@ else if (frequency < 20000000) HPF <= 6'b000001;        // 13MHz HPF
 else                                               HPF <= 6'b000010;    // 20MHz HPF
 */
 
-
-
-    long filters=0x00000000;
-
-    if(isTransmitting()) {
-      filters=0x08000000;
-    }
-
-// set HPF
     if(ddsFrequency<1800000L) {
         filters|=ALEX_BYPASS_HPF;
     } else if(ddsFrequency<6500000L) {
@@ -424,7 +424,8 @@ else                                               HPF <= 6'b000010;    // 20MHz
     } else {
         filters|=ALEX_20MHZ_HPF;
     }
-// alex LPF filters
+
+// Alex TX LPF filters
 /*
 if (frequency > 32000000)   LPF <= 7'b0010000;             // > 10m so use 6m LPF^M
 else if (frequency > 22000000) LPF <= 7'b0100000;       // > 15m so use 12/10m LPF^M
@@ -552,6 +553,7 @@ static void new_protocol_transmit_specific() {
 
     buffer[4]=1; // 1 DAC
     buffer[5]=0; //  default no CW
+    // may be using local pihpsdr OR hpsdr CW
     if(mode==modeCWU || mode==modeCWL) {
         buffer[5]|=0x02;
     }
@@ -878,6 +880,7 @@ static void process_high_priority(unsigned char *buffer) {
     dot=(buffer[4]>>1)&0x01;
     dash=(buffer[4]>>2)&0x01;
 
+#if 0
 if(ptt!=previous_ptt) {
   fprintf(stderr,"ptt=%d\n",ptt);
 }
@@ -887,6 +890,8 @@ if(dot!=previous_dot) {
 if(dash!=previous_dash) {
   fprintf(stderr,"dash=%d\n",dash);
 }
+#endif
+
     pll_locked=(buffer[4]>>3)&0x01;
 
 
@@ -973,15 +978,15 @@ static void process_freedv_rx_buffer() {
   int demod_samples;
   for(j=0;j<outputsamples;j++) {
     if(freedv_samples==0) {
-      leftaudiosample=(short)(audiooutputbuffer[j*2]*32767.0*volume);
-      rightaudiosample=(short)(audiooutputbuffer[(j*2)+1]*32767.0*volume);
+      leftaudiosample=(short)(audiooutputbuffer[j*2]*32767.0);
+      rightaudiosample=(short)(audiooutputbuffer[(j*2)+1]*32767.0);
       demod_samples=demod_sample_freedv(leftaudiosample);
       if(demod_samples!=0) {
         int s;
         int t;
         for(s=0;s<demod_samples;s++) {
           if(freedv_sync) {
-            leftaudiosample=rightaudiosample=(short)((double)speech_out[s]*volume);
+            leftaudiosample=rightaudiosample=(short)((double)speech_out[s]);
           } else {
             leftaudiosample=rightaudiosample=0;
           }
@@ -1030,8 +1035,8 @@ static void process_rx_buffer() {
       leftaudiosample=0;
       rightaudiosample=0;
     } else {
-      leftaudiosample=(short)(audiooutputbuffer[j*2]*32767.0*volume);
-      rightaudiosample=(short)(audiooutputbuffer[(j*2)+1]*32767.0*volume);
+      leftaudiosample=(short)(audiooutputbuffer[j*2]*32767.0);
+      rightaudiosample=(short)(audiooutputbuffer[(j*2)+1]*32767.0);
 
 #ifdef PSK
       if(mode==modePSK) {
@@ -1225,7 +1230,7 @@ void new_protocol_process_local_mic(unsigned char *buffer,int le) {
                }
             } else {
 #endif
-               if(mode==modeCWL || mode==modeCWU || tune || !isTransmitting()) {
+               if(mode==modeCWL || mode==modeCWU || tune /*|| !isTransmitting()*/) {
                    micinputbuffer[micsamples*2]=0.0;
                    micinputbuffer[(micsamples*2)+1]=0.0;
                } else {
