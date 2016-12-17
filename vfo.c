@@ -86,14 +86,7 @@ void vfo_move(int hz) {
       if(ctun) {
         setFrequency((entry->frequencyA+ddsOffset-hz)/step*step);
       } else {
-#ifdef RTLSDR
-        if(protocol==RTLSDR_PROTOCOL)
-          setFrequency((entry->frequencyA+ddsOffset-hz)/step*step);
-        else 
-          setFrequency((entry->frequencyA+ddsOffset+hz)/step*step);
-#else
         setFrequency((entry->frequencyA+ddsOffset+hz)/step*step);
-#endif
       }
     vfo_update(NULL);
   }
@@ -111,15 +104,7 @@ void vfo_move_to(int hz) {
       if(ctun) {
         setFrequency((entry->frequencyA+hz)/step*step);
       } else {
-#ifdef RTLSDR
-        long f;
-        if(protocol==RTLSDR_PROTOCOL)
-          f=(entry->frequencyA+ddsOffset-hz)/step*step;
-        else
-          f=(entry->frequencyA+ddsOffset+hz)/step*step;
-#else
         long f=(entry->frequencyA+ddsOffset+hz)/step*step;
-#endif
         if(mode==modeCWL) {
           f+=cw_keyer_sidetone_frequency;
         } else if(mode==modeCWU) {

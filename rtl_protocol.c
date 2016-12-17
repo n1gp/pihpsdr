@@ -20,9 +20,6 @@ static SoapySDRStream *stream;
 static int display_width;
 static int buffer_size=BUFFER_SIZE;
 static int outputsamples;
-static int fft_size=4096;
-static int dspRate=48000;
-static int outputRate=48000;
 static float *buffer;
 static int max_samples;
 
@@ -42,8 +39,7 @@ static double resamples[1024*16];
 static double resampled[1024*16];
 
 static int running;
-
-#define RTL_RATE 1536000
+static int rtl_rate;
 
 void rtl_protocol_init(int rx,int pixels) {
     SoapySDRKwargs args;
@@ -53,6 +49,7 @@ void rtl_protocol_init(int rx,int pixels) {
 
     receiver=(size_t)rx;
     display_width=pixels;
+    rtl_rate = 960000;
 
     switch(sample_rate) {
     case 48000:
@@ -72,6 +69,7 @@ void rtl_protocol_init(int rx,int pixels) {
         break;
     case 1536000:
         outputsamples=BUFFER_SIZE/32;
+        rtl_rate = 1536000;
         break;
     }
 
@@ -93,10 +91,10 @@ void rtl_protocol_init(int rx,int pixels) {
         rtl_protocol_set_frequency((long long)100000000);
     }
 
-    fprintf(stderr,"rtl_protocol: setting samplerate=%f\n",(double)RTL_RATE);
-    rc=SoapySDRDevice_setSampleRate(rtl_device,SOAPY_SDR_RX,receiver,(double)RTL_RATE);
+    fprintf(stderr,"rtl_protocol: setting samplerate=%f\n",(double)rtl_rate);
+    rc=SoapySDRDevice_setSampleRate(rtl_device,SOAPY_SDR_RX,receiver,(double)rtl_rate);
     if(rc!=0) {
-        fprintf(stderr,"rtl_protocol: SoapySDRDevice_setSampleRate(%f) failed: %s\n",(double)RTL_RATE,SoapySDRDevice_lastError());
+        fprintf(stderr,"rtl_protocol: SoapySDRDevice_setSampleRate(%f) failed: %s\n",(double)rtl_rate,SoapySDRDevice_lastError());
     }
 
     actual_rate=(int)SoapySDRDevice_getSampleRate(rtl_device, SOAPY_SDR_RX, receiver);
@@ -170,7 +168,7 @@ static void *receive_thread(void *arg) {
     int elements;
     int flags=0;
     long long timeNs=0;
-    long timeoutNs=1000000;
+    long timeoutNs=100000;
     int i,j;
     int leftaudiosample;
     int rightaudiosample;
@@ -193,8 +191,8 @@ static void *receive_thread(void *arg) {
             outsamples=xresample(resampler);
 
             for(i=0; i<outsamples; i++) {
-                iqinputbuffer[samples*2]=(double)resampled[i*2];
-                iqinputbuffer[(samples*2)+1]=(double)resampled[(i*2)+1];
+                iqinputbuffer[samples*2]=(double)resampled[(i*2)+1];
+                iqinputbuffer[(samples*2)+1]=(double)resampled[i*2];
                 samples++;
                 if(samples==buffer_size) {
                     int error;
@@ -216,8 +214,8 @@ static void *receive_thread(void *arg) {
             }
         } else {
             for(i=0; i<elements; i++) {
-                iqinputbuffer[samples*2]=(double)buffer[i*2];
-                iqinputbuffer[(samples*2)+1]=(double)buffer[(i*2)+1];
+                iqinputbuffer[samples*2]=(double)buffer[(i*2)+1];
+                iqinputbuffer[(samples*2)+1]=(double)buffer[i*2];
                 samples++;
                 if(samples==buffer_size) {
                     int error;
