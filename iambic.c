@@ -388,13 +388,6 @@ int keyer_init() {
     //stack_prefault();
 
 
-/*
-    if (wiringPiSetup () < 0) {
-        fprintf(stderr,"pthread_create for keyer_thread failed %d\n", rc);
-        exit(-1);
-    }
-*/
-
     if (SIDETONE_GPIO)
         softToneCreate(SIDETONE_GPIO);
     else {
