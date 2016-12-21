@@ -243,7 +243,7 @@ static void lockAlert(int gpio, int level, uint32_t tick) {
 }
 
 static void cwAlert(int gpio, int level, uint32_t tick) {
-#ifdef LOCAL_CW
+#ifdef LOCALCW
     if (cw_keyer_internal == 0)
        keyer_event(gpio, cw_active_level == 0 ? level : (level==0));
 #endif
