@@ -338,6 +338,12 @@ int vfo_update(void *data) {
             break;
         }
 
+         
+        cairo_move_to(cr, 400, 50);  
+        if(ctun) {
+          cairo_show_text(cr, "CTUN");
+        }
+
         cairo_destroy (cr);
         gtk_widget_queue_draw (vfo);
     } else {

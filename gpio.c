@@ -244,7 +244,7 @@ static void lockAlert(int gpio, int level, uint32_t tick) {
 
 static void cwAlert(int gpio, int level, uint32_t tick) {
 #ifdef LOCALCW
-    if (cw_keyer_internal == 0)
+    if (cw_keyer_internal == 0 && (mode==modeCWL || mode==modeCWU))
        keyer_event(gpio, cw_active_level == 0 ? level : (level==0));
 #endif
 }
@@ -1054,12 +1054,22 @@ static int agc_encoder_changed(void *data) {
 }
 
 static int band_pressed(void *data) {
-  sim_band_cb(NULL,NULL);
+  sim_band_pressed_cb(NULL,NULL);
+  return 0;
+}
+
+static int band_released(void *data) {
+  sim_band_released_cb(NULL,NULL);
   return 0;
 }
 
 static int bandstack_pressed(void *data) {
-  sim_bandstack_cb(NULL,NULL);
+  sim_bandstack_pressed_cb(NULL,NULL);
+  return 0;
+}
+
+static int bandstack_released(void *data) {
+  sim_bandstack_released_cb(NULL,NULL);
   return 0;
 }
 
@@ -1157,6 +1167,8 @@ static void* rotary_encoder_thread(void *arg) {
             previous_band_button=band_button;
             if(band_button) {
                 g_idle_add(band_pressed,(gpointer)NULL);
+            } else {
+                g_idle_add(band_released,(gpointer)NULL);
             }
         }
 
@@ -1165,6 +1177,8 @@ static void* rotary_encoder_thread(void *arg) {
             previous_bandstack_button=bandstack_button;
             if(bandstack_button) {
                 g_idle_add(bandstack_pressed,(gpointer)NULL);
+            } else {
+                g_idle_add(bandstack_released,(gpointer)NULL);
             }
         }
 

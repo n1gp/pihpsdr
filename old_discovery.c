@@ -151,7 +151,7 @@ fprintf(stderr,"discover_receive_thread\n");
             perror("discovery: recvfrom socket failed for discover_receive_thread");
             break;
         }
-        fprintf(stderr,"discovered: received %d bytes\n",bytes_read);
+//        fprintf(stderr,"discovered: received %d bytes\n",bytes_read);
         if ((buffer[0] & 0xFF) == 0xEF && (buffer[1] & 0xFF) == 0xFE) {
             int status = buffer[2] & 0xFF;
             if (status == 2 || status == 3) {
