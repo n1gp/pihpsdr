@@ -12,12 +12,15 @@ GIT_VERSION := $(shell git describe --abbrev=0 --tags)
 # uncomment the line to below include support for sx1509 i2c expander
 #SX1509_INCLUDE=sx1509
 
+# uncomment the line to below include support for mcp23x17 i2c expander
+MCP23X17_INCLUDE=mcp23x17
+
 # uncomment the line to below include support local CW keyer
 LOCALCW_INCLUDE=LOCALCW
 
 #uncomment the line below for the platform being compiled on
-UNAME_N=raspberrypi
-#UNAME_N=odroid
+#UNAME_N=raspberrypi
+UNAME_N=odroid
 #UNAME_N=up
 #UNAME_N=pine64
 #UNAME_N=x86
@@ -124,10 +127,13 @@ else
   GPIO_LIBS=-lwiringPi -lpigpio
   endif
   ifeq ($(UNAME_N),odroid)
+  GPIO_OPTIONS=-D GPIO
   GPIO_LIBS=-lwiringPi
   endif
+  ifeq ($(MCP23X17_INCLUDE),mcp23x17)
+  GPIO_OPTIONS+=-D mcp23X17
+  endif
   ifeq ($(SX1509_INCLUDE),sx1509)
-  GPIO_OPTIONS=-D GPIO
   GPIO_OPTIONS+=-D sx1509
   GPIO_LIBS+=-lsx1509
   endif

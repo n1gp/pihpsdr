@@ -43,7 +43,7 @@ int ENABLE_VFO_ENCODER=1;
 int ENABLE_VFO_PULLUP=1;
 int VFO_ENCODER_A=17;
 int VFO_ENCODER_B=18;
-#if defined odroid && !defined sx1509
+#if defined odroid && !defined sx1509 && !defined mcp23X17
 int VFO_ENCODER_A_PIN=0;
 int VFO_ENCODER_B_PIN=1;
 #endif
@@ -392,7 +392,7 @@ void sx1509_interrupt(void) {
 }
 #endif
 
-#if defined odroid && !defined sx1509
+#if defined odroid && !defined sx1509 && !defined mcp23X17
 void interruptB(void) {
    vfoEncoderPulse(VFO_ENCODER_B,digitalRead(VFO_ENCODER_B_PIN),0);
 }
@@ -413,7 +413,7 @@ void gpio_restore_state() {
   if(value) VFO_ENCODER_A=atoi(value);
   value=getProperty("VFO_ENCODER_B");
   if(value) VFO_ENCODER_B=atoi(value);
-#if defined odroid && !defined sx1509
+#if defined odroid && !defined sx1509 && !defined mcp23X17
   value=getProperty("VFO_ENCODER_A_PIN");
   if(value) VFO_ENCODER_A_PIN=atoi(value);
   value=getProperty("VFO_ENCODER_B_PIN");
@@ -500,7 +500,7 @@ void gpio_save_state() {
   setProperty("VFO_ENCODER_A",value);
   sprintf(value,"%d",VFO_ENCODER_B);
   setProperty("VFO_ENCODER_B",value);
-#if defined odroid && !defined sx1509
+#if defined odroid && !defined sx1509 && !defined mcp23X17
   sprintf(value,"%d",VFO_ENCODER_A_PIN);
   setProperty("VFO_ENCODER_A_PIN",value);
   sprintf(value,"%d",VFO_ENCODER_B_PIN);
@@ -582,7 +582,7 @@ void gpio_save_state() {
 int gpio_init() {
 fprintf(stderr,"encoder_init\n");
 
-#if defined odroid && !defined sx1509
+#if defined odroid && !defined sx1509 && !defined mcp23X17
   VFO_ENCODER_A=88;
   VFO_ENCODER_B=87;
 #endif
@@ -809,7 +809,7 @@ fprintf(stderr,"encoder_init\n");
   }
 #endif
 
-#if defined odroid && !defined sx1509
+#if defined odroid && !defined sx1509 && !defined mcp23X17
 
     //VFO_ENCODER_A=ODROID_VFO_ENCODER_A;
     //VFO_ENCODER_B=ODROID_VFO_ENCODER_B;
@@ -862,7 +862,7 @@ fprintf(stderr,"encoder_init\n");
 
 void gpio_close() {
     running=0;
-#if defined odroid && !defined sx1509
+#if defined odroid && !defined sx1509 && !defined mcp23X17
     FILE *fp;
     fp = popen("echo 97 > /sys/class/gpio/unexport\n", "r");
     pclose(fp);
