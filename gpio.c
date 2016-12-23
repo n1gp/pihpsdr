@@ -18,6 +18,9 @@
 #ifdef sx1509
 #include <SparkFunSX1509_C.h>
 #endif
+#ifdef mcp23x17
+#include <mcp23017.h>
+#endif
 
 #include "band.h"
 #include "channel.h"
@@ -91,6 +94,12 @@ int ENABLE_CW_BUTTONS=1;
 // make sure to disable UART0 for next 2 gpios
 int CWL_BUTTON=15;
 int CWR_BUTTON=14;
+
+#ifdef mcp23x17
+int MCP_I2CADDR=0x20;
+int MCP_PINBASE=300;
+int MCP23X17_INT_PIN=0;
+#endif
 
 #ifdef sx1509
 /* Hardware Hookup:
@@ -330,6 +339,14 @@ static void e3EncoderPulse(int gpio, int level, uint32_t tick)
       }
    }
 }
+
+#ifdef mcp23x17
+void mcp23x17_interrupt(void) {
+  int value, pin = MCP_PINBASE;
+
+  interruptRead (&pin, &value);
+}
+#endif
 
 #ifdef sx1509
 #define SX1509_ENCODER_MASK 0xF0F0
@@ -740,6 +757,48 @@ fprintf(stderr,"encoder_init\n");
  
 #endif
 
+#ifdef mcp23x17
+  int i;
+
+  if (wiringPiSetup () < 0) {
+    printf ("Unable to setup wiringPi: %s\n", strerror (errno));
+    return -1;
+  }
+
+  if (mcp23017Setup (MCP_PINBASE, MCP_I2CADDR) < 0) {
+    printf ("Unable to setup mcp23017Setup: %s\n", strerror (errno));
+    return -1;
+  }
+
+  // 1 - combine AB ints, 0 - disable opendrain, LOW - active_low ints
+  if (mcp23017SetupInts (MCP_PINBASE, 1, 0, LOW) < 0) {
+    printf ("Unable to setup mcp23017SetupInts: %s\n", strerror (errno));
+    return -1;
+  }
+
+  // setup interrupt pin on SBC
+  pinMode(MCP23X17_INT_PIN, INPUT);
+  pullUpDnControl(MCP23X17_INT_PIN, PUD_UP);
+
+  if (wiringPiISR (MCP23X17_INT_PIN, INT_EDGE_FALLING, &mcp23x17_interrupt) < 0 ) {
+    printf ("Unable to setup MCP ISR: %s\n", strerror (errno));
+    return -1;
+  }
+
+  // just for test setup the bank A as GP inputs
+  for (i = 0 ; i < 8 ; i++) {
+    pinMode (MCP_PINBASE + i, INPUT) ;
+    pullUpDnControl (MCP_PINBASE + i, PUD_UP) ;
+  }
+
+  // and bank B as interrupt inputs
+  for (i = 8 ; i < 16 ; i++) {
+    pinMode (MCP_PINBASE + i, INPUT) ;
+    pullUpDnControl (MCP_PINBASE + i, PUD_UP) ;
+    pinIntPolarity (MCP_PINBASE + i, INT_EDGE_BOTH) ;
+  }
+#endif
+
 #ifdef sx1509
   // override default (PI) values
   VFO_ENCODER_A=4;
@@ -760,13 +819,13 @@ fprintf(stderr,"encoder_init\n");
   if (!SX1509_begin(pSX1509, SX1509_ADDRESS, 255))
   {
     printf("Failed to communicate to sx1509 at %x.\n", SX1509_ADDRESS);
-    return 1;
+    return -1;
   }
 
   fprintf(stderr,"wiringPiSetup\n");
   if (wiringPiSetup () < 0) {
     printf ("Unable to setup wiringPi: %s\n", strerror (errno));
-    return 1;
+    return -1;
   }
 
   // Initialize the buttons
@@ -804,7 +863,7 @@ fprintf(stderr,"encoder_init\n");
 
   if ( wiringPiISR (SX1509_INT_PIN, INT_EDGE_FALLING, &sx1509_interrupt) < 0 ) {
     printf ("Unable to setup ISR: %s\n", strerror (errno));
-    return 1;
+    return -1;
   }
 #endif
 
@@ -853,8 +912,8 @@ fprintf(stderr,"encoder_init\n");
   int rc=pthread_create(&rotary_encoder_thread_id, NULL, rotary_encoder_thread, NULL);
   if(rc<0) {
     fprintf(stderr,"pthread_create for rotary_encoder_thread failed %d\n",rc);
+    return rc;
   }
-
 
   return 0;
 }
