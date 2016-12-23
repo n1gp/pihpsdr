@@ -131,7 +131,7 @@ else
   GPIO_LIBS=-lwiringPi
   endif
   ifeq ($(MCP23X17_INCLUDE),mcp23x17)
-  GPIO_OPTIONS+=-D mcp23X17
+  GPIO_OPTIONS+=-D mcp23x17
   endif
   ifeq ($(SX1509_INCLUDE),sx1509)
   GPIO_OPTIONS+=-D sx1509

@@ -46,7 +46,7 @@ int ENABLE_VFO_ENCODER=1;
 int ENABLE_VFO_PULLUP=1;
 int VFO_ENCODER_A=17;
 int VFO_ENCODER_B=18;
-#if defined odroid && !defined sx1509 && !defined mcp23X17
+#if defined odroid && !defined sx1509 && !defined mcp23x17
 int VFO_ENCODER_A_PIN=0;
 int VFO_ENCODER_B_PIN=1;
 #endif
@@ -98,7 +98,6 @@ int CWR_BUTTON=14;
 #ifdef mcp23x17
 int MCP_I2CADDR=0x20;
 int MCP_PINBASE=300;
-int MCP23X17_INT_PIN=0;
 #endif
 
 #ifdef sx1509
@@ -341,10 +340,54 @@ static void e3EncoderPulse(int gpio, int level, uint32_t tick)
 }
 
 #ifdef mcp23x17
-void mcp23x17_interrupt(void) {
-  int value, pin = MCP_PINBASE;
+#define MCP_BANKA 0x00ff
+#define MCP_BANKB 0xff00
 
-  interruptRead (&pin, &value);
+void mcp23x17_interrupt(void) {
+  int values, pins = MCP_PINBASE;
+
+  interruptRead (&pins, &values);
+
+  // check BANKA (encoders)
+  if (pins & MCP_BANKA) {
+     if (pins & (1<<VFO_ENCODER_A))
+       vfoEncoderPulse(VFO_ENCODER_A, values&(1<<VFO_ENCODER_A), 0);
+     if (pins & (1<<VFO_ENCODER_B))
+       vfoEncoderPulse(VFO_ENCODER_B, values&(1<<VFO_ENCODER_B), 0);
+     if (pins & (1<<E1_ENCODER_A))
+       e1EncoderPulse(E1_ENCODER_A, values&(1<<E1_ENCODER_A), 0);
+     if (pins & (1<<E1_ENCODER_B))
+       e1EncoderPulse(E1_ENCODER_B, values&(1<<E1_ENCODER_B), 0);
+     if (pins & (1<<E2_ENCODER_A))
+       e2EncoderPulse(E2_ENCODER_A, values&(1<<E2_ENCODER_A), 0);
+     if (pins & (1<<E2_ENCODER_B))
+       e2EncoderPulse(E2_ENCODER_B, values&(1<<E2_ENCODER_B), 0);
+     if (pins & (1<<E3_ENCODER_A))
+       e3EncoderPulse(E3_ENCODER_A, values&(1<<E3_ENCODER_A), 0);
+     if (pins & (1<<E3_ENCODER_B))
+       e3EncoderPulse(E3_ENCODER_B, values&(1<<E3_ENCODER_B), 0);
+  }
+
+  // check BANKB (buttons)
+  if (pins & MCP_BANKB) {
+     pins >>= 8;
+     if (pins & (1<<MOX_BUTTON))
+       moxAlert(MOX_BUTTON, values&(1<<MOX_BUTTON), 0);
+     if (pins & (1<<FUNCTION_BUTTON))
+       functionAlert(FUNCTION_BUTTON, values&(1<<FUNCTION_BUTTON), 0);
+     if (pins & (1<<S1_BUTTON))
+       bandAlert(S1_BUTTON, values&(1<<S1_BUTTON), 0);
+     if (pins & (1<<S2_BUTTON))
+       bandstackAlert(S2_BUTTON, values&(1<<S2_BUTTON), 0);
+     if (pins & (1<<S3_BUTTON))
+       modeAlert(S3_BUTTON, values&(1<<S3_BUTTON), 0);
+     if (pins & (1<<S4_BUTTON))
+       filterAlert(S4_BUTTON, values&(1<<S4_BUTTON), 0);
+     if (pins & (1<<S5_BUTTON))
+       noiseAlert(S5_BUTTON, values&(1<<S5_BUTTON), 0);
+     if (pins & (1<<S6_BUTTON))
+       agcAlert(S6_BUTTON, values&(1<<S6_BUTTON), 0);
+  }
 }
 #endif
 
@@ -408,7 +451,7 @@ void sx1509_interrupt(void) {
 }
 #endif
 
-#if defined odroid && !defined sx1509 && !defined mcp23X17
+#if defined odroid && !defined sx1509 && !defined mcp23x17
 void interruptB(void) {
    vfoEncoderPulse(VFO_ENCODER_B,digitalRead(VFO_ENCODER_B_PIN),0);
 }
@@ -429,7 +472,7 @@ void gpio_restore_state() {
   if(value) VFO_ENCODER_A=atoi(value);
   value=getProperty("VFO_ENCODER_B");
   if(value) VFO_ENCODER_B=atoi(value);
-#if defined odroid && !defined sx1509 && !defined mcp23X17
+#if defined odroid && !defined sx1509 && !defined mcp23x17
   value=getProperty("VFO_ENCODER_A_PIN");
   if(value) VFO_ENCODER_A_PIN=atoi(value);
   value=getProperty("VFO_ENCODER_B_PIN");
@@ -516,7 +559,7 @@ void gpio_save_state() {
   setProperty("VFO_ENCODER_A",value);
   sprintf(value,"%d",VFO_ENCODER_B);
   setProperty("VFO_ENCODER_B",value);
-#if defined odroid && !defined sx1509 && !defined mcp23X17
+#if defined odroid && !defined sx1509 && !defined mcp23x17
   sprintf(value,"%d",VFO_ENCODER_A_PIN);
   setProperty("VFO_ENCODER_A_PIN",value);
   sprintf(value,"%d",VFO_ENCODER_B_PIN);
@@ -598,7 +641,7 @@ void gpio_save_state() {
 int gpio_init() {
 fprintf(stderr,"encoder_init\n");
 
-#if defined odroid && !defined sx1509 && !defined mcp23X17
+#if defined odroid && !defined sx1509 && !defined mcp23x17
   VFO_ENCODER_A=88;
   VFO_ENCODER_B=87;
 #endif
@@ -745,20 +788,50 @@ fprintf(stderr,"encoder_init\n");
   if(ENABLE_CW_BUTTONS) {
     setup_button(CWL_BUTTON, cwAlert);
     setup_button(CWR_BUTTON, cwAlert);
-/*
-    gpioSetMode(CWL_BUTTON, PI_INPUT);
-    gpioSetAlertFunc(CWL_BUTTON, cwAlert);
-    gpioSetMode(CWR_BUTTON, PI_INPUT);
-    gpioSetAlertFunc(CWR_BUTTON, cwAlert);
-    gpioGlitchFilter(CWL_BUTTON, 5000);
-    gpioGlitchFilter(CWR_BUTTON, 5000);
-*/
   }
  
 #endif
 
 #ifdef mcp23x17
+  void setup_button(int button, void *pAlert) {
+    pinMode(button, INPUT);
+    pullUpDnControl(button, PUD_UP);
+    // give time to settle to avoid false triggers
+    usleep(10000);
+    wiringPiISR (button, INT_EDGE_BOTH, pAlert);
+  }
+
+  int MCP23X17_INTA=0;
+  int MCP23X17_INTB=1;
   int i;
+
+  // override default (PI) values
+  // encoders on bank A
+  VFO_ENCODER_A=0;
+  VFO_ENCODER_B=1;
+  E1_ENCODER_A=2;
+  E1_ENCODER_B=3;
+  E2_ENCODER_A=4;
+  E2_ENCODER_B=5;
+  E3_ENCODER_A=6;
+  E3_ENCODER_B=7;
+
+  // buttons on bank B
+  MOX_BUTTON=8;
+  FUNCTION_BUTTON=9;
+  S1_BUTTON=10;
+  S2_BUTTON=11;
+  S3_BUTTON=12;
+  S4_BUTTON=13;
+  S5_BUTTON=14;
+  S6_BUTTON=15;
+
+  // mcp pins all used above, need some from SBC
+  E1_FUNCTION=4;
+  E2_FUNCTION=5;
+  E3_FUNCTION=6;
+
+  fprintf(stderr,"mcp23x17 encoder_init: VFO_ENCODER_A=%d VFO_ENCODER_B=%d\n",VFO_ENCODER_A,VFO_ENCODER_B);
 
   if (wiringPiSetup () < 0) {
     printf ("Unable to setup wiringPi: %s\n", strerror (errno));
@@ -770,29 +843,44 @@ fprintf(stderr,"encoder_init\n");
     return -1;
   }
 
-  // 1 - combine AB ints, 0 - disable opendrain, LOW - active_low ints
-  if (mcp23017SetupInts (MCP_PINBASE, 1, 0, LOW) < 0) {
+  // 0 - seperate AB ints, 0 - disable opendrain, LOW - active_low ints
+  if (mcp23017SetupInts (MCP_PINBASE, 0, 0, LOW) < 0) {
     printf ("Unable to setup mcp23017SetupInts: %s\n", strerror (errno));
     return -1;
   }
 
-  // setup interrupt pin on SBC
-  pinMode(MCP23X17_INT_PIN, INPUT);
-  pullUpDnControl(MCP23X17_INT_PIN, PUD_UP);
+  // setup interrupt pins on SBC
+  setup_button(E1_FUNCTION, &e1FunctionAlert);
+  setup_button(E2_FUNCTION, &e2FunctionAlert);
+  setup_button(E3_FUNCTION, &e3FunctionAlert);
+  e1Function=0;
+  e2Function=0;
+  e3Function=0;
 
-  if (wiringPiISR (MCP23X17_INT_PIN, INT_EDGE_FALLING, &mcp23x17_interrupt) < 0 ) {
+  if(ENABLE_CW_BUTTONS) {
+    CWL_BUTTON=2;
+    CWR_BUTTON=3;
+    setup_button(CWL_BUTTON, &cwAlert);
+    setup_button(CWR_BUTTON, &cwAlert);
+  }
+
+  pinMode(MCP23X17_INTA, INPUT);
+  pullUpDnControl(MCP23X17_INTA, PUD_UP);
+  pinMode(MCP23X17_INTB, INPUT);
+  pullUpDnControl(MCP23X17_INTB, PUD_UP);
+
+  if (wiringPiISR (MCP23X17_INTA, INT_EDGE_FALLING, &mcp23x17_interrupt) < 0 ) {
     printf ("Unable to setup MCP ISR: %s\n", strerror (errno));
     return -1;
   }
 
-  // just for test setup the bank A as GP inputs
-  for (i = 0 ; i < 8 ; i++) {
-    pinMode (MCP_PINBASE + i, INPUT) ;
-    pullUpDnControl (MCP_PINBASE + i, PUD_UP) ;
+  if (wiringPiISR (MCP23X17_INTB, INT_EDGE_FALLING, &mcp23x17_interrupt) < 0 ) {
+    printf ("Unable to setup MCP ISR: %s\n", strerror (errno));
+    return -1;
   }
 
-  // and bank B as interrupt inputs
-  for (i = 8 ; i < 16 ; i++) {
+  // setup all mcp pins as interrupt inputs
+  for (i = 0 ; i < 16 ; i++) {
     pinMode (MCP_PINBASE + i, INPUT) ;
     pullUpDnControl (MCP_PINBASE + i, PUD_UP) ;
     pinIntPolarity (MCP_PINBASE + i, INT_EDGE_BOTH) ;
@@ -867,7 +955,7 @@ fprintf(stderr,"encoder_init\n");
   }
 #endif
 
-#if defined odroid && !defined sx1509 && !defined mcp23X17
+#if defined odroid && !defined sx1509 && !defined mcp23x17
 
     //VFO_ENCODER_A=ODROID_VFO_ENCODER_A;
     //VFO_ENCODER_B=ODROID_VFO_ENCODER_B;
@@ -920,7 +1008,7 @@ fprintf(stderr,"encoder_init\n");
 
 void gpio_close() {
     running=0;
-#if defined odroid && !defined sx1509 && !defined mcp23X17
+#if defined odroid && !defined sx1509 && !defined mcp23x17
     FILE *fp;
     fp = popen("echo 97 > /sys/class/gpio/unexport\n", "r");
     pclose(fp);
