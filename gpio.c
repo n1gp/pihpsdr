@@ -1389,6 +1389,11 @@ static void* rotary_encoder_thread(void *arg) {
         mox_state = 0;
         lock_state = 0;
 #endif
+#ifdef mcp23x17
+        e1Function = 0;
+        e2Function = 0;
+        e3Function=e3Function==0?1:0;
+#endif
 
 #ifdef raspberrypi
           if(running) gpioDelay(100000); // 10 per second
