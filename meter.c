@@ -245,7 +245,7 @@ void meter_update(int meter_type,double value,double reverse,double exciter,doub
   cairo_select_font_face(cr, "FreeMono",
                 CAIRO_FONT_SLANT_NORMAL,
                 CAIRO_FONT_WEIGHT_BOLD);
-  cairo_set_source_rgb(cr, 0.5, 0.5, 0.5);
+  cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
   cairo_set_font_size(cr, 10);
   cairo_move_to(cr, 5, 15);
   cairo_show_text(cr, text);

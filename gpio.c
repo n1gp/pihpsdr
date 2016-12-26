@@ -251,7 +251,7 @@ static void lockAlert(int gpio, int level, uint32_t tick) {
 
 static void cwAlert(int gpio, int level, uint32_t tick) {
 #ifdef LOCALCW
-    if (cw_keyer_internal == 0 && (mode==modeCWL || mode==modeCWU))
+    if (cw_keyer_internal == 0)
        keyer_event(gpio, cw_active_level == 0 ? level : (level==0));
 #endif
 }
@@ -720,7 +720,7 @@ fprintf(stderr,"encoder_init\n");
   if(ENABLE_E2_ENCODER) {
     gpioSetMode(E2_ENCODER_A, PI_INPUT);
     gpioSetMode(E2_ENCODER_B, PI_INPUT);
-    if(ENABLE_E1_PULLUP) {
+    if(ENABLE_E2_PULLUP) {
       gpioSetPullUpDown(E2_ENCODER_A, PI_PUD_UP);
       gpioSetPullUpDown(E2_ENCODER_B, PI_PUD_UP);
     } else {
@@ -738,7 +738,7 @@ fprintf(stderr,"encoder_init\n");
   if(ENABLE_E3_ENCODER) {
     gpioSetMode(E3_ENCODER_A, PI_INPUT);
     gpioSetMode(E3_ENCODER_B, PI_INPUT);
-    if(ENABLE_E1_PULLUP) {
+    if(ENABLE_E3_PULLUP) {
       gpioSetPullUpDown(E3_ENCODER_A, PI_PUD_UP);
       gpioSetPullUpDown(E3_ENCODER_B, PI_PUD_UP);
     } else {
@@ -1230,7 +1230,7 @@ static int mox_pressed(void *data) {
 }
 
 static int lock_pressed(void *data) {
-  lock_cb((GtkWidget *)NULL, (gpointer)NULL);
+//RRK  lock_cb((GtkWidget *)NULL, (gpointer)NULL);
   return 0;
 }
 
