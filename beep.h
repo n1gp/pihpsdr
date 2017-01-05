@@ -2,9 +2,9 @@
 #define _BEEP_H
 
 extern double beep_freq;
+extern int beep_mute;
 
 void beep_vol(long volume);
-void beep_mute(int mute);
 void beep_init();
 void beep_close();
 

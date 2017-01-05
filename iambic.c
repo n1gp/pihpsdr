@@ -177,13 +177,13 @@ void set_keyer_out(int state) {
             if (SIDETONE_GPIO)
                 softToneWrite (SIDETONE_GPIO, cw_keyer_sidetone_frequency);
             else {
-                beep_mute(1);
+                beep_mute = 0;
             }
         else
             if (SIDETONE_GPIO)
                 softToneWrite (SIDETONE_GPIO, 0);
             else  {
-                beep_mute(0);
+                beep_mute = 1;
             }
     }
 }
