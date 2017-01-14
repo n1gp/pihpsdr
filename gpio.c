@@ -95,11 +95,6 @@ int ENABLE_CW_BUTTONS=1;
 int CWL_BUTTON=15;
 int CWR_BUTTON=14;
 
-#ifdef mcp23x17
-int MCP_I2CADDR=0x20;
-int MCP_PINBASE=300;
-#endif
-
 #ifdef sx1509
 /* Hardware Hookup:
 
@@ -343,30 +338,12 @@ static void e3EncoderPulse(int gpio, int level, uint32_t tick)
 #define MCP_BANKA 0x00ff
 #define MCP_BANKB 0xff00
 
+int MCPA_PINBASE=300;
+int MCPB_PINBASE=320;
+
 void mcp23x17_interruptA(void) {
-  int values, pins = MCP_PINBASE;
-
+  int values, pins = MCPA_PINBASE;
   interruptRead (&pins, &values);
-
-  // check BANKA (buttons)
-  if (pins & MCP_BANKA) {
-     if (pins & (1<<MOX_BUTTON))
-       moxAlert(MOX_BUTTON, values&(1<<MOX_BUTTON), 0);
-     if (pins & (1<<FUNCTION_BUTTON))
-       functionAlert(FUNCTION_BUTTON, values&(1<<FUNCTION_BUTTON), 0);
-     if (pins & (1<<S1_BUTTON))
-       bandAlert(S1_BUTTON, values&(1<<S1_BUTTON), 0);
-     if (pins & (1<<S2_BUTTON))
-       bandstackAlert(S2_BUTTON, values&(1<<S2_BUTTON), 0);
-     if (pins & (1<<S3_BUTTON))
-       modeAlert(S3_BUTTON, values&(1<<S3_BUTTON), 0);
-     if (pins & (1<<S4_BUTTON))
-       filterAlert(S4_BUTTON, values&(1<<S4_BUTTON), 0);
-     if (pins & (1<<S5_BUTTON))
-       noiseAlert(S5_BUTTON, values&(1<<S5_BUTTON), 0);
-     if (pins & (1<<S6_BUTTON))
-       agcAlert(S6_BUTTON, values&(1<<S6_BUTTON), 0);
-  }
 
   // check BANKB (encoders)
   if (pins & MCP_BANKB) {
@@ -389,12 +366,44 @@ void mcp23x17_interruptA(void) {
   }
 }
 
-#if 0
 void mcp23x17_interruptB(void) {
-  int values, pins = MCP_PINBASE;
+  int values, pins = MCPB_PINBASE;
   interruptRead (&pins, &values);
+
+  // check BANKA (buttons)
+  if (pins & MCP_BANKA) {
+     if (pins & (1<<MOX_BUTTON))
+       moxAlert(MOX_BUTTON, values&(1<<MOX_BUTTON), 0);
+     if (pins & (1<<FUNCTION_BUTTON))
+       functionAlert(FUNCTION_BUTTON, values&(1<<FUNCTION_BUTTON), 0);
+     if (pins & (1<<S1_BUTTON))
+       bandAlert(S1_BUTTON, values&(1<<S1_BUTTON), 0);
+     if (pins & (1<<S2_BUTTON))
+       bandstackAlert(S2_BUTTON, values&(1<<S2_BUTTON), 0);
+     if (pins & (1<<S3_BUTTON))
+       modeAlert(S3_BUTTON, values&(1<<S3_BUTTON), 0);
+     if (pins & (1<<S4_BUTTON))
+       filterAlert(S4_BUTTON, values&(1<<S4_BUTTON), 0);
+     if (pins & (1<<S5_BUTTON))
+       noiseAlert(S5_BUTTON, values&(1<<S5_BUTTON), 0);
+     if (pins & (1<<S6_BUTTON))
+       agcAlert(S6_BUTTON, values&(1<<S6_BUTTON), 0);
+  }
+
+  // check BANKB (buttons)
+  if (pins & MCP_BANKB) {
+     if (pins & (1<<E1_FUNCTION))
+       e1FunctionAlert(E1_FUNCTION, values&(1<<E1_FUNCTION), 0);
+     if (pins & (1<<E2_FUNCTION))
+       e2FunctionAlert(E2_FUNCTION, values&(1<<E2_FUNCTION), 0);
+     if (pins & (1<<E3_FUNCTION))
+       e3FunctionAlert(E3_FUNCTION, values&(1<<E3_FUNCTION), 0);
+     if (pins & (1<<CWR_BUTTON))
+       cwAlert(CWR_BUTTON, values&(1<<CWR_BUTTON), 0);
+     if (pins & (1<<CWL_BUTTON))
+       cwAlert(CWL_BUTTON, values&(1<<CWL_BUTTON), 0);
+  }
 }
-#endif
 #endif
 
 #ifdef sx1509
@@ -799,46 +808,43 @@ fprintf(stderr,"encoder_init\n");
 #endif
 
 #ifdef mcp23x17
-  void setup_button(int button, int edge, void *pAlert) {
-    pinMode(button, INPUT);
-    pullUpDnControl(button, PUD_UP);
-    // give time to settle to avoid false triggers
-    usleep(10000);
-    wiringPiISR (button, edge, pAlert);
-  }
-
-  int values, pins = MCP_PINBASE;
-  int MCP23X17_INTA=0;
-//  int MCP23X17_INTB=1;
-  int i;
+  // we're using two mcp23017 chips to cover all GPIOs
+  int MCP23X17A_INT=0; //chip A
+  int MCP23X17B_INT=1; //chip B
+  int MCPA_I2CADDR=0x20;
+  int MCPB_I2CADDR=0x21;
+  int values, pins, i;
 
   // override default (PI) values
-  // encoders on bank A
+
+  // encoders int A on chip A bank A
   VFO_ENCODER_A=8;
-  VFO_ENCODER_B=9;
-  E1_ENCODER_A=10;
-  E1_ENCODER_B=11;
-  E2_ENCODER_A=12;
-  E2_ENCODER_B=13;
-  E3_ENCODER_A=14;
+  E1_ENCODER_A=9;
+  E2_ENCODER_A=10;
+  E3_ENCODER_A=11;
+  VFO_ENCODER_B=12;
+  E1_ENCODER_B=13;
+  E2_ENCODER_B=14;
   E3_ENCODER_B=15;
+  // spares on chip A bank B 0-7
 
-  // buttons on bank B
-  MOX_BUTTON=0;
-  FUNCTION_BUTTON=1;
-  S1_BUTTON=2;
-  S2_BUTTON=3;
-  S3_BUTTON=4;
-  S4_BUTTON=5;
-  S5_BUTTON=6;
-  S6_BUTTON=7;
+  // lcd buttons on chip B bank A
+  MOX_BUTTON=8;
+  FUNCTION_BUTTON=9;
+  S1_BUTTON=10;
+  S2_BUTTON=11;
+  S3_BUTTON=12;
+  S4_BUTTON=13;
+  S5_BUTTON=14;
+  S6_BUTTON=15;
 
-  // mcp pins all used above, need some from SBC
-  // will need to POLL these as I can only get
-  // 5 edge triggers from the Odroid C2
-  E1_FUNCTION=2;
-  E2_FUNCTION=3;
-  E3_FUNCTION=12;
+  // cw & encoder buttons on chip B bank B
+  E1_FUNCTION=0;
+  E2_FUNCTION=1;
+  E3_FUNCTION=2;
+  // spares 3-5
+  CWL_BUTTON=6;
+  CWR_BUTTON=7;
 
   fprintf(stderr,"mcp23x17 encoder_init: VFO_ENCODER_A=%d VFO_ENCODER_B=%d\n",VFO_ENCODER_A,VFO_ENCODER_B);
 
@@ -847,59 +853,63 @@ fprintf(stderr,"encoder_init\n");
     return -1;
   }
 
-  if (mcp23017Setup (MCP_PINBASE, MCP_I2CADDR) < 0) {
-    printf ("Unable to setup mcp23017Setup: %s\n", strerror (errno));
+  if (mcp23017Setup (MCPA_PINBASE, MCPA_I2CADDR) < 0) {
+    printf ("Unable to complete mcp23017Setup for chip A: %s\n", strerror (errno));
     return -1;
   }
 
-  // 1 - mirrored AB ints, 0 - disable opendrain, LOW - active_low ints
-  if (mcp23017SetupInts (MCP_PINBASE, 1, 0, LOW) < 0) {
-    printf ("Unable to setup mcp23017SetupInts: %s\n", strerror (errno));
+  if (mcp23017Setup (MCPB_PINBASE, MCPB_I2CADDR) < 0) {
+    printf ("Unable to complete mcp23017Setup for chip B: %s\n", strerror (errno));
     return -1;
   }
 
-  // will need to POLL these
-//  setup_button(E1_FUNCTION, INT_EDGE_FALLING, &e1FunctionAlert);
-//  setup_button(E2_FUNCTION, INT_EDGE_FALLING, &e2FunctionAlert);
-//  setup_button(E3_FUNCTION, INT_EDGE_FALLING, &e3FunctionAlert);
-  e1Function=0;
-  e2Function=0;
-  e3Function=0;
+  // chip A - mirrored AB ints, 0 - disable opendrain, LOW - active_low ints
+  if (mcp23017SetupInts (MCPA_PINBASE, 1, 0, LOW) < 0) {
+    printf ("Unable to complete mcp23017SetupInts for chip A: %s\n", strerror (errno));
+    return -1;
+  }
 
-  // (this takes 4 of the 8 Odroid edge triggers)
-  if(ENABLE_CW_BUTTONS) {
-    CWL_BUTTON=2;
-    CWR_BUTTON=3;
-    setup_button(CWL_BUTTON, INT_EDGE_BOTH, &cwAlert);
-    setup_button(CWR_BUTTON, INT_EDGE_BOTH, &cwAlert);
+  // chip B - mirrored AB ints, 0 - disable opendrain, LOW - active_low ints
+  if (mcp23017SetupInts (MCPB_PINBASE, 1, 0, LOW) < 0) {
+    printf ("Unable to complete mcp23017SetupInts for chip B: %s\n", strerror (errno));
+    return -1;
   }
 
   // setup all mcp pins as interrupt inputs
   for (i = 0 ; i < 16 ; i++) {
-    pinMode (MCP_PINBASE + i, INPUT) ;
-    pullUpDnControl (MCP_PINBASE + i, PUD_UP) ;
-    pinIntPolarity (MCP_PINBASE + i, INT_EDGE_BOTH) ;
+    pinMode (MCPA_PINBASE + i, INPUT) ;
+    pullUpDnControl (MCPA_PINBASE + i, PUD_UP) ;
+    pinIntPolarity (MCPA_PINBASE + i, INT_EDGE_BOTH) ;
   }
 
-  // read just to clear any pending interrupts
+  for (i = 0 ; i < 16 ; i++) {
+    pinMode (MCPB_PINBASE + i, INPUT) ;
+    pullUpDnControl (MCPB_PINBASE + i, PUD_UP) ;
+    pinIntPolarity (MCPB_PINBASE + i, INT_EDGE_BOTH) ;
+  }
+
+  // dummy read just to clear any pending interrupts
+  pins = MCPA_PINBASE;
+  interruptRead (&pins, &values);
+  pins = MCPB_PINBASE;
   interruptRead (&pins, &values);
 
-  pinMode(MCP23X17_INTA, INPUT);
-  pullUpDnControl(MCP23X17_INTA, PUD_UP);
-//  pinMode(MCP23X17_INTB, INPUT);
-//  pullUpDnControl(MCP23X17_INTB, PUD_UP);
+  pinMode(MCP23X17A_INT, INPUT);
+  pullUpDnControl(MCP23X17A_INT, PUD_UP);
+  pinMode(MCP23X17B_INT, INPUT);
+  pullUpDnControl(MCP23X17B_INT, PUD_UP);
 
   // (this takes 1 of the 8 Odroid edge triggers)
-  if (wiringPiISR (MCP23X17_INTA, INT_EDGE_FALLING, &mcp23x17_interruptA) < 0 ) {
+  if (wiringPiISR (MCP23X17A_INT, INT_EDGE_FALLING, &mcp23x17_interruptA) < 0 ) {
     printf ("Unable to setup MCP ISR A: %s\n", strerror (errno));
     return -1;
   }
 
-// (none left of the 8 Odroid edge triggers)
-//  if (wiringPiISR (MCP23X17_INTB, INT_EDGE_FALLING, &mcp23x17_interruptB) < 0 ) {
-//    printf ("Unable to setup MCP ISR B: %s\n", strerror (errno));
-//    return -1;
-//  }
+  // (this takes 1 of the 8 Odroid edge triggers)
+  if (wiringPiISR (MCP23X17B_INT, INT_EDGE_FALLING, &mcp23x17_interruptB) < 0 ) {
+    printf ("Unable to setup MCP ISR B: %s\n", strerror (errno));
+    return -1;
+  }
 #endif
 
 #ifdef sx1509
