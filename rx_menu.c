@@ -205,7 +205,12 @@ void rx_menu(GtkWidget *parent) {
   gtk_grid_attach(GTK_GRID(grid),close_b,0,0,1,1);
 
   int row;
+  int col=0;
 
+  if (protocol == ORIGINAL_PROTOCOL || protocol == NEW_PROTOCOL) {
+    //
+    // Everything in the first two columns does not apply to SOAPY
+    //
   row=1;
   switch(protocol) {
     case NEW_PROTOCOL:  // Sample rate in RX menu only for P2
@@ -318,26 +323,28 @@ void rx_menu(GtkWidget *parent) {
         gtk_grid_attach(GTK_GRID(grid),preamp_b,0,row,1,1);
         g_signal_connect(preamp_b,"toggled",G_CALLBACK(preamp_cb),NULL);
       }
+    }
+    col=2;
   }
 
   GtkWidget *mute_audio_b=gtk_check_button_new_with_label("Mute when not active");
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (mute_audio_b), active_receiver->mute_when_not_active);
   gtk_widget_show(mute_audio_b);
-  gtk_grid_attach(GTK_GRID(grid),mute_audio_b,2,1,1,1);
+  gtk_grid_attach(GTK_GRID(grid),mute_audio_b,col,1,1,1);
   g_signal_connect(mute_audio_b,"toggled",G_CALLBACK(mute_audio_cb),NULL);
-  row++;
 
   GtkWidget *mute_radio_b=gtk_check_button_new_with_label("Mute audio to radio");
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (mute_radio_b), active_receiver->mute_radio);
   gtk_widget_show(mute_radio_b);
-  gtk_grid_attach(GTK_GRID(grid),mute_radio_b,2,2,1,1);
+  gtk_grid_attach(GTK_GRID(grid),mute_radio_b,col,2,1,1);
   g_signal_connect(mute_radio_b,"toggled",G_CALLBACK(mute_radio_cb),NULL);
+  col++;
 
   if(n_output_devices>0) {
     local_audio_b=gtk_check_button_new_with_label("Local Audio Output:");
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (local_audio_b), active_receiver->local_audio);
     gtk_widget_show(local_audio_b);
-    gtk_grid_attach(GTK_GRID(grid),local_audio_b,3,1,1,1);
+    gtk_grid_attach(GTK_GRID(grid),local_audio_b,col,1,1,1);
     g_signal_connect(local_audio_b,"toggled",G_CALLBACK(local_audio_cb),NULL);
 
     if(active_receiver->audio_device==-1) active_receiver->audio_device=0;
@@ -362,7 +369,7 @@ void rx_menu(GtkWidget *parent) {
       }
     }
 
-    my_combo_attach(GTK_GRID(grid),output,3,2,1,1);
+    my_combo_attach(GTK_GRID(grid),output,col,2,1,1);
     g_signal_connect(output,"changed",G_CALLBACK(local_output_changed_cb),NULL);
 
     GtkWidget *channel=gtk_combo_box_text_new();
@@ -381,7 +388,7 @@ void rx_menu(GtkWidget *parent) {
         gtk_combo_box_set_active(GTK_COMBO_BOX(channel),2);
         break;
     }
-    my_combo_attach(GTK_GRID(grid),channel,3,3,1,1);
+    my_combo_attach(GTK_GRID(grid),channel,col,3,1,1);
     g_signal_connect(channel,"changed",G_CALLBACK(audio_channel_cb),NULL);
   }
 
