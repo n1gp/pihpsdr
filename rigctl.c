@@ -2615,11 +2615,12 @@ case 'E': //ZZZE
       case 'P': //ZZZP
          // Push Buttons
          if(command[7]==';') {
+           static int numpad_active=0;
            static int longpress=0;
            int v=(command[6]-0x30);
            int p=(command[4]-0x30)*10;
            p+=command[5]-0x30;
-           switch(p) {
+           if (!numpad_active) switch(p) {
              case 21: // Function Switches
              case 22:
              case 23:
@@ -2647,7 +2648,48 @@ case 'E': //ZZZE
                }
                break;
            }
-           if (!locked) switch(p) {
+           if (numpad_active && v==1) switch(p) {
+             case 30: // Band Buttons
+               schedule_action(NUMPAD_1, PRESSED, 0);
+               break;
+             case 31:
+               schedule_action(NUMPAD_2, PRESSED, 0);
+               break;
+             case 32:
+               schedule_action(NUMPAD_3, PRESSED, 0);
+               break;
+             case 33:
+               schedule_action(NUMPAD_4, PRESSED, 0);
+               break;
+             case 34:
+               schedule_action(NUMPAD_5, PRESSED, 0);
+               break;
+             case 35:
+               schedule_action(NUMPAD_6, PRESSED, 0);
+               break;
+             case 36:
+               schedule_action(NUMPAD_7, PRESSED, 0);
+               break;
+             case 37:
+               schedule_action(NUMPAD_8, PRESSED, 0);
+               break;
+             case 38:
+               schedule_action(NUMPAD_9, PRESSED, 0);
+               break;
+             case 39:
+               schedule_action(NUMPAD_DEC, PRESSED, 0);
+               break;
+             case 40:
+               schedule_action(NUMPAD_0, PRESSED, 0);
+               break;
+             case 41:
+               {
+                 schedule_action(NUMPAD_ENTER, PRESSED, 0);
+                 numpad_active=0;
+                 locked=0;
+               }
+               break;
+           } else if (!locked) switch(p) {
              static int shift=0;
              case 1: // Rx1 AF Mute
                if(v==0) receiver[0]->mute_radio^=1;
@@ -2712,31 +2754,26 @@ case 'E': //ZZZE
                  shift=0;
                  sprintf(reply,"ZZZI060;");
                  send_resp(client->fd,reply);
-               } else {
-                 if (p==30 && v==0) // MODE DATA
-                   start_tx();
-                 else if (p==31) // MODE+
-                   schedule_action(MODE_PLUS, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==32) // FILTER+
-                   schedule_action(FILTER_PLUS, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==33 && v==0) // RX2
-                   radio_change_receivers(receivers==1?2:1);
-                 else if (p==34) // MODE-
-                   schedule_action(MODE_MINUS, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==35) // FILTER-
-                   schedule_action(FILTER_MINUS, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==36) // A>B
-                   schedule_action(A_TO_B, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==37) // B>A
-                   schedule_action(B_TO_A, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==38) // SPLIT
-                   schedule_action(SPLIT, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==39) // U1 (use A_SWAP_B)
-                   schedule_action(A_SWAP_B, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==40) // U2 (use NB)
-                   schedule_action(NB, (v==0)?PRESSED:RELEASED, 0);
-                 else if (p==41) // U3 (use NR)
-                   schedule_action(NR, (v==0)?PRESSED:RELEASED, 0);
+               } else if (v==1) {
+                 if (p==30)start_tx();                                     // MODE DATA
+                 else if (p==31) schedule_action(MODE_PLUS, PRESSED, 0);   // MODE+
+                 else if (p==32) schedule_action(FILTER_PLUS, PRESSED, 0); // FILTER+
+                 else if (p==33) radio_change_receivers(receivers==1?2:1); // RX2
+                 else if (p==34) schedule_action(MODE_MINUS, PRESSED, 0);  // MODE-
+                 else if (p==35) schedule_action(FILTER_MINUS, PRESSED, 0);// FILTER-
+                 else if (p==36) schedule_action(A_TO_B, PRESSED, 0);      // A>B
+                 else if (p==37) schedule_action(B_TO_A, PRESSED, 0);      // B>A
+                 else if (p==38) schedule_action(SPLIT, PRESSED, 0);       // SPLIT
+                 else if (p==40) schedule_action(NB, PRESSED, 0);          // U2 (use NB)
+                 else if (p==41) schedule_action(NR, PRESSED, 0);          // U3 (use NR)
+               } else if (p==39) {                                         // U1 (use A_SWAP_B)
+                   if (v==0) schedule_action(A_SWAP_B, PRESSED, 0);
+                   else if (v==2) {
+                     numpad_active=1;
+                     locked=1;
+                     g_idle_add(ext_vfo_update,NULL);
+                     schedule_action(NUMPAD_CL, PRESSED, 0);
+                   }
                }
                break;
              case 42: // RIT/XIT
@@ -2834,7 +2871,7 @@ case 'E': //ZZZE
                break;
            }
            if (p==44) { // VFO lock
-             if(v==0) {
+             if(v==0 && !numpad_active) {
                locked ^= 1;
                g_idle_add(ext_vfo_update,NULL);
                sprintf(reply,"ZZZI11%d;", locked);
@@ -4312,22 +4349,6 @@ static int last_rit;
 static int last_xit;
 static int last_vfoa;
 
-gboolean andromeda_init(gpointer data) {
-  //
-  // This function is put into the GTK idle queue
-  // when an "andromeda" serial line is opened
-  //
-  CLIENT *client = (CLIENT *)data;
-  if (!client->running) return FALSE;
-
-  // This triggers new results to be reported;
-  last_mox = last_tune = last_ps = last_ctun = last_lock = last_div = last_rit = last_xit = last_vfoa = -999;
-
-  // This triggers a reply (from Andromeda) to report its FP version
-  send_resp(client->fd,"ZZZS;");
-  return FALSE;
-}
-
 gboolean andromeda_handler(gpointer data) {
   //
   // This function is repeatedly called until it returns FALSE
@@ -4338,6 +4359,11 @@ gboolean andromeda_handler(gpointer data) {
 
   if (!client->running) return FALSE;
 
+  if(last_vfoa!=active_receiver->id) {
+    sprintf(reply,"ZZZI10%d;", active_receiver->id^1);
+    send_resp(client->fd,reply);
+    last_vfoa=active_receiver->id;
+  }
   if(last_div!=diversity_enabled) {
     sprintf(reply,"ZZZI05%d;", diversity_enabled);
     send_resp(client->fd,reply);
@@ -4373,17 +4399,28 @@ gboolean andromeda_handler(gpointer data) {
     send_resp(client->fd,reply);
     last_xit=transmitter->xit_enabled;
   }
-  if(last_vfoa!=active_receiver->id) {
-    sprintf(reply,"ZZZI10%d;", active_receiver->id^1);
-    send_resp(client->fd,reply);
-    last_vfoa=active_receiver->id;
-  }
   if(last_lock!=locked) {
     sprintf(reply,"ZZZI11%d;", locked);
     send_resp(client->fd,reply);
     last_lock=locked;
   }
   return TRUE;
+}
+
+gboolean andromeda_init(gpointer data) {
+  //
+  // This function is put into the GTK idle queue
+  // when an "andromeda" serial line is opened
+  //
+  CLIENT *client = (CLIENT *)data;
+  if (!client->running) return FALSE;
+
+  // This triggers new results to be reported;
+  last_mox = last_tune = last_ps = last_ctun = last_lock = last_div = last_rit = last_xit = last_vfoa = -999;
+
+  // This triggers a reply (from Andromeda) to report its FP version
+  send_resp(client->fd,"ZZZS;");
+  return FALSE;
 }
 #endif
 
@@ -4446,8 +4483,7 @@ void launch_andromeda (int id) {
      // This is a no-op if the serial client is NOT running
      //
      if (SerialPorts[id].andromeda && serial_client[id].running) {
-       usleep(500000L); // Need to wait for andromedas serial to settle, Andromeda FP Version: h/w:01 s/w:006
-       g_idle_add(andromeda_init, &serial_client[id]);           // executed once
+       g_timeout_add(700,andromeda_init,&serial_client[id]);           // executed once, but init is delayed 700ms
        serial_client[id].andromeda_timer=g_timeout_add(500,andromeda_handler,&serial_client[id]);  // executed periodically
      }
 }

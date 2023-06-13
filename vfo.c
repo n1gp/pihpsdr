@@ -1576,10 +1576,48 @@ void vfo_ctun_update(int id,int state) {
   }
 }
 
+static GtkWidget *label;
+static GtkWidget *dialog=NULL;
+
+void vfo_num_pad(GtkWidget *parent,int vfo) {
+  int i;
+  int v=vfo;
+
+  dialog=gtk_dialog_new();
+  gtk_window_set_transient_for(GTK_WINDOW(dialog),GTK_WINDOW(parent));
+  char title[64];
+  sprintf(title,"VFO %s in MHz",vfo==0?"A":"B");
+  gtk_window_set_title(GTK_WINDOW(dialog),title);
+  set_backgnd(dialog);
+
+  GtkWidget *content=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+
+  GtkWidget *grid=gtk_grid_new();
+  gtk_widget_set_size_request (grid, 150, 30);
+  gtk_grid_set_row_homogeneous(GTK_GRID(grid), FALSE);
+  gtk_grid_set_column_homogeneous(GTK_GRID(grid),TRUE);
+  set_backgnd(grid);
+
+  label = gtk_label_new (NULL);
+  gtk_label_set_markup (GTK_LABEL (label), "<big>0</big>");
+  gtk_misc_set_alignment (GTK_MISC (label), 1, .5);
+  gtk_grid_attach(GTK_GRID(grid),label,0,1,3,1);
+
+  gtk_container_add(GTK_CONTAINER(content),grid);
+
+  sub_menu=dialog;
+
+  gtk_widget_show_all(dialog);
+}
+
 //
 // helper function for numerically entering a new VFO frequency
 //
+#define BUF_SIZE 88
 void num_pad(int val) {
+  char output[BUF_SIZE], freq_str[BUF_SIZE];
+  static gint64 freq_int, digit_count;
+  static int dec_done;
   //
   // The numpad may be difficult to use since the frequency has to be given in Hz
   // TODO: add a multiplier button like "kHz"
@@ -1588,23 +1626,61 @@ void num_pad(int val) {
   //
   RECEIVER *rx=active_receiver;
   if(!vfo[rx->id].entering_frequency) {
-    vfo[rx->id].entered_frequency=0;
+    freq_int=0;
+    digit_count=0;
+    dec_done=0;
+    vfo[rx->id].entered_frequency=vfo[rx->id].frequency;
     vfo[rx->id].entering_frequency=TRUE;
+    vfo_num_pad(top_window,rx->id);
+    return;
   }
+
+  if(digit_count>=12 && val!=-2)
+    return;
+
   switch(val) {
     case -1: // clear
+      freq_int=0;
+      digit_count=0;
+      dec_done=0;
       vfo[rx->id].entered_frequency=0;
       vfo[rx->id].entering_frequency=FALSE;
       break;
     case -2: // enter
-      if(vfo[rx->id].entered_frequency!=0) {
+      if(vfo[rx->id].entered_frequency!=0 && vfo[rx->id].entered_frequency!=vfo[rx->id].frequency) {
+        if(dec_done)
+          sprintf(freq_str, "%llu.%llu", freq_int, vfo[rx->id].entered_frequency);
+        else
+          sprintf(freq_str, "%llu", vfo[rx->id].entered_frequency);
+        vfo[rx->id].entered_frequency=(gint64)(atof(freq_str)*1000000);
         receiver_set_frequency(rx, vfo[rx->id].entered_frequency);
         g_idle_add(ext_vfo_update, NULL);
       }
       vfo[rx->id].entering_frequency=FALSE;
+      if(dialog!=NULL) {
+        gtk_widget_destroy(dialog);
+        dialog=NULL;
+        sub_menu=NULL;
+      }
+      break;
+    case -3: // decimal point
+      if(dec_done) break; // ignore extra decimal points
+      dec_done=1;
+      freq_int=(digit_count)?vfo[rx->id].entered_frequency:0;
+      vfo[rx->id].entered_frequency=0;
+      sprintf(output, "<big>%d.</big>", freq_int);
+      gtk_label_set_markup (GTK_LABEL (label), output);
       break;
     default:
-      vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
+      if(digit_count++ == 0) vfo[rx->id].entered_frequency=0;
+      if(dec_done) {
+        vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
+        sprintf(output, "<big>%llu.%llu</big>", freq_int, vfo[rx->id].entered_frequency);
+      } else {
+        vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
+        sprintf(output, "<big>%llu</big>", vfo[rx->id].entered_frequency);
+      }
+      gtk_label_set_markup (GTK_LABEL (label), output);
       break;
   }
 }
