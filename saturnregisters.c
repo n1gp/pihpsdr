@@ -1400,7 +1400,6 @@ void InitialiseCWKeyerRamp(bool Protocol2, uint32_t Length_us)
     double LargestSample;
     double Fraction;                         // fractional position in ramp
     double SamplePeriod;                     // sample period in us
-    double Length;                           // length required in us
     uint32_t RampLength;                    // integer length in WORDS not bytes!
     double RampSample[VRAMPSIZE];            // array samples
     uint32_t Cntr;

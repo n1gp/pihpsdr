@@ -103,13 +103,9 @@ gint controller=NO_CONTROLLER;
 GtkWidget *fixed;
 static GtkWidget *vfo_panel;
 static GtkWidget *meter;
-static GtkWidget *menu;
 static GtkWidget *zoompan;
 static GtkWidget *sliders;
 static GtkWidget *toolbar;
-static GtkWidget *panadapter;
-static GtkWidget *waterfall;
-static GtkWidget *audio_waterfall;
 
 // RX and TX calibration
 long long frequency_calibration=0LL;
@@ -129,7 +125,6 @@ int echo=0;
 int radio_sample_rate;   // alias for radio->info.soapy.sample_rate
 gboolean iqswap;
 
-static gint save_timer_id;
 
 DISCOVERED *radio=NULL;
 #ifdef CLIENT_SERVER
@@ -144,8 +139,7 @@ RECEIVER *active_receiver;
 TRANSMITTER *transmitter;
 
 int RECEIVERS;
-int MAX_RECEIVERS;
-int MAX_DDC;
+int MAX_DDC;  // only used in new_protocol.c
 int PS_TX_FEEDBACK;
 int PS_RX_FEEDBACK;
 
@@ -232,7 +226,7 @@ int rit_increment=10;
 
 int cw_keys_reversed=0; // 0=disabled 1=enabled
 int cw_keyer_speed=16; // 1-60 WPM
-int cw_keyer_mode=KEYER_MODE_A;
+int cw_keyer_mode=KEYER_MODE_A;        // Modes A/B and STRAIGHT
 int cw_keyer_weight=50; // 0-100
 int cw_keyer_spacing=0; // 0=on 1=off
 int cw_keyer_internal=1; // 0=external 1=internal
@@ -241,8 +235,11 @@ int cw_keyer_ptt_delay=30; // 0-255ms
 int cw_keyer_hang_time=500; // ms
 int cw_keyer_sidetone_frequency=800; // Hz
 int cw_breakin=1; // 0=disabled 1=enabled
+int cw_audio_peak_filter=1;            // 0=disables 1=enabled, only in CW mode
+int cw_audio_peak_width=75;            // Width of CW audio peak filter
 
 int cw_is_on_vfo_freq=1;   // 1= signal on VFO freq, 0= signal offset by side tone
+                                       // shall hard-wire this to "1"
 
 int vfo_encoder_divisor=15;
 
@@ -312,8 +309,6 @@ int tx_filter_high=2850;
 
 static int pre_tune_mode;
 static int pre_tune_cw_internal;
-static int pre_tune_filter_low;
-static int pre_tune_filter_high;
 
 int enable_tx_equalizer=0;
 int tx_equalizer[4]={0,0,0,0};
@@ -341,11 +336,7 @@ double div_phase=0.0;	   // phase for diversity (in degrees, 0 ... 360)
 
 
 int can_transmit=0;
-#ifdef ANDROMEDA
-int optimize_for_touchscreen=1;
-#else
 int optimize_for_touchscreen=0;
-#endif
 
 gboolean duplex=FALSE;
 gboolean mute_rx_while_transmitting=FALSE;
@@ -365,7 +356,8 @@ gint rx_height;
 // theme in use.
 //
 void set_backgnd(GtkWidget *widget) {
-   static GdkRGBA BackGroundColour = {COLOUR_MENU_BACKGND};
+   //static GdkRGBA BackGroundColour = {COLOUR_MENU_BACKGND};
+   //gtk_widget_override_background_color(widget,GTK_STATE_FLAG_NORMAL,&BackGroundColor);
 }
 
 void radio_stop() {
@@ -462,10 +454,16 @@ g_print("reconfigure_radio: receivers=%d\n",receivers);
   }
 }
 
+#if 0
+//
+// used to regularly write props file, currently not active
+//
+static gint save_timer_id;
 static gboolean save_cb(gpointer data) {
     radioSaveState();
     return TRUE;
 }
+#endif
 
 static gboolean minimize_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   gtk_window_iconify(GTK_WINDOW(top_window));
@@ -559,6 +557,11 @@ static void create_visual() {
   }
 
   active_receiver=receiver[0];
+  //
+  // This is to detect illegal accesses to the PS receivers
+  //
+  receiver[PS_RX_FEEDBACK]=NULL;
+  receiver[PS_TX_FEEDBACK]=NULL;
 
 // TEMP
 #ifdef CLIENT_SERVER
@@ -587,7 +590,7 @@ if(!radio_is_remote) {
       receiver[PS_RX_FEEDBACK]=create_pure_signal_receiver(PS_RX_FEEDBACK, buffer_size,protocol==ORIGINAL_PROTOCOL?active_receiver->sample_rate:192000,display_width);
       switch (protocol) {
         case NEW_PROTOCOL:
-          switch (radio->device) {
+          switch (device) {
             case NEW_DEVICE_SATURN:
               pk = 0.6121;
               break;
@@ -597,7 +600,7 @@ if(!radio_is_remote) {
           }
           break;
         case ORIGINAL_PROTOCOL:
-          switch (radio->device) {
+          switch (device) {
             case DEVICE_HERMES_LITE2:
               pk = 0.2330;
               break;
@@ -605,6 +608,11 @@ if(!radio_is_remote) {
               pk = 0.4067;
               break;
           }
+          break;
+        default:
+          // NOTREACHED
+          pk = 1.000;
+          break;
       }
       SetPSHWPeak(transmitter->id, pk);
     }
@@ -695,12 +703,22 @@ void start_radio() {
   gdk_window_set_cursor(gtk_widget_get_window(top_window),gdk_cursor_new(GDK_WATCH));
 
   //
-  // In the discovery dialog, we have set the combobox behaviour to
-  // "touchscreen friendly". Now we set it to "mouse friendly"
-  // but this can be overridden in the RADIO menu or when reading
-  // from the props file
+  // The behaviour of pop-up menus (Combo-Boxes) can be set to
+  // "mouse friendly" (standard case) and "touchscreen friendly"
+  // menu pops up upon press, and stays upon release, and the selection can
+  // be made with a second press).
   //
-  optimize_for_touchscreen=0;
+  // Here we set it to "mouse friendly" in the NO_CONTROLLER case,
+  // since if we use one of the GPIO controllers, chances are high that
+  // we operate with a touch-screen.
+  //
+  // The setting can be changed in the RADIO menu and is stored in the
+  // props file, so will be restored therefrom as well.
+  //
+  optimize_for_touchscreen=1;
+#ifndef ANDROMEDA
+  if (controller == NO_CONTROLLER) optimize_for_touchscreen=0;
+#endif
 
   protocol=radio->protocol;
   device=radio->device;
@@ -1172,15 +1190,13 @@ void start_radio() {
     case SOAPYSDR_PROTOCOL:
   g_print("%s: setup RECEIVERS SOAPYSDR\n",__FUNCTION__);
       RECEIVERS=1;
-      MAX_RECEIVERS=RECEIVERS;
-      PS_TX_FEEDBACK=0;
-      PS_RX_FEEDBACK=0;
-      MAX_DDC=1;
+      PS_TX_FEEDBACK=1;
+      PS_RX_FEEDBACK=1;
+      MAX_DDC=1;  // unused in SOAPY protocol
       break;
     default:
   g_print("%s: setup RECEIVERS default\n",__FUNCTION__);
       RECEIVERS=2;
-      MAX_RECEIVERS=(RECEIVERS+2);
       PS_TX_FEEDBACK=(RECEIVERS);
       PS_RX_FEEDBACK=(RECEIVERS+1);
       MAX_DDC=(RECEIVERS+2);
@@ -1402,8 +1418,8 @@ static void rxtx(int state) {
     RECEIVER *rx_feedback=receiver[PS_RX_FEEDBACK];
     RECEIVER *tx_feedback=receiver[PS_TX_FEEDBACK];
 
-    rx_feedback->samples=0;
-    tx_feedback->samples=0;
+    if (rx_feedback) rx_feedback->samples=0;
+    if (tx_feedback) tx_feedback->samples=0;
 
     if(!duplex) {
       for(i=0;i<receivers;i++) {
@@ -1476,6 +1492,10 @@ static void rxtx(int state) {
         // the TX phase (TUNE, AM, FM), the problem is virtually non-existent for CW, and of medium
         // importance in SSB. On the other hand, one want a very fast turnaround in CW.
         // So there is no "muting" for CW, 31 msec "muting" for TUNE/AM/FM, and 16 msec for other modes.
+        //
+        // Note that for doing "TwoTone" we should also use the long silence, but it is difficult
+        // to detect at this point whether this TX/RX transition comes from ending a TwoTone
+        // experiment.
         //
         switch(get_tx_mode()) {
           case modeCWU:
@@ -1663,6 +1683,7 @@ void setTune(int state) {
       pre_tune_mode=txmode;
       pre_tune_cw_internal=cw_keyer_internal;
 
+#if 0
       //
       // in USB/DIGU      tune 1000 Hz above carrier
       // in LSB/DIGL,     tune 1000 Hz below carrier
@@ -1681,6 +1702,12 @@ void setTune(int state) {
           SetTXAPostGenToneFreq(transmitter->id,(double)0.0);
           break;
       }
+#else
+      //
+      // Perhaps it it best to *always* tune on the dial frequency
+      //
+      SetTXAPostGenToneFreq(transmitter->id,(double)0.0);
+#endif
 
       SetTXAPostGenToneMag(transmitter->id,0.99999);
       SetTXAPostGenMode(transmitter->id,0);
@@ -2016,8 +2043,12 @@ g_print("radioRestoreState: %s\n",property_path);
 
     value=getProperty("step");
     if(value) step=atoll(value);
-    value=getProperty("cw_is_on_vfo_freq");
-    if(value) cw_is_on_vfo_freq=atoi(value);
+    //value=getProperty("cw_is_on_vfo_freq");
+    //if(value) cw_is_on_vfo_freq=atoi(value);
+    value=getProperty("cw_audio_peak_filter");
+    if(value) cw_audio_peak_filter=atoi(value);
+    value=getProperty("cw_audio_peak_width");
+    if(value) cw_audio_peak_width=atoi(value);
     value=getProperty("cw_keys_reversed");
     if(value) cw_keys_reversed=atoi(value);
     value=getProperty("cw_keyer_speed");
@@ -2308,7 +2339,9 @@ g_print("radioSaveState: %s\n",property_path);
   if(can_transmit) {
     // The only variables of interest in this receiver are
     // the alex_antenna an the adc
+    if (receiver[PS_RX_FEEDBACK]) {
     receiver_save_state(receiver[PS_RX_FEEDBACK]);
+    }
     transmitter_save_state(transmitter);
   }
 
@@ -2397,8 +2430,12 @@ g_print("radioSaveState: %s\n",property_path);
 
     sprintf(value,"%lld",step);
     setProperty("step",value);
-    sprintf(value,"%d",cw_is_on_vfo_freq);
-    setProperty("cw_is_on_vfo_freq",value);
+    //sprintf(value,"%d",cw_is_on_vfo_freq);
+    //setProperty("cw_is_on_vfo_freq",value);
+    sprintf(value,"%d",cw_audio_peak_filter);
+    setProperty("cw_audio_peak_filter",value);
+    sprintf(value,"%d",cw_audio_peak_width);
+    setProperty("cw_audio_peak_width",value);
     sprintf(value,"%d",cw_keys_reversed);
     setProperty("cw_keys_reversed",value);
     sprintf(value,"%d",cw_keyer_speed);

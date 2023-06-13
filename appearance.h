@@ -34,9 +34,14 @@
 #define DISPLAY_FONT_SIZE1 10                       // Default: 10
 #define DISPLAY_FONT_SIZE2 12                       // Default: 12
 #define DISPLAY_FONT_SIZE3 16                       // Default: 16
-#define DISPLAY_FONT_SIZE4 22                       // Default: 22
+#define DISPLAY_FONT_SIZE4 20                       // Default: 22
+#define DISPLAY_FONT_SIZE5 26                       // Default: 22
 
+#ifdef __APPLE__
+#define SLIDERS_FONT "FreeSans Bold 12"             // Default: FreeSans Bold 10
+#else
 #define SLIDERS_FONT "FreeSans Bold 10"             // Default: FreeSans Bold 10
+#endif
 
 //
 // Colours. They are given as a 4-tuple (RGB and opacity).
@@ -115,3 +120,10 @@
 #define COLOUR_PAN_FILL1     1.00, 1.00, 1.00, 0.25 // Default: 1.00, 1.00, 1.00, 0.25
 #define COLOUR_PAN_FILL2     1.00, 1.00, 1.00, 0.50 // Default: 1.00, 1.00, 1.00, 0.50
 #define COLOUR_PAN_FILL3     1.00, 1.00, 1.00, 0.75 // Default: 1.00, 1.00, 1.00, 0.75
+//
+// thin and thick line widths in the panadapers
+// "thick" and "extra" also used in the analog meter
+//
+#define PAN_LINE_THIN  0.5
+#define PAN_LINE_THICK 1.0
+#define PAN_LINE_EXTRA 2.0  // used for really important things such as band edges

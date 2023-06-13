@@ -30,7 +30,6 @@
 #include "vfo.h"
 
 static GtkWidget *dialog=NULL;
-static GtkWidget *last_filter;
 static GtkWidget *input;
 static GtkWidget *micin_b=NULL;
 static GtkWidget *linein_b=NULL;
@@ -38,8 +37,6 @@ static GtkWidget *micboost_b=NULL;
 static GtkWidget *tx_spin_low;
 static GtkWidget *tx_spin_high;
 
-static GtkWidget *tune_label;
-static GtkWidget *tune_scale;
 
 static void cleanup() {
   if(dialog!=NULL) {

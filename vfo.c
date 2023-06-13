@@ -73,8 +73,6 @@ char *step_labels[]={"1Hz","10Hz","25Hz","50Hz","100Hz","250Hz","500Hz","1kHz","
 //
 #define ROUND(f,n)  (((f+step/2)/step + n)*step)
 
-static GtkWidget* menu=NULL;
-static GtkWidget* band_menu=NULL;
 
 struct _vfo vfo[MAX_VFOS];
 struct _mode_settings mode_settings[MODES];
@@ -99,14 +97,8 @@ void modesettings_save_state() {
     sprintf(name,"modeset.%d.nr", i);
     sprintf(value,"%d", mode_settings[i].nr);
     setProperty(name,value);
-    sprintf(name,"modeset.%d.nr2", i);
-    sprintf(value,"%d", mode_settings[i].nr2);
-    setProperty(name,value);
     sprintf(name,"modeset.%d.nb", i);
     sprintf(value,"%d", mode_settings[i].nb);
-    setProperty(name,value);
-    sprintf(name,"modeset.%d.nb2", i);
-    sprintf(value,"%d", mode_settings[i].nb2);
     setProperty(name,value);
     sprintf(name,"modeset.%d.anf", i);
     sprintf(value,"%d", mode_settings[i].anf);
@@ -165,9 +157,7 @@ void modesettings_restore_state() {
     char name[80];
     mode_settings[i].filter=filterF6;
     mode_settings[i].nr=0;
-    mode_settings[i].nr2=0;
     mode_settings[i].nb=0;
-    mode_settings[i].nb2=0;
     mode_settings[i].anf=0;
     mode_settings[i].snb=0;
     mode_settings[i].en_txeq=0;
@@ -190,15 +180,9 @@ void modesettings_restore_state() {
     sprintf(name,"modeset.%d.nr",i);
     value=getProperty(name);
     if(value) mode_settings[i].nr=atoi(value);
-    sprintf(name,"modeset.%d.nr2",i);
-    value=getProperty(name);
-    if(value) mode_settings[i].nr2=atoi(value);
     sprintf(name,"modeset.%d.nb",i);
     value=getProperty(name);
     if(value) mode_settings[i].nb=atoi(value);
-    sprintf(name,"modeset.%d.nb2",i);
-    value=getProperty(name);
-    if(value) mode_settings[i].nb2=atoi(value);
     sprintf(name,"modeset.%d.anf",i);
     value=getProperty(name);
     if(value) mode_settings[i].anf=atoi(value);
@@ -346,17 +330,38 @@ void vfo_restore_state() {
 }
 
 void vfo_xvtr_changed() {
+  //
+  // It may happen that the XVTR band is messed up in the sense
+  // that the resulting radio frequency exceeds the limits.
+  // In this case, change the VFO frequencies to get into
+  // the allowed range, which is from LO + radio_min_frequency
+  // to LO + radio_max_frequency
+  //
   if(vfo[0].band>=BANDS) {
     BAND *band=band_get_band(vfo[0].band);
     vfo[0].lo=band->frequencyLO+band->errorLO;
+    if ((vfo[0].frequency > vfo[0].lo + radio->frequency_max)  ||
+        (vfo[0].frequency < vfo[0].lo + radio->frequency_min)) {
+      vfo[0].frequency = vfo[0].lo + (radio->frequency_min+radio->frequency_max)/2;
+      receiver_set_frequency(receiver[0], vfo[0].frequency);
+    }
   }
   if(vfo[1].band>=BANDS) {
     BAND *band=band_get_band(vfo[1].band);
     vfo[1].lo=band->frequencyLO+band->errorLO;
+    if ((vfo[1].frequency > vfo[1].lo + radio->frequency_max)  ||
+        (vfo[1].frequency < vfo[1].lo + radio->frequency_min)) {
+      vfo[1].frequency = vfo[1].lo + (radio->frequency_min+radio->frequency_max)/2;
+      if (receivers == 2) {
+        receiver_set_frequency(receiver[1], vfo[1].frequency);
+      }
+    }
   }
   if (protocol == NEW_PROTOCOL) {
     schedule_general();   // for disablePA
+    schedule_high_priority();  // for Frequencies
   }
+  g_idle_add(ext_vfo_update, NULL);
 }
 
 void vfo_apply_mode_settings(RECEIVER *rx) {
@@ -367,9 +372,7 @@ void vfo_apply_mode_settings(RECEIVER *rx) {
 
   vfo[id].filter       = mode_settings[m].filter;
   rx->nr               = mode_settings[m].nr;
-  rx->nr2              = mode_settings[m].nr2;
   rx->nb               = mode_settings[m].nb;
-  rx->nb2              = mode_settings[m].nb2;
   rx->anf              = mode_settings[m].anf;
   rx->snb              = mode_settings[m].snb;
   enable_rx_equalizer  = mode_settings[m].en_rxeq;
@@ -699,7 +702,6 @@ void vfo_step(int steps) {
   int id=active_receiver->id;
   long long delta;
   int sid;
-  RECEIVER *other_receiver;
 
 #ifdef CLIENT_SERVER
   if(radio_is_remote) {
@@ -735,10 +737,6 @@ void vfo_step(int steps) {
     }
 
     sid=id==0?1:0;
-    if (sid < receivers) {
-      other_receiver=receiver[sid];
-    }
-    // other_receiver will be accessed only if receivers == 2
 
     switch(sat_mode) {
       case SAT_NONE:
@@ -751,7 +749,7 @@ void vfo_step(int steps) {
           vfo[sid].frequency      += delta;
         }
         if(receivers==2) {
-          receiver_frequency_changed(other_receiver);
+          receiver_frequency_changed(receiver[sid]);
         }
         break;
       case RSAT_MODE:
@@ -762,7 +760,7 @@ void vfo_step(int steps) {
           vfo[sid].frequency      -= delta;
         }
         if(receivers==2) {
-          receiver_frequency_changed(other_receiver);
+          receiver_frequency_changed(receiver[sid]);
         }
         break;
     }
@@ -778,7 +776,6 @@ void vfo_step(int steps) {
 void vfo_id_step(int id, int steps) {
 
   if(!locked) {
-    RECEIVER *other_receiver;
     long long delta;
     if(vfo[id].ctun) {
       delta=vfo[id].ctun_frequency;
@@ -791,9 +788,6 @@ void vfo_id_step(int id, int steps) {
     }
 
     int sid=id==0?1:0;
-    if (sid < receivers) {
-      other_receiver=receiver[sid];
-    }
 
     switch(sat_mode) {
       case SAT_NONE:
@@ -806,7 +800,7 @@ void vfo_id_step(int id, int steps) {
           vfo[sid].frequency      += delta;
         }
         if(receivers==2) {
-          receiver_frequency_changed(other_receiver);
+          receiver_frequency_changed(receiver[sid]);
         }
         break;
       case RSAT_MODE:
@@ -817,7 +811,7 @@ void vfo_id_step(int id, int steps) {
           vfo[sid].frequency      -= delta;
         }
         if(receivers==2) {
-          receiver_frequency_changed(other_receiver);
+          receiver_frequency_changed(receiver[sid]);
         }
         break;
     }
@@ -844,7 +838,6 @@ void vfo_id_step(int id, int steps) {
 void vfo_id_move(int id,long long hz,int round) {
   long long delta;
   int sid;
-  RECEIVER *other_receiver;
 
 #ifdef CLIENT_SERVER
   if(radio_is_remote) {
@@ -888,9 +881,6 @@ void vfo_id_move(int id,long long hz,int round) {
     }
 
     sid=id==0?1:0;
-    if (sid < receivers) {
-      other_receiver=receiver[sid];
-    }
 
     switch(sat_mode) {
       case SAT_NONE:
@@ -903,7 +893,7 @@ void vfo_id_move(int id,long long hz,int round) {
           vfo[sid].frequency      += delta;
         }
         if(receivers==2) {
-          receiver_frequency_changed(other_receiver);
+          receiver_frequency_changed(receiver[sid]);
         }
         break;
       case RSAT_MODE:
@@ -914,7 +904,7 @@ void vfo_id_move(int id,long long hz,int round) {
           vfo[sid].frequency      -= delta;
         }
         if(receivers==2) {
-          receiver_frequency_changed(other_receiver);
+          receiver_frequency_changed(receiver[sid]);
         }
         break;
     }
@@ -935,7 +925,6 @@ void vfo_move_to(long long hz) {
   long long f;
   long long delta;
   int sid;
-  RECEIVER *other_receiver;
 
 #ifdef CLIENT_SERVER
   if(radio_is_remote) {
@@ -971,9 +960,6 @@ void vfo_move_to(long long hz) {
     }
 
     sid=id==0?1:0;
-    if (sid < receivers) {
-      other_receiver=receiver[sid];
-    }
 
     switch(sat_mode) {
       case SAT_NONE:
@@ -986,7 +972,7 @@ void vfo_move_to(long long hz) {
           vfo[sid].frequency      += delta;
         }
         if(receivers==2) {
-          receiver_frequency_changed(other_receiver);
+          receiver_frequency_changed(receiver[sid]);
         }
         break;
       case RSAT_MODE:
@@ -997,7 +983,7 @@ void vfo_move_to(long long hz) {
           vfo[sid].frequency      -= delta;
         }
         if(receivers==2) {
-          receiver_frequency_changed(other_receiver);
+          receiver_frequency_changed(receiver[sid]);
         }
         break;
     }
@@ -1121,18 +1107,17 @@ void vfo_update() {
 
 #if 0
 //
-// DL1YCF: code still here but deactivated:
-// there is no consensus whether the "VFO display frequency" should move if
-// RIT/XIT values are changed. My Kenwood TS590 does, but some popular
-// other SDR software does not.
-// So although I do not feel too well if the actual TX frequency is not
-// that on the display, I deactivate the code but leave it here so it
-// can quickly be re-activated if one wants.
+        // DL1YCF:
+        // There is no consensus whether the "VFO display frequency" should move if
+        // RIT/XIT values are changed. My Kenwood TS590 does so, but some popular
+        // other SDR software does not (which in my personal view is a bug, not a feature).
 //
+        // The strongest argument to prefer the "TS590" behaviour is that during TX,
+        // the frequency actually used for transmit should be displayed.
+        // Then, to preserve symmetry, during RX the effective RX frequency
+        // is also displayed.
         //
-        // If RIT or XIT is active, add this to displayed VFO frequency
-        //
-        // Adjust VFO_A frequency
+        // Adjust VFO_A frequency for RIT/XIT
         //
         if (isTransmitting() && txvfo == 0) {
           if (transmitter->xit_enabled) af += transmitter->xit;
@@ -1140,53 +1125,114 @@ void vfo_update() {
           if (vfo[0].rit_enabled) af += vfo[0].rit;
         }
         //
-        // Adjust VFO_B frequency
+        // Adjust VFO_B frequency for RIT/XIT
         //
         if (isTransmitting() && txvfo == 1) {
           if (transmitter->xit_enabled) bf += transmitter->xit;
         } else {
-          if (vfo[1].rit_enabled) bf += vfo[0].rit;
+          if (vfo[1].rit_enabled) bf += vfo[1].rit;
         }
 #endif
 
         int oob=0;
+        int f_m; // MHz part
+        int f_k; // kHz part
+        int f_h; // Hz  part
         if (can_transmit) oob=transmitter->out_of_band;
 
-        sprintf(temp_text,"VFO A: %0lld.%06lld",af/(long long)1000000,af%(long long)1000000);
-        if(txvfo == 0 && (isTransmitting() || oob)) {
-            if (oob) sprintf(temp_text,"VFO A: Out of band");
+        //
+        // VFO A Dial
+        //
+        cairo_move_to(cr, 5, 41);
+        if (txvfo == 0 && (isTransmitting() || oob))
             cairo_set_source_rgba(cr, COLOUR_ALARM);
-        } else {
-            if(vfo[0].entering_frequency) {
+        else if (vfo[0].entering_frequency)
               cairo_set_source_rgba(cr, COLOUR_ATTN);
-            } else if(id==0) {
-              cairo_set_source_rgba(cr, COLOUR_OK);
-            } else {
+        else if (id != 0)
               cairo_set_source_rgba(cr, COLOUR_OK_WEAK);
-            }
-        }
-        cairo_move_to(cr, 5, 38);
+        else
+              cairo_set_source_rgba(cr, COLOUR_OK);
+        f_m = af / 1000000LL;
+        f_k = (af - 1000000LL*f_m) / 1000;
+        f_h = (af - 1000000LL*f_m - 1000*f_k);
+
         cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
-        cairo_show_text(cr, temp_text);
-
-        sprintf(temp_text,"VFO B: %0lld.%06lld",bf/(long long)1000000,bf%(long long)1000000);
-        if(txvfo == 1 && (isTransmitting() || oob)) {
-            if (oob) sprintf(temp_text,"VFO B: Out of band");
-            cairo_set_source_rgba(cr, COLOUR_ALARM);
-        } else {
-            if(vfo[1].entering_frequency) {
-              cairo_set_source_rgba(cr, COLOUR_ATTN);
-            } else if(id==1) {
-              cairo_set_source_rgba(cr, COLOUR_OK);
+        cairo_show_text(cr, "VFO A:");
+        cairo_set_font_size(cr, DISPLAY_FONT_SIZE5);
+        if (txvfo == 0 && oob) {
+          cairo_show_text(cr, "Out of band");
             } else {
-              cairo_set_source_rgba(cr, COLOUR_OK_WEAK);
-            }
-        }
-        cairo_move_to(cr, 300, 38);
+          //
+          // poor man's right alignment:
+          // If the frequency is small, print some blanks
+          // with the background colour
+          //
+          cairo_save(cr);
+          cairo_set_source_rgba(cr, COLOUR_VFO_BACKGND);
+          if (f_m < 10)
+            cairo_show_text(cr, "0000");
+          else if (f_m < 100)
+            cairo_show_text(cr, "000");
+          else if (f_m < 1000)
+            cairo_show_text(cr, "00");
+          else if (f_m < 10000)
+            cairo_show_text(cr, "0");
+          cairo_restore(cr);
+          sprintf(temp_text,"%0d.%03d", f_m,f_k);
+          cairo_show_text(cr, temp_text);
+        cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
+          sprintf(temp_text,"%03d", f_h);
         cairo_show_text(cr, temp_text);
+        }
 
-        if(can_transmit) {
-          cairo_move_to(cr, 120, 50);
+        //
+        // VFO B Dial
+        //
+        cairo_move_to(cr, 300, 41);
+        if (txvfo == 1 && (isTransmitting() || oob))
+            cairo_set_source_rgba(cr, COLOUR_ALARM);
+        else if (vfo[1].entering_frequency)
+              cairo_set_source_rgba(cr, COLOUR_ATTN);
+        else if (id != 1)
+              cairo_set_source_rgba(cr, COLOUR_OK_WEAK);
+        else
+              cairo_set_source_rgba(cr, COLOUR_OK);
+        f_m = bf / 1000000LL;
+        f_k = (bf - 1000000LL*f_m) / 1000;
+        f_h = (bf - 1000000LL*f_m - 1000*f_k);
+
+        cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
+        cairo_set_source_rgba(cr, COLOUR_OK);
+        cairo_show_text(cr, "VFO B:");
+        cairo_set_font_size(cr, DISPLAY_FONT_SIZE5);
+        if (txvfo == 0 && oob) {
+          cairo_show_text(cr, "Out of band");
+            } else {
+          //
+          // poor man's right alignment:
+          // If the frequency is small, print some blanks
+          // with the background colour
+          //
+          cairo_save(cr);
+          cairo_set_source_rgba(cr, COLOUR_VFO_BACKGND);
+          if (f_m < 10)
+            cairo_show_text(cr, "0000");
+          else if (f_m < 100)
+            cairo_show_text(cr, "000");
+          else if (f_m < 1000)
+            cairo_show_text(cr, "00");
+          else if (f_m < 10000)
+            cairo_show_text(cr, "0");
+          cairo_restore(cr);
+          sprintf(temp_text,"%0d.%03d", f_m,f_k);
+        cairo_show_text(cr, temp_text);
+          cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
+          sprintf(temp_text,"%03d", f_h);
+          cairo_show_text(cr, temp_text);
+        }
+
+        if ((protocol == ORIGINAL_PROTOCOL || protocol == NEW_PROTOCOL) && can_transmit) {
+          cairo_move_to(cr, 115, 54);
           if(transmitter->puresignal) {
             cairo_set_source_rgba(cr, COLOUR_ATTN);
           } else {
@@ -1196,7 +1242,7 @@ void vfo_update() {
           cairo_show_text(cr, "PS");
         }
 
-        cairo_move_to(cr, 55, 50);
+        cairo_move_to(cr, 55, 54);
         if(active_receiver->zoom>1) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1229,35 +1275,49 @@ void vfo_update() {
           cairo_show_text(cr, temp_text);
         }
 
-        // NB and NB2 are mutually exclusive, therefore
-        // they are put to the same place in order to save
-        // some space
-        cairo_move_to(cr, 145, 50);
-        if(active_receiver->nb) {
+        cairo_move_to(cr, 140, 54);
+        switch(active_receiver->nb) {
+          case 1:
           cairo_set_source_rgba(cr, COLOUR_ATTN);
           cairo_show_text(cr, "NB");
-        } else if (active_receiver->nb2) {
+            break;
+          case 2:
           cairo_set_source_rgba(cr, COLOUR_ATTN);
           cairo_show_text(cr, "NB2");
-        } else {
+            break;
+          default:
           cairo_set_source_rgba(cr, COLOUR_SHADE);
           cairo_show_text(cr, "NB");
+            break;
         }
 
-        // NR and NR2 are mutually exclusive
-        cairo_move_to(cr, 175, 50);
-        if(active_receiver->nr) {
+        cairo_move_to(cr, 170, 54);
+        switch (active_receiver->nr) {
+          case 1:
           cairo_set_source_rgba(cr, COLOUR_ATTN);
           cairo_show_text(cr, "NR");
-        } else if (active_receiver->nr2) {
+            break;
+        case 2:
           cairo_set_source_rgba(cr, COLOUR_ATTN);
           cairo_show_text(cr, "NR2");
-        } else {
+          break;
+#ifdef EXTNR
+        case 3:
+          cairo_set_source_rgba(cr, COLOUR_ATTN);
+          cairo_show_text(cr, "NR3");
+          break;
+        case 4:
+          cairo_set_source_rgba(cr, COLOUR_ATTN);
+          cairo_show_text(cr, "NR4");
+          break;
+#endif
+        default:
           cairo_set_source_rgba(cr, COLOUR_SHADE);
           cairo_show_text(cr, "NR");
+          break;
         }
 
-        cairo_move_to(cr, 200, 50);
+        cairo_move_to(cr, 200, 54);
         if(active_receiver->anf) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1265,7 +1325,7 @@ void vfo_update() {
         }
         cairo_show_text(cr, "ANF");
 
-        cairo_move_to(cr, 230, 50);
+        cairo_move_to(cr, 230, 54);
         if(active_receiver->snb) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1273,7 +1333,7 @@ void vfo_update() {
         }
         cairo_show_text(cr, "SNB");
 
-        cairo_move_to(cr, 265, 50);
+        cairo_move_to(cr, 265, 54);
         switch(active_receiver->agc) {
           case AGC_OFF:
             cairo_set_source_rgba(cr, COLOUR_SHADE);
@@ -1302,7 +1362,7 @@ void vfo_update() {
         // we should display the compressor (level)
         //
         if(can_transmit) {
-          cairo_move_to(cr, 335, 50);
+          cairo_move_to(cr, 335, 54);
           if (transmitter->compressor) {
               sprintf(temp_text,"CMPR %d",(int) transmitter->compressor_level);
               cairo_set_source_rgba(cr, COLOUR_ATTN);
@@ -1315,7 +1375,7 @@ void vfo_update() {
         //
         // Indicate whether an equalizer is active
         //
-        cairo_move_to(cr, 400, 50);
+        cairo_move_to(cr, 400, 54);
         if ((isTransmitting() && enable_tx_equalizer) || (!isTransmitting() && enable_rx_equalizer)) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1323,7 +1383,7 @@ void vfo_update() {
         }
         cairo_show_text(cr, "EQ");
 
-        cairo_move_to(cr, 500, 50);
+        cairo_move_to(cr, 500, 54);
         if(diversity_enabled) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1342,7 +1402,7 @@ void vfo_update() {
         cairo_set_source_rgba(cr, COLOUR_ATTN);
         cairo_show_text(cr, temp_text);
 
-        cairo_move_to(cr, 425, 50);
+        cairo_move_to(cr, 425, 54);
         if(vfo[id].ctun) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1350,7 +1410,7 @@ void vfo_update() {
         }
         cairo_show_text(cr, "CTUN");
 
-        cairo_move_to(cr, 468, 50);
+        cairo_move_to(cr, 468, 54);
         if(cat_control>0) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1368,7 +1428,7 @@ void vfo_update() {
           cairo_show_text(cr, "VOX");
         }
 
-        cairo_move_to(cr, 5, 50);
+        cairo_move_to(cr, 5, 54);
         if(locked) {
           cairo_set_source_rgba(cr, COLOUR_ALARM);
         } else {
@@ -1384,7 +1444,7 @@ void vfo_update() {
         }
         cairo_show_text(cr, "Split");
 
-        cairo_move_to(cr, 265, 27);
+        cairo_move_to(cr, 265, 28);
         if(sat_mode!=SAT_NONE) {
           cairo_set_source_rgba(cr, COLOUR_ALARM);
         } else {
@@ -1403,7 +1463,7 @@ void vfo_update() {
             cairo_set_source_rgba(cr, COLOUR_SHADE);
         }
         sprintf(temp_text,"DUP");
-        cairo_move_to(cr, 265, 39);
+        cairo_move_to(cr, 265, 41);
         cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
         cairo_show_text(cr, temp_text);
 
@@ -1499,10 +1559,10 @@ void vfo_rit_clear(int id) {
 void vfo_rit(int id,int i) {
   double value=(double)vfo[id].rit;
   value+=(double)(i*rit_increment);
-  if(value<-10000.0) {
-    value=-10000.0;
-  } else if(value>10000.0) {
-    value=10000.0;
+  if(value<-9999.0) {
+    value=-9999.0;
+  } else if(value>9999.0) {
+    value=9999.0;
   }
   vfo[id].rit=value;
   vfo[id].rit_enabled=(value!=0);
@@ -1580,9 +1640,6 @@ static GtkWidget *label;
 static GtkWidget *dialog=NULL;
 
 void vfo_num_pad(GtkWidget *parent,int vfo) {
-  int i;
-  int v=vfo;
-
   dialog=gtk_dialog_new();
   gtk_window_set_transient_for(GTK_WINDOW(dialog),GTK_WINDOW(parent));
   char title[64];
@@ -1649,9 +1706,9 @@ void num_pad(int val) {
     case -2: // enter
       if(vfo[rx->id].entered_frequency!=0 && vfo[rx->id].entered_frequency!=vfo[rx->id].frequency) {
         if(dec_done)
-          sprintf(freq_str, "%llu.%llu", freq_int, vfo[rx->id].entered_frequency);
+          sprintf(freq_str, "%ld.%ld", freq_int, vfo[rx->id].entered_frequency);
         else
-          sprintf(freq_str, "%llu", vfo[rx->id].entered_frequency);
+          sprintf(freq_str, "%ld", vfo[rx->id].entered_frequency);
         vfo[rx->id].entered_frequency=(gint64)(atof(freq_str)*1000000);
         receiver_set_frequency(rx, vfo[rx->id].entered_frequency);
         g_idle_add(ext_vfo_update, NULL);
@@ -1668,17 +1725,17 @@ void num_pad(int val) {
       dec_done=1;
       freq_int=(digit_count)?vfo[rx->id].entered_frequency:0;
       vfo[rx->id].entered_frequency=0;
-      sprintf(output, "<big>%d.</big>", freq_int);
+      sprintf(output, "<big>%ld.</big>", freq_int);
       gtk_label_set_markup (GTK_LABEL (label), output);
       break;
     default:
       if(digit_count++ == 0) vfo[rx->id].entered_frequency=0;
       if(dec_done) {
         vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
-        sprintf(output, "<big>%llu.%llu</big>", freq_int, vfo[rx->id].entered_frequency);
+        sprintf(output, "<big>%ld.%ld</big>", freq_int, vfo[rx->id].entered_frequency);
       } else {
         vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
-        sprintf(output, "<big>%llu</big>", vfo[rx->id].entered_frequency);
+        sprintf(output, "<big>%ld</big>", vfo[rx->id].entered_frequency);
       }
       gtk_label_set_markup (GTK_LABEL (label), output);
       break;

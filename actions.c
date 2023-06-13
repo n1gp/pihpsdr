@@ -33,7 +33,8 @@
 //
 // The "short button text" (button_str) needs to be present in ALL cases, and must be different
 // for each case. button_str is used to identify the action in the props files and therefore
-// it should not contain white space.
+// it should not contain white space. Apart from the props files, the button_str determines
+// what is written on the buttons in the toolbar (but that's it).
 //
 ACTION_TABLE ActionTable[] = {
   {NO_ACTION,           "NONE",                 "NONE",         TYPE_NONE},
@@ -49,30 +50,30 @@ ACTION_TABLE ActionTable[] = {
   {ANF,                 "ANF",                  "ANF",          MIDI_KEY | CONTROLLER_SWITCH},
   {ATTENUATION,         "ATTEN",                "ATTEN",        MIDI_KNOB | MIDI_WHEEL | CONTROLLER_ENCODER},
   {B_TO_A,              "A<B",                  "A<B",          MIDI_KEY | CONTROLLER_SWITCH},
-  {BAND_10,             "BAND 10",              "10",           MIDI_KEY},
-  {BAND_12,             "BAND 12",              "12",           MIDI_KEY},
-  {BAND_1240,           "BAND 1240",            "1240",         MIDI_KEY},
-  {BAND_144,            "BAND 144",             "144",          MIDI_KEY},
-  {BAND_15,             "BAND 15",              "15",           MIDI_KEY},
-  {BAND_160,            "BAND 160",             "160",          MIDI_KEY},
-  {BAND_17,             "BAND 17",              "17",           MIDI_KEY},
-  {BAND_20,             "BAND 20",              "20",           MIDI_KEY},
-  {BAND_220,            "BAND 220",             "220",          MIDI_KEY},
-  {BAND_2300,           "BAND 2300",            "2300",         MIDI_KEY},
-  {BAND_30,             "BAND 30",              "30",           MIDI_KEY},
-  {BAND_3400,           "BAND 3400",            "3400",         MIDI_KEY},
-  {BAND_40,             "BAND 40",              "40",           MIDI_KEY},
-  {BAND_430,            "BAND 430",             "430",          MIDI_KEY},
-  {BAND_6,              "BAND 6",               "6",            MIDI_KEY},
-  {BAND_60,             "BAND 60",              "60",           MIDI_KEY},
-  {BAND_70,             "BAND 70",              "70",           MIDI_KEY},
-  {BAND_80,             "BAND 80",              "80",           MIDI_KEY},
-  {BAND_902,            "BAND 902",             "902",          MIDI_KEY},
-  {BAND_AIR,            "BAND AIR",             "AIR",          MIDI_KEY},
-  {BAND_GEN,            "BAND GEN",             "GEN",          MIDI_KEY},
+  {BAND_10,             "BAND 10",              "10",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_12,             "BAND 12",              "12",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_1240,           "BAND 1240",            "1240",         MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_144,            "BAND 144",             "144",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_15,             "BAND 15",              "15",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_160,            "BAND 160",             "160",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_17,             "BAND 17",              "17",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_20,             "BAND 20",              "20",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_220,            "BAND 220",             "220",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_2300,           "BAND 2300",            "2300",         MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_30,             "BAND 30",              "30",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_3400,           "BAND 3400",            "3400",         MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_40,             "BAND 40",              "40",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_430,            "BAND 430",             "430",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_6,              "BAND 6",               "6",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_60,             "BAND 60",              "60",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_70,             "BAND 70",              "70",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_80,             "BAND 80",              "80",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_902,            "BAND 902",             "902",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_AIR,            "BAND AIR",             "AIR",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {BAND_GEN,            "BAND GEN",             "GEN",          MIDI_KEY   | CONTROLLER_SWITCH},
   {BAND_MINUS,          "BAND -",               "BND-",         MIDI_KEY | CONTROLLER_SWITCH},
   {BAND_PLUS,           "BAND +",               "BND+",         MIDI_KEY | CONTROLLER_SWITCH},
-  {BAND_WWV,            "BAND WWV",             "WWV",          MIDI_KEY},
+  {BAND_WWV,            "BAND WWV",             "WWV",          MIDI_KEY   | CONTROLLER_SWITCH},
   {BANDSTACK_MINUS,     "BANDSTACK -",          "BSTK-",        MIDI_KEY | CONTROLLER_SWITCH},
   {BANDSTACK_PLUS,      "BANDSTACK +",          "BSTK+",        MIDI_KEY | CONTROLLER_SWITCH},
   {COMP_ENABLE,         "COMP ON/OFF",          "COMP",         MIDI_KEY | CONTROLLER_SWITCH},
@@ -100,7 +101,7 @@ ACTION_TABLE ActionTable[] = {
   {FILTER_CUT_LOW,      "FILTER CUT\nLOW",      "FCUTL",        MIDI_KNOB | MIDI_WHEEL | CONTROLLER_ENCODER},
   {FILTER_CUT_HIGH,     "FILTER CUT\nHIGH",     "FCUTH",        MIDI_KNOB | MIDI_WHEEL | CONTROLLER_ENCODER},
   {FILTER_CUT_DEFAULT,  "FILTER CUT\nDEFAULT",  "FCUTDEF",      MIDI_KEY | CONTROLLER_SWITCH},
-  {FUNCTION,            "FUNC",                 "FUNC",         CONTROLLER_SWITCH},
+  {FUNCTION,            "FUNC",                 "FUNC",         MIDI_KEY   | CONTROLLER_SWITCH},
   {IF_SHIFT,            "IF SHIFT",             "IFSHFT",       MIDI_WHEEL | CONTROLLER_ENCODER},
   {IF_SHIFT_RX1,        "IF SHIFT\nRX1",        "IFSHFT1",      MIDI_WHEEL | CONTROLLER_ENCODER},
   {IF_SHIFT_RX2,        "IF SHIFT\nRX2",        "IFSHFT2",      MIDI_WHEEL | CONTROLLER_ENCODER},
@@ -126,19 +127,19 @@ ACTION_TABLE ActionTable[] = {
   {MUTE,                "MUTE",                 "MUTE",         MIDI_KEY | CONTROLLER_SWITCH},
   {NB,                  "NB",                   "NB",           MIDI_KEY | CONTROLLER_SWITCH},
   {NR,                  "NR",                   "NR",           MIDI_KEY | CONTROLLER_SWITCH},
-  {NUMPAD_0,            "NUMPAD 0",             "0",            MIDI_KEY},
-  {NUMPAD_1,            "NUMPAD 1",             "1",            MIDI_KEY},
-  {NUMPAD_2,            "NUMPAD 2",             "2",            MIDI_KEY},
-  {NUMPAD_3,            "NUMPAD 3",             "3",            MIDI_KEY},
-  {NUMPAD_4,            "NUMPAD 4",             "4",            MIDI_KEY},
-  {NUMPAD_5,            "NUMPAD 5",             "5",            MIDI_KEY},
-  {NUMPAD_6,            "NUMPAD 6",             "6",            MIDI_KEY},
-  {NUMPAD_7,            "NUMPAD 7",             "7",            MIDI_KEY},
-  {NUMPAD_8,            "NUMPAD 8",             "8",            MIDI_KEY},
-  {NUMPAD_9,            "NUMPAD 9",             "9",            MIDI_KEY},
-  {NUMPAD_CL,           "NUMPAD\nCL",           "CL",           MIDI_KEY},
-  {NUMPAD_DEC,          "NUMPAD\nDEC",          "DEC",          MIDI_KEY},
-  {NUMPAD_ENTER,        "NUMPAD\nENTER",        "EN",           MIDI_KEY},
+  {NUMPAD_0,            "NUMPAD 0",             "0",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_1,            "NUMPAD 1",             "1",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_2,            "NUMPAD 2",             "2",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_3,            "NUMPAD 3",             "3",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_4,            "NUMPAD 4",             "4",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_5,            "NUMPAD 5",             "5",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_6,            "NUMPAD 6",             "6",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_7,            "NUMPAD 7",             "7",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_8,            "NUMPAD 8",             "8",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_9,            "NUMPAD 9",             "9",            MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_CL,           "NUMPAD\nCL",           "CL",           MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_DEC,          "NUMPAD\nDEC",          "DEC",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_ENTER,        "NUMPAD\nENTER",        "EN",           MIDI_KEY   | CONTROLLER_SWITCH},
   {PAN,                 "PAN",                  "PAN",          MIDI_WHEEL | CONTROLLER_ENCODER},
   {PAN_MINUS,           "PAN -",                "PAN-",         MIDI_KEY | CONTROLLER_SWITCH},
   {PAN_PLUS,            "PAN +",                "PAN+",         MIDI_KEY | CONTROLLER_SWITCH},
@@ -311,7 +312,7 @@ int process_action(void *data) {
     case AGC:
       if(a->mode==PRESSED) {
         active_receiver->agc++;
-        if(active_receiver->agc>+AGC_LAST) {
+        if(active_receiver->agc>=AGC_LAST) {
           active_receiver->agc=0;
         }
         set_agc(active_receiver, active_receiver->agc);
@@ -607,7 +608,9 @@ int process_action(void *data) {
               function=0;
             }
             toolbar_switches=switches_controller1[function];
+            if (controller == CONTROLLER1) {
             switches=switches_controller1[function];
+            }
             update_toolbar_labels();
             break;
           case CONTROLLER2_V1:
@@ -739,43 +742,21 @@ int process_action(void *data) {
       break;
     case NB:
       if(a->mode==PRESSED) {
-        if(active_receiver->nb==0 && active_receiver->nb2==0) {
-          active_receiver->nb=1;
-          active_receiver->nb2=0;
-          mode_settings[vfo[active_receiver->id].mode].nb=1;
-          mode_settings[vfo[active_receiver->id].mode].nb2=0;
-        } else if(active_receiver->nb==1 && active_receiver->nb2==0) {
-          active_receiver->nb=0;
-          active_receiver->nb2=1;
-          mode_settings[vfo[active_receiver->id].mode].nb=0;
-          mode_settings[vfo[active_receiver->id].mode].nb2=1;
-        } else if(active_receiver->nb==0 && active_receiver->nb2==1) {
-          active_receiver->nb=0;
-          active_receiver->nb2=0;
-          mode_settings[vfo[active_receiver->id].mode].nb=0;
-          mode_settings[vfo[active_receiver->id].mode].nb2=0;
-        }
+        active_receiver->nb++;
+        if (active_receiver->nb > 2) active_receiver->nb=0;
+        mode_settings[vfo[active_receiver->id].mode].nb=active_receiver->nb;
         update_noise();
       }
       break;
     case NR:
       if(a->mode==PRESSED) {
-        if(active_receiver->nr==0 && active_receiver->nr2==0) {
-          active_receiver->nr=1;
-          active_receiver->nr2=0;
-          mode_settings[vfo[active_receiver->id].mode].nr=1;
-          mode_settings[vfo[active_receiver->id].mode].nr2=0;
-        } else if(active_receiver->nr==1 && active_receiver->nr2==0) {
-          active_receiver->nr=0;
-          active_receiver->nr2=1;
-          mode_settings[vfo[active_receiver->id].mode].nr=0;
-          mode_settings[vfo[active_receiver->id].mode].nr2=1;
-        } else if(active_receiver->nr==0 && active_receiver->nr2==1) {
-          active_receiver->nr=0;
-          active_receiver->nr2=0;
-          mode_settings[vfo[active_receiver->id].mode].nr=0;
-          mode_settings[vfo[active_receiver->id].mode].nr2=0;
-        }
+        active_receiver->nr++;
+#ifdef EXTNR
+        if (active_receiver->nr > 4) active_receiver->nr=0;
+#else
+        if (active_receiver->nr > 2) active_receiver->nr=0;
+#endif
+        mode_settings[vfo[active_receiver->id].mode].nr=active_receiver->nr;
         update_noise();
       }
       break;
@@ -1115,7 +1096,7 @@ int process_action(void *data) {
       active_receiver->waterfall_low=(int)value;
       break;
     case XIT:
-      value=KnobOrWheel(a, (double)transmitter->xit, -10000.0, 10000.0, (double) rit_increment);
+      value=KnobOrWheel(a, (double)transmitter->xit, -9999.0, 9999.0, (double) rit_increment);
       transmitter->xit=(int)value;
       transmitter->xit_enabled=(value!=0);
       if(protocol==NEW_PROTOCOL) {
@@ -1147,14 +1128,14 @@ int process_action(void *data) {
       }
       break;
     case XIT_MINUS:
-      if(a->mode==PRESSED) {
         if(can_transmit) {
+        if(a->mode==PRESSED) {
           value=(double)transmitter->xit;
           value-=(double)rit_increment;
-          if(value<-10000.0) {
-            value=-10000.0;
-          } else if(value>10000.0) {
-            value=10000.0;
+          if(value<-9999.0) {
+            value=-9999.0;
+          } else if(value>9999.0) {
+            value=9999.0;
           }
           transmitter->xit=(int)value;
           transmitter->xit_enabled=(transmitter->xit!=0);
@@ -1162,12 +1143,19 @@ int process_action(void *data) {
             schedule_high_priority();
           }
           g_idle_add(ext_vfo_update,NULL);
+          if(timer==0) {
+            timer=g_timeout_add(250,timeout_cb,a);
+            timer_released=FALSE;
+          }
+          free_action=FALSE;
+        } else {
+          timer_released=TRUE;
         }
       }
       break;
     case XIT_PLUS:
-      if(a->mode==PRESSED) {
         if(can_transmit) {
+        if(a->mode==PRESSED) {
           value=(double)transmitter->xit;
           value+=(double)rit_increment;
           if(value<-10000.0) {
@@ -1181,6 +1169,13 @@ int process_action(void *data) {
             schedule_high_priority();
           }
           g_idle_add(ext_vfo_update,NULL);
+          if(timer==0) {
+            timer=g_timeout_add(250,timeout_cb,a);
+            timer_released=FALSE;
+          }
+          free_action=FALSE;
+        } else {
+          timer_released=TRUE;
         }
       }
       break;

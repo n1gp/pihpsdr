@@ -81,7 +81,6 @@ extern char property_path[];
 extern int region;
 
 extern int RECEIVERS;
-extern int MAX_RECEIVERS;
 extern int MAX_DDC;
 extern int PS_TX_FEEDBACK;
 extern int PS_RX_FEEDBACK;
@@ -193,6 +192,8 @@ extern int cw_keyer_hang_time;
 extern int cw_keyer_sidetone_frequency;
 extern int cw_breakin;
 extern int cw_is_on_vfo_freq;
+extern int cw_audio_peak_filter;
+extern int cw_audio_peak_width;
 
 extern int vfo_encoder_divisor;
 

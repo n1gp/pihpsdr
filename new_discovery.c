@@ -40,11 +40,9 @@
 static char interface_name[64];
 static struct sockaddr_in interface_addr={0};
 static struct sockaddr_in interface_netmask={0};
-static int interface_length;
 
 #define DISCOVERY_PORT 1024
 static int discovery_socket;
-static struct sockaddr_in discovery_addr;
 
 static void new_discover(struct ifaddrs* iface, int discflag);
 
@@ -134,37 +132,37 @@ static void new_discover(struct ifaddrs* iface, int discflag) {
 
     switch (discflag) {
       case 1:
-	//
-	// prepeare socket for sending an UDP broadcast packet to interface ifa
-	//
-	strcpy(interface_name,iface->ifa_name);
+        //
+        // prepeare socket for sending an UDP broadcast packet to interface ifa
+        //
+        strcpy(interface_name,iface->ifa_name);
         g_print("new_discover: looking for HPSDR devices on %s\n",interface_name);
 
-	// send a broadcast to locate metis boards on the network
-	discovery_socket=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP);
-	if(discovery_socket<0) {
-	  perror("new_discover: create socket failed for discovery_socket\n");
-	  return;
-	}
+        // send a broadcast to locate metis boards on the network
+        discovery_socket=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP);
+        if(discovery_socket<0) {
+          perror("new_discover: create socket failed for discovery_socket\n");
+          return;
+        }
 
-	sa = (struct sockaddr_in *) iface->ifa_addr;
-	mask = (struct sockaddr_in *) iface->ifa_netmask;
-	interface_netmask.sin_addr.s_addr = mask->sin_addr.s_addr;
+        sa = (struct sockaddr_in *) iface->ifa_addr;
+        mask = (struct sockaddr_in *) iface->ifa_netmask;
+        interface_netmask.sin_addr.s_addr = mask->sin_addr.s_addr;
 
-	// bind to this interface and the discovery port
-	interface_addr.sin_family = AF_INET;
-	interface_addr.sin_addr.s_addr = sa->sin_addr.s_addr;
-	interface_addr.sin_port = htons(0); // system assigned port
-	if(bind(discovery_socket,(struct sockaddr*)&interface_addr,sizeof(interface_addr))<0) {
-	  perror("new_discover: bind socket failed for discovery_socket\n");
-	  close (discovery_socket);
-	  return;
-	}
-	strcpy(addr,inet_ntoa(sa->sin_addr));
-	strcpy(net_mask,inet_ntoa(mask->sin_addr));
+        // bind to this interface and the discovery port
+        interface_addr.sin_family = AF_INET;
+        interface_addr.sin_addr.s_addr = sa->sin_addr.s_addr;
+        interface_addr.sin_port = htons(0); // system assigned port
+        if(bind(discovery_socket,(struct sockaddr*)&interface_addr,sizeof(interface_addr))<0) {
+          perror("new_discover: bind socket failed for discovery_socket\n");
+          close (discovery_socket);
+          return;
+        }
+        strcpy(addr,inet_ntoa(sa->sin_addr));
+        strcpy(net_mask,inet_ntoa(mask->sin_addr));
         g_print("new_discover: bound to %s %s %s\n",interface_name,addr,net_mask);
 
-	// allow broadcast on the socket
+        // allow broadcast on the socket
         int on=1;
         rc=setsockopt(discovery_socket, SOL_SOCKET, SO_BROADCAST, &on, sizeof(on));
         if(rc != 0) {
@@ -179,9 +177,9 @@ static void new_discover(struct ifaddrs* iface, int discflag) {
         to_addr.sin_addr.s_addr=htonl(INADDR_BROADCAST);
         break;
       case 2:
-	//
-	// prepeare socket for sending an UPD packet to ipaddr_radio
-	//
+        //
+        // prepeare socket for sending an UPD packet to ipaddr_radio
+        //
         interface_addr.sin_family = AF_INET;
         interface_addr.sin_addr.s_addr = INADDR_ANY;
         memset(&to_addr, 0, sizeof(to_addr));
@@ -199,8 +197,8 @@ static void new_discover(struct ifaddrs* iface, int discflag) {
         }
         break;
       default:
-	return;
-	break;
+        return;
+        break;
     }
 
     int optval = 1;
@@ -223,7 +221,7 @@ static void new_discover(struct ifaddrs* iface, int discflag) {
 
     if(sendto(discovery_socket,buffer,60,0,(struct sockaddr*)&to_addr,sizeof(to_addr))<0) {
         perror("new_discover: sendto socket failed for discovery_socket\n");
-	close (discovery_socket);
+        close (discovery_socket);
         return;
     }
 
@@ -235,7 +233,7 @@ static void new_discover(struct ifaddrs* iface, int discflag) {
     switch (discflag) {
        case 1:
         g_print("new_discover: exiting discover for %s\n",iface->ifa_name);
-	break;
+        break;
       case 2:
         g_print("discover: exiting HPSDR discover for IP %s\n",ipaddr_radio);
         if (devices == rc+1) {
@@ -291,48 +289,43 @@ gpointer new_discover_receive_thread(gpointer data) {
                     //
                     discovered[devices].device += 1000;
                     switch(discovered[devices].device) {
-			case NEW_DEVICE_ATLAS:
+                                  case NEW_DEVICE_ATLAS:
                             strcpy(discovered[devices].name,"Atlas");
                             frequency_min=0.0;
                             frequency_max=61440000.0;
                             break;
-			case NEW_DEVICE_HERMES:
+                                  case NEW_DEVICE_HERMES:
                             strcpy(discovered[devices].name,"Hermes");
                             frequency_min=0.0;
                             frequency_max=61440000.0;
                             break;
-			case NEW_DEVICE_HERMES2:
+                                  case NEW_DEVICE_HERMES2:
                             strcpy(discovered[devices].name,"Hermes2");
                             frequency_min=0.0;
                             frequency_max=61440000.0;
                             break;
-			case NEW_DEVICE_ANGELIA:
+                                  case NEW_DEVICE_ANGELIA:
                             strcpy(discovered[devices].name,"Angelia");
                             frequency_min=0.0;
                             frequency_max=61440000.0;
                             break;
-			case NEW_DEVICE_ORION:
+                                  case NEW_DEVICE_ORION:
                             strcpy(discovered[devices].name,"Orion");
                             frequency_min=0.0;
                             frequency_max=61440000.0;
                             break;
-			case NEW_DEVICE_ORION2:
+                                  case NEW_DEVICE_ORION2:
                             strcpy(discovered[devices].name,"Orion2");
                             frequency_min=0.0;
                             frequency_max=61440000.0;
                             break;
-			case NEW_DEVICE_SATURN:
-                            strcpy(discovered[devices].name,"saturn");
-                            frequency_min=0.0;
-                            frequency_max=61440000.0;
-                            break;
-			case NEW_DEVICE_HERMES_LITE:
-			    if (discovered[devices].software_version < 40) {
+                                  case NEW_DEVICE_HERMES_LITE:
+                                        if (discovered[devices].software_version < 40) {
                               strcpy(discovered[devices].name,"Hermes Lite V1");
-			    } else {
+                                        } else {
                               strcpy(discovered[devices].name,"Hermes Lite V2");
-			      discovered[devices].device = NEW_DEVICE_HERMES_LITE2;
-			    }
+                                          discovered[devices].device = NEW_DEVICE_HERMES_LITE2;
+                                        }
                             frequency_min=0.0;
                             frequency_max=30720000.0;
                             break;
@@ -381,8 +374,8 @@ gpointer new_discover_receive_thread(gpointer data) {
                             discovered[devices].info.network.mac_address[4],
                             discovered[devices].info.network.mac_address[5],
                             discovered[devices].info.network.interface_name);
-                            discovered[devices].frequency_min=frequency_min;
-                            discovered[devices].frequency_max=frequency_max;
+                    discovered[devices].frequency_min=frequency_min;
+                    discovered[devices].frequency_max=frequency_max;
                     devices++;
                 }
             }

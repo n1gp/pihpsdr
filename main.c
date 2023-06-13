@@ -60,17 +60,11 @@ gint display_width;
 gint display_height;
 gint full_screen=1;
 
-static GtkWidget *discovery_dialog;
-
 static GdkCursor *cursor_arrow;
 static GdkCursor *cursor_watch;
 
-static GtkWidget *splash;
-
 GtkWidget *top_window;
 GtkWidget *topgrid;
-
-static DISCOVERED* d;
 
 static GtkWidget *status_label;
 
@@ -79,11 +73,6 @@ void status_text(char *text) {
   usleep(100000);
   while (gtk_events_pending ())
     gtk_main_iteration ();
-}
-
-static gint save_cb(gpointer data) {
-    radioSaveState();
-    return TRUE;
 }
 
 static pthread_t wisdom_thread_id;
@@ -105,9 +94,7 @@ gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event, gpointer data) {
 
    if (radio != NULL) {
       if (event->keyval == GDK_KEY_space) {
-        
-          g_print( "space");
-        
+        //g_print( "space");
         if(getTune()==1) {
           setTune(0);
         }

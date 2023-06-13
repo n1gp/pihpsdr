@@ -248,7 +248,6 @@ void saturn_discovery()
     {
 
         struct stat sb;
-        int status = 1;
         int i;
         char buf[256];
         FILE *fp;
@@ -272,7 +271,6 @@ void saturn_discovery()
                 {
                     sscanf(buf, "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &mac[0],
                            &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
-                    status = 0;
                 }
                 fclose(fp);
             }
@@ -312,8 +310,6 @@ void saturn_init_duc_iq()
 //
     uint8_t* IQWriteBuffer = NULL;							// data for DMA to write to DUC
     uint32_t IQBufferSize = VDMADUCBUFFERSIZE;
-    unsigned char* DUCIQReadPtr;								// pointer for reading out an I/Q sample
-    unsigned char* DUCIQHeadPtr;								// ptr to 1st free location in I/Q memory
 
     printf("%s: Initializing DUC I/Q data\n", __FUNCTION__);
 
@@ -326,8 +322,6 @@ void saturn_init_duc_iq()
         printf("%s: I/Q TX write buffer allocation failed\n", __FUNCTION__);
         exit( -1 );
     }
-    DUCIQReadPtr = IQWriteBuffer + VBASE;							// offset 4096 bytes into buffer
-    DUCIQHeadPtr = IQWriteBuffer + VBASE;
     DUCIQBasePtr = IQWriteBuffer + VBASE;
     memset(IQWriteBuffer, 0, IQBufferSize);
 
@@ -505,7 +499,6 @@ static gpointer saturn_high_priority_thread(gpointer arg)
 //
 // variables for outgoing UDP frame
 //
-    struct ThreadSocketData *ThreadData;
     struct sockaddr_in DestAddr;
     struct iovec iovecinst;
     struct msghdr datagram;
@@ -639,8 +632,6 @@ static gpointer saturn_micaudio_thread(gpointer arg)
 //
     uint8_t* MicReadBuffer = NULL;							// data for DMA read from DDC
     uint32_t MicBufferSize = VDMAMICBUFFERSIZE;
-    unsigned char* MicReadPtr;								// pointer for reading out a mic sample
-    unsigned char* MicHeadPtr;								// ptr to 1st free location in mic memory
     unsigned char* MicBasePtr;								// ptr to DMA location in mic memory
     uint32_t Depth = 0;
     int DMAReadfile_fd = -1;									// DMA read file device
@@ -654,7 +645,6 @@ static gpointer saturn_micaudio_thread(gpointer arg)
 //
 // variables for outgoing UDP frame
 //
-    struct ThreadSocketData *ThreadData;
     struct sockaddr_in DestAddr;
     struct iovec iovecinst;
     struct msghdr datagram;
@@ -668,8 +658,6 @@ static gpointer saturn_micaudio_thread(gpointer arg)
         printf("%s: mic read buffer allocation failed\n", __FUNCTION__);
         exit( -1 );
     }
-    MicReadPtr = MicReadBuffer + VBASE;							// offset 4096 bytes into buffer
-    MicHeadPtr = MicReadBuffer + VBASE;
     MicBasePtr = MicReadBuffer + VBASE;
     memset(MicReadBuffer, 0, MicBufferSize);
 
@@ -803,7 +791,6 @@ static gpointer saturn_rx_thread(gpointer arg)
 //
 // variables for outgoing UDP frame
 //
-    struct ThreadSocketData *ThreadData;
     struct sockaddr_in DestAddr[VNUMDDC];
     struct iovec iovecinst[VNUMDDC];                            // instance of iovec
     struct msghdr datagram[VNUMDDC];
@@ -1018,7 +1005,7 @@ static gpointer saturn_rx_thread(gpointer arg)
             {
                 if(*(DMAReadPtr + 7) != 0x80)
                 {
-                    printf("%s: header not found for rate word at addr %x\n", __FUNCTION__, DMAReadPtr);
+                    printf("%s: header not found for rate word at addr %hhn\n", __FUNCTION__, DMAReadPtr);
                     exit(1);
                 }
                 else                                                                    // analyse word, then process
@@ -1377,9 +1364,13 @@ void saturn_handle_duc_specific(bool FromNetwork, unsigned char *UDPInBuffer)
 
     //printf("DUC specific %sbuffer received\n", (FromNetwork)?"network ":"");
     if(FromNetwork)
+    {
       if(TXActive == 1) return;
+    }
     else
+    {
       if(TXActive == 2) return;
+    }
 
 // iambic settings
     IambicSpeed = *(uint8_t*)(UDPInBuffer+9);               // keyer speed

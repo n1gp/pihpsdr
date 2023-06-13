@@ -265,9 +265,6 @@ void* saturn_server(void *arg)
   struct iovec iovecinst;                                           // iovcnt buffer - 1 for each outgoing buffer
   struct msghdr datagram;                                           // multiple incoming message header
 
-  uint32_t TestFrequency;                                           // test source DDS freq
-  int CmdOption;                                                    // command line option
-
 //
 // start up thread to check for no longer getting messages, to set back to inactive
 //
@@ -663,9 +660,6 @@ void *IncomingSpkrAudio(void *arg)                      // listener thread
 //
     uint8_t* SpkWriteBuffer = NULL;							// data for DMA to write to spkr
     uint32_t SpkBufferSize = VDMABUFFERSIZE;
-    bool InitError = false;                                 // becomes true if we get an initialisation error
-    unsigned char* SpkReadPtr;								// pointer for reading out a spkr sample
-    unsigned char* SpkHeadPtr;								// ptr to 1st free location in spk memory
     unsigned char* SpkBasePtr;								// ptr to DMA location in spk memory
     uint32_t Depth = 0;
     int DMAWritefile_fd = -1;								// DMA read file device
@@ -683,10 +677,7 @@ void *IncomingSpkrAudio(void *arg)                      // listener thread
     if (!SpkWriteBuffer)
     {
         printf("spkr write buffer allocation failed\n");
-        InitError = true;
     }
-    SpkReadPtr = SpkWriteBuffer + VBASE;							// offset 4096 bytes into buffer
-    SpkHeadPtr = SpkWriteBuffer + VBASE;
     SpkBasePtr = SpkWriteBuffer + VBASE;
     memset(SpkWriteBuffer, 0, SpkBufferSize);
 
@@ -697,7 +688,6 @@ void *IncomingSpkrAudio(void *arg)                      // listener thread
     if (DMAWritefile_fd < 0)
     {
         printf("XDMA write device open failed for spk data\n");
-        InitError = true;
     }
 	ResetDMAStreamFIFO(eSpkCodecDMA);
 
