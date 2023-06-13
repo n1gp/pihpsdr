@@ -1673,8 +1673,9 @@ void vfo_num_pad(GtkWidget *parent,int vfo) {
 #define BUF_SIZE 88
 void num_pad(int val) {
   char output[BUF_SIZE], freq_str[BUF_SIZE];
-  static gint64 freq_int, digit_count;
-  static int dec_done;
+  int mult=1;
+  static gint64 freq_int;
+  static int dec_done, digit_count;
   //
   // The numpad may be difficult to use since the frequency has to be given in Hz
   // TODO: add a multiplier button like "kHz"
@@ -1703,13 +1704,17 @@ void num_pad(int val) {
       vfo[rx->id].entered_frequency=0;
       vfo[rx->id].entering_frequency=FALSE;
       break;
-    case -2: // enter
+    case -4: // KHz
+      mult*=1000;
+    case -3: // MHz
+      mult*=1000;
+    case -2: // enter/Hz
       if(vfo[rx->id].entered_frequency!=0 && vfo[rx->id].entered_frequency!=vfo[rx->id].frequency) {
         if(dec_done)
           sprintf(freq_str, "%ld.%ld", freq_int, vfo[rx->id].entered_frequency);
         else
           sprintf(freq_str, "%ld", vfo[rx->id].entered_frequency);
-        vfo[rx->id].entered_frequency=(gint64)(atof(freq_str)*1000000);
+        vfo[rx->id].entered_frequency=(gint64)(atof(freq_str)*mult);
         receiver_set_frequency(rx, vfo[rx->id].entered_frequency);
         g_idle_add(ext_vfo_update, NULL);
       }
@@ -1720,7 +1725,7 @@ void num_pad(int val) {
         sub_menu=NULL;
       }
       break;
-    case -3: // decimal point
+    case -5: // decimal point
       if(dec_done) break; // ignore extra decimal points
       dec_done=1;
       freq_int=(digit_count)?vfo[rx->id].entered_frequency:0;

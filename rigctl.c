@@ -2540,7 +2540,7 @@ gboolean parse_extended_cmd (char *command,CLIENT *client) {
            }
          }
          break;
-case 'E': //ZZZE
+       case 'E': //ZZZE
          // Encoders
          if(command[7]==';') {
            int v,p;
@@ -2687,6 +2687,12 @@ case 'E': //ZZZE
                  locked=0;
                }
                break;
+             case 45:
+               {
+                 schedule_action(NUMPAD_MHZ, PRESSED, 0);
+                 numpad_active=0;
+                 locked=0;
+               }
            } else if (!locked) switch(p) {
              static int shift=0;
              case 1: // Rx1 AF Mute
@@ -2762,10 +2768,10 @@ case 'E': //ZZZE
                  else if (p==36) schedule_action(A_TO_B, PRESSED, 0);      // A>B
                  else if (p==37) schedule_action(B_TO_A, PRESSED, 0);      // B>A
                  else if (p==38) schedule_action(SPLIT, PRESSED, 0);       // SPLIT
+                 else if (p==39) schedule_action(A_SWAP_B, PRESSED, 0);    // U1 (use A_SWAP_B)
                  else if (p==40) schedule_action(NB, PRESSED, 0);          // U2 (use NB)
-                 else if (p==41) schedule_action(NR, PRESSED, 0);          // U3 (use NR)
-               } else if (p==39) {                                         // U1 (use A_SWAP_B)
-                   if (v==0) schedule_action(A_SWAP_B, PRESSED, 0);
+               } else if (p==41) {
+                   if (v==0) schedule_action(NR, PRESSED, 0);              // U3 (use NR)
                    else if (v==2) {
                      numpad_active=1;
                      locked=1;
@@ -2824,8 +2830,8 @@ case 'E': //ZZZE
                }
                break;
              case 45: // ctune
-               schedule_action(CTUN, (v==0)?PRESSED:RELEASED, 0);
-               if(v==0) {
+               if(v==1) {
+                 schedule_action(CTUN, PRESSED, 0);
                  sprintf(reply,"ZZZI07%d;", vfo[active_receiver->id].ctun^1);
                  send_resp(client->fd,reply);
                  g_idle_add(ext_vfo_update,NULL);
@@ -2869,11 +2875,17 @@ case 'E': //ZZZE
                break;
            }
            if (p==44) { // VFO lock
-             if(v==0 && !numpad_active) {
-               locked ^= 1;
-               g_idle_add(ext_vfo_update,NULL);
-               sprintf(reply,"ZZZI11%d;", locked);
-               send_resp(client->fd,reply);
+             if(v==0) {
+               if(numpad_active) {
+                 schedule_action(NUMPAD_KHZ, PRESSED, 0);
+                 numpad_active=0;
+                 locked=0;
+	       } else {
+                 locked ^= 1;
+                 g_idle_add(ext_vfo_update,NULL);
+                 sprintf(reply,"ZZZI11%d;", locked);
+                 send_resp(client->fd,reply);
+	       }
              }
            }
          }

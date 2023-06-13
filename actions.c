@@ -139,6 +139,8 @@ ACTION_TABLE ActionTable[] = {
   {NUMPAD_9,            "NUMPAD 9",             "9",            MIDI_KEY   | CONTROLLER_SWITCH},
   {NUMPAD_CL,           "NUMPAD\nCL",           "CL",           MIDI_KEY   | CONTROLLER_SWITCH},
   {NUMPAD_DEC,          "NUMPAD\nDEC",          "DEC",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_KHZ,          "NUMPAD\nKHZ",          "KHZ",          MIDI_KEY   | CONTROLLER_SWITCH},
+  {NUMPAD_MHZ,          "NUMPAD\nMHZ",          "MHZ",          MIDI_KEY   | CONTROLLER_SWITCH},
   {NUMPAD_ENTER,        "NUMPAD\nENTER",        "EN",           MIDI_KEY   | CONTROLLER_SWITCH},
   {PAN,                 "PAN",                  "PAN",          MIDI_WHEEL | CONTROLLER_ENCODER},
   {PAN_MINUS,           "PAN -",                "PAN-",         MIDI_KEY | CONTROLLER_SWITCH},
@@ -820,9 +822,19 @@ int process_action(void *data) {
         num_pad(-2);
       }
       break;
-    case NUMPAD_DEC:
+    case NUMPAD_KHZ:
       if(a->mode==PRESSED) {
         num_pad(-3);
+      }
+      break;
+    case NUMPAD_MHZ:
+      if(a->mode==PRESSED) {
+        num_pad(-4);
+      }
+      break;
+    case NUMPAD_DEC:
+      if(a->mode==PRESSED) {
+        num_pad(-5);
       }
       break;
     case PAN:

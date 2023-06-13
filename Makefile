@@ -24,7 +24,7 @@ MIDI_INCLUDE=MIDI
 SATURN_INCLUDE=SATURN
 
 # uncomment the line below to include ANDROMEDA support
-# ANDROMEDA_OPTIONS=-D ANDROMEDA
+ANDROMEDA_OPTIONS=-D ANDROMEDA
 
 # uncomment the line below to include USB Ozy support (needs libusb)
 # USBOZY_INCLUDE=USBOZY
