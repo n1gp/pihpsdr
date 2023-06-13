@@ -1709,7 +1709,7 @@ void vfo_num_pad(GtkWidget *parent,int vfo) {
   dialog=gtk_dialog_new();
   gtk_window_set_transient_for(GTK_WINDOW(dialog),GTK_WINDOW(parent));
   char title[64];
-  sprintf(title,"VFO %s in MHz",vfo==0?"A":"B");
+  sprintf(title,"VFO %s numpad",vfo==0?"A":"B");
   gtk_window_set_title(GTK_WINDOW(dialog),title);
   set_backgnd(dialog);
 
@@ -1722,7 +1722,7 @@ void vfo_num_pad(GtkWidget *parent,int vfo) {
   set_backgnd(grid);
 
   label = gtk_label_new (NULL);
-  gtk_label_set_markup (GTK_LABEL (label), "<big>0</big>");
+  gtk_label_set_markup (GTK_LABEL (label), "<b><big>0</big></b>");
   gtk_misc_set_alignment (GTK_MISC (label), 1, .5);
   gtk_grid_attach(GTK_GRID(grid),label,0,1,3,1);
 
@@ -1796,17 +1796,17 @@ void num_pad(int val) {
       dec_done=1;
       freq_int=(digit_count)?vfo[rx->id].entered_frequency:0;
       vfo[rx->id].entered_frequency=0;
-      sprintf(output, "<big>%ld.</big>", freq_int);
+      sprintf(output, "<b><big>%ld.</big></b>", freq_int);
       gtk_label_set_markup (GTK_LABEL (label), output);
       break;
     default:
       if(digit_count++ == 0) vfo[rx->id].entered_frequency=0;
       if(dec_done) {
         vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
-        sprintf(output, "<big>%ld.%ld</big>", freq_int, vfo[rx->id].entered_frequency);
+        sprintf(output, "<b><big>%ld.%ld</big></b>", freq_int, vfo[rx->id].entered_frequency);
       } else {
         vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
-        sprintf(output, "<big>%ld</big>", vfo[rx->id].entered_frequency);
+        sprintf(output, "<b><big>%ld</big></b>", vfo[rx->id].entered_frequency);
       }
       gtk_label_set_markup (GTK_LABEL (label), output);
       break;
