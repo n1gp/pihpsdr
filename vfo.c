@@ -65,7 +65,7 @@ static GtkWidget *vfo_panel;
 static cairo_surface_t *vfo_surface = NULL;
 
 int steps[]={1,10,25,50,100,250,500,1000,5000,9000,10000,100000,250000,500000,1000000};
-char *step_labels[]={"1Hz","10Hz","25Hz","50Hz","100Hz","250Hz","500Hz","1kHz","5kHz","9kHz","10kHz","100kHz","250KHz","500KHz","1MHz"};
+char *step_labels[]={"1Hz","10Hz","25Hz","50Hz","100Hz","250Hz","500Hz","1kHz","5kHz","9kHz","10kHz","100kHz","250kHz","500kHz","1MHz"};
 
 //
 // Move frequency f by n steps, adjust to multiple of step size
@@ -1255,7 +1255,7 @@ void vfo_update() {
         // X =  115 - 140, Y =  42 -  54: "PS" indicator
         //
         if ((protocol == ORIGINAL_PROTOCOL || protocol == NEW_PROTOCOL) && can_transmit) {
-          cairo_move_to(cr, 115, 54);
+          cairo_move_to(cr, 240, 54);
           if(transmitter->puresignal) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1280,7 +1280,7 @@ void vfo_update() {
 
 
         //
-        // X = 300 - 420, Y = 1-15: "XIT" indicator
+        // X = 270 - 470, Y = 1-15: "XIT" indicator
         //
         if(can_transmit) {
           if(transmitter->xit_enabled==0) {
@@ -1289,7 +1289,7 @@ void vfo_update() {
               cairo_set_source_rgba(cr, COLOUR_ATTN);
           }
           sprintf(temp_text,"XIT: %lldHz",transmitter->xit);
-          cairo_move_to(cr, 300, 15);
+          cairo_move_to(cr, 270, 15);
           cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
           cairo_show_text(cr, temp_text);
         }
@@ -1297,7 +1297,7 @@ void vfo_update() {
         //
         // X = 140 - 170, Y = 41-54: "NB" indicator
         //
-        cairo_move_to(cr, 140, 54);
+        cairo_move_to(cr, 270, 28);
         switch(active_receiver->nb) {
           case 1:
           cairo_set_source_rgba(cr, COLOUR_ATTN);
@@ -1316,7 +1316,7 @@ void vfo_update() {
         //
         // X = 170 - 200, Y = 41-54: "NR" indicator
         //
-        cairo_move_to(cr, 170, 54);
+        cairo_move_to(cr, 240, 28);
         switch (active_receiver->nr) {
           case 1:
           cairo_set_source_rgba(cr, COLOUR_ATTN);
@@ -1345,7 +1345,7 @@ void vfo_update() {
         //
         // X = 200 - 235, Y = 41-54 "ANF" indicator
         //
-        cairo_move_to(cr, 200, 54);
+        cairo_move_to(cr, 240, 41);
         if(active_receiver->anf) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1356,7 +1356,7 @@ void vfo_update() {
         //
         // X = 235 - 270, Y = 41-54: "SNB" indicator
         //
-        cairo_move_to(cr, 235, 54);
+        cairo_move_to(cr, 270, 41);
         if(active_receiver->snb) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1367,7 +1367,7 @@ void vfo_update() {
         //
         // X = 350 - 420, Y = 41-54: "AGC" indicator
         //
-        cairo_move_to(cr, 350, 54);
+        cairo_move_to(cr, 360, 54);
         switch(active_receiver->agc) {
           case AGC_OFF:
             cairo_set_source_rgba(cr, COLOUR_SHADE);
@@ -1396,7 +1396,7 @@ void vfo_update() {
         //
         //
         if(can_transmit) {
-          cairo_move_to(cr, 420, 54);
+          cairo_move_to(cr, 440, 54);
           if (transmitter->compressor) {
               sprintf(temp_text,"CMPR %d",(int) transmitter->compressor_level);
               cairo_set_source_rgba(cr, COLOUR_ATTN);
@@ -1410,7 +1410,7 @@ void vfo_update() {
         // X = 500 - 530, Y = 41-54: Equalizer indicator
         //
         //
-        cairo_move_to(cr, 500, 54);
+        cairo_move_to(cr, 440, 15);
         if (isTransmitting() && enable_tx_equalizer) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
           cairo_show_text(cr, "TxEQ");
@@ -1443,7 +1443,7 @@ void vfo_update() {
         if(s>=STEPS) s=0;
 
         sprintf(temp_text,"Step %s",step_labels[s]);
-        cairo_move_to(cr, 420, 15);
+        cairo_move_to(cr, 360, 15);
         cairo_set_source_rgba(cr, COLOUR_ATTN);
         cairo_show_text(cr, temp_text);
 
@@ -1461,7 +1461,7 @@ void vfo_update() {
         //
         // X = 235 - 350, Y = 15-28: CAT indicator
         //
-        cairo_move_to(cr, 235, 28);
+        cairo_move_to(cr, 110, 54);
         if(cat_control>0) {
           cairo_set_source_rgba(cr, COLOUR_ATTN);
         } else {
@@ -1496,7 +1496,7 @@ void vfo_update() {
         //
         // X = 235 - 270, Y = 1-15: Split indicator
         //
-        cairo_move_to(cr, 235, 41);
+        cairo_move_to(cr, 175, 54);
         if(split) {
           cairo_set_source_rgba(cr, COLOUR_ALARM);
         } else {
@@ -1507,7 +1507,7 @@ void vfo_update() {
         //
         // X = 270 - 300, Y = 1-15: SAT indicator
         //
-        cairo_move_to(cr, 270, 28);
+        cairo_move_to(cr, 145, 54);
         if(sat_mode!=SAT_NONE) {
           cairo_set_source_rgba(cr, COLOUR_ALARM);
         } else {
@@ -1529,7 +1529,7 @@ void vfo_update() {
             cairo_set_source_rgba(cr, COLOUR_SHADE);
         }
         sprintf(temp_text,"DUP");
-        cairo_move_to(cr, 270, 41);
+        cairo_move_to(cr, 210, 54);
         cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
         cairo_show_text(cr, temp_text);
 
@@ -1702,46 +1702,13 @@ void vfo_ctun_update(int id,int state) {
   }
 }
 
-static GtkWidget *label;
-static GtkWidget *dialog=NULL;
-
-void vfo_num_pad(GtkWidget *parent,int vfo) {
-  dialog=gtk_dialog_new();
-  gtk_window_set_transient_for(GTK_WINDOW(dialog),GTK_WINDOW(parent));
-  char title[64];
-  sprintf(title,"VFO %s numpad",vfo==0?"A":"B");
-  gtk_window_set_title(GTK_WINDOW(dialog),title);
-  set_backgnd(dialog);
-
-  GtkWidget *content=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
-
-  GtkWidget *grid=gtk_grid_new();
-  gtk_widget_set_size_request (grid, 150, 30);
-  gtk_grid_set_row_homogeneous(GTK_GRID(grid), FALSE);
-  gtk_grid_set_column_homogeneous(GTK_GRID(grid),TRUE);
-  set_backgnd(grid);
-
-  label = gtk_label_new (NULL);
-  gtk_label_set_markup (GTK_LABEL (label), "<b><big>0</big></b>");
-  gtk_misc_set_alignment (GTK_MISC (label), 1, .5);
-  gtk_grid_attach(GTK_GRID(grid),label,0,1,3,1);
-
-  gtk_container_add(GTK_CONTAINER(content),grid);
-
-  sub_menu=dialog;
-
-  gtk_widget_show_all(dialog);
-}
-
 //
 // helper function for numerically entering a new VFO frequency
 //
-#define BUF_SIZE 88
 void num_pad(int val) {
-  char output[BUF_SIZE], freq_str[BUF_SIZE];
+  static gint64 freq_w, freq_d, d_count=0;
   int mult=1;
-  static gint64 freq_int;
-  static int dec_done, digit_count;
+  char fstr[64];
   //
   // The numpad may be difficult to use since the frequency has to be given in Hz
   // TODO: add a multiplier button like "kHz"
@@ -1750,66 +1717,52 @@ void num_pad(int val) {
   //
   RECEIVER *rx=active_receiver;
   if(!vfo[rx->id].entering_frequency) {
-    freq_int=0;
-    digit_count=0;
-    dec_done=0;
-    vfo[rx->id].entered_frequency=vfo[rx->id].frequency;
+    freq_w=freq_d=d_count=0;
+    vfo[rx->id].entered_frequency=0;
     vfo[rx->id].entering_frequency=TRUE;
-    vfo_num_pad(top_window,rx->id);
-    return;
   }
 
-  if(digit_count>=12 && val!=-2)
-    return;
 
   switch(val) {
     case -1: // clear
-      freq_int=0;
-      digit_count=0;
-      dec_done=0;
+      freq_w=freq_d=d_count=0;
       vfo[rx->id].entered_frequency=0;
       vfo[rx->id].entering_frequency=FALSE;
       break;
-    case -4: // KHz
+    case -5: // Decimal point
+      // shift whole part over past decimal point
+      freq_w=vfo[rx->id].entered_frequency;
+      vfo[rx->id].entered_frequency*=1000000;
+      break;
+    case -4: // enter as MHz
       mult*=1000;
-    case -3: // MHz
+      // FALLTHROUGH
+    case -3: // enter as KHz
       mult*=1000;
-    case -2: // enter/Hz
-      if(vfo[rx->id].entered_frequency!=0 && vfo[rx->id].entered_frequency!=vfo[rx->id].frequency) {
-        if(dec_done)
-          sprintf(freq_str, "%ld.%ld", freq_int, vfo[rx->id].entered_frequency);
-        else
-          sprintf(freq_str, "%ld", vfo[rx->id].entered_frequency);
-        vfo[rx->id].entered_frequency=(gint64)(atof(freq_str)*mult);
+      // FALLTHROUGH
+    case -2: // enter as Hz
+      if(freq_w) { // handle the decimal point
+        sprintf(fstr, "%ld.%ld", freq_w, freq_d);
+        vfo[rx->id].entered_frequency=(gint64)(atof(fstr)*mult);
+      } else
+        vfo[rx->id].entered_frequency*=mult;
+
+      if(vfo[rx->id].entered_frequency!=0)
         receiver_set_frequency(rx, vfo[rx->id].entered_frequency);
-        g_idle_add(ext_vfo_update, NULL);
-      }
       vfo[rx->id].entering_frequency=FALSE;
-      if(dialog!=NULL) {
-        gtk_widget_destroy(dialog);
-        dialog=NULL;
-        sub_menu=NULL;
-      }
-      break;
-    case -5: // decimal point
-      if(dec_done) break; // ignore extra decimal points
-      dec_done=1;
-      freq_int=(digit_count)?vfo[rx->id].entered_frequency:0;
-      vfo[rx->id].entered_frequency=0;
-      sprintf(output, "<b><big>%ld.</big></b>", freq_int);
-      gtk_label_set_markup (GTK_LABEL (label), output);
       break;
     default:
-      if(digit_count++ == 0) vfo[rx->id].entered_frequency=0;
-      if(dec_done) {
+      //
+      // NumPad: enter the frequency in MHz, KHz, or Hz
+      //
+      if (freq_w) { // we have a decimal point
+        if(d_count++ > 6) break;
+        freq_d=(freq_d*10)+val;
+        vfo[rx->id].entered_frequency=freq_w*1000000+freq_d*pow(10, 6-d_count);
+      } else
         vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
-        sprintf(output, "<b><big>%ld.%ld</big></b>", freq_int, vfo[rx->id].entered_frequency);
-      } else {
-        vfo[rx->id].entered_frequency=(vfo[rx->id].entered_frequency*10)+val;
-        sprintf(output, "<b><big>%ld</big></b>", vfo[rx->id].entered_frequency);
-      }
-      gtk_label_set_markup (GTK_LABEL (label), output);
       break;
   }
+  g_idle_add(ext_vfo_update, NULL);
 }
 

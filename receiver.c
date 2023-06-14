@@ -1448,9 +1448,8 @@ void receiver_set_frequency(RECEIVER *rx, long long f) {
   int id=rx->id;
 
   //
-  // update VFO, and let receiver_frequency_changed do the rest
+  // update VFO frequency, and let receiver_frequency_changed do the rest
   //
-  vfo[id].band=get_band_from_frequency(f);
   if(vfo[id].ctun) {
     vfo[id].ctun_frequency=f;
   } else {
@@ -1461,6 +1460,7 @@ void receiver_set_frequency(RECEIVER *rx, long long f) {
 
 void receiver_frequency_changed(RECEIVER *rx) {
   int id=rx->id;
+  long long f;
 
   if(vfo[id].ctun) {
     long long frequency=vfo[id].frequency;
@@ -1515,6 +1515,11 @@ void receiver_frequency_changed(RECEIVER *rx) {
       vfo[id].offset=vfo[id].rit;
     }
   }
+  //
+  // Get new band from new frequency
+  //
+  f = vfo[id].ctun ? vfo[id].ctun_frequency : vfo[id].frequency;
+  vfo[id].band=get_band_from_frequency(f);
   //
   // To make this bullet-proof, report the (possibly new) offset to WDSP
   // and send the (possibly changed) frequency to the radio in any case.
