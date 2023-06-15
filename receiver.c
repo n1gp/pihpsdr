@@ -740,6 +740,10 @@ void set_displaying(RECEIVER *rx,int state) {
 void set_mode(RECEIVER *rx,int m) {
   vfo[rx->id].mode=m;
   SetRXAMode(rx->id, vfo[rx->id].mode);
+  //
+  // The choice of the squelch method depends on the mode
+  //
+  setSquelch(rx);
 }
 
 void set_filter(RECEIVER *rx) {
@@ -749,11 +753,11 @@ void set_filter(RECEIVER *rx) {
 
   if ((m == modeCWU || m == modeCWL) && cw_audio_peak_filter) {
     //
-    // Possibly engage cw peak filter
+    // Possibly engage cw peak filter. Use a fixed gain
     //
     SetRXASPCWFreq(rx->id, (double) cw_keyer_sidetone_frequency);
     SetRXASPCWBandwidth(rx->id, (double) cw_audio_peak_width);
-    SetRXASPCWGain(rx->id, 1.5);
+    SetRXASPCWGain(rx->id, 1.75);
     SetRXASPCWRun(rx->id, 1);
   } else {
     SetRXASPCWRun(rx->id, 0);

@@ -2768,7 +2768,7 @@ gboolean parse_extended_cmd (char *command,CLIENT *client) {
                  else if (p==36) schedule_action(A_TO_B, PRESSED, 0);      // A>B
                  else if (p==37) schedule_action(B_TO_A, PRESSED, 0);      // B>A
                  else if (p==38) schedule_action(SPLIT, PRESSED, 0);       // SPLIT
-                 else if (p==39) schedule_action(A_SWAP_B, PRESSED, 0);    // U1 (use A_SWAP_B)
+                 else if (p==39) schedule_action(NB, PRESSED, 0);          // U1 (use NB)
                  else if (p==40) schedule_action(NR, PRESSED, 0);          // U2 (use NR)
                } else if (p==41) {
                    if (v==0 || v==2) {

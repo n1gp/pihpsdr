@@ -1706,7 +1706,7 @@ void vfo_ctun_update(int id,int state) {
 // helper function for numerically entering a new VFO frequency
 //
 void num_pad(int val) {
-  static gint64 freq_w, freq_d, d_count=0;
+  static long long freq_w, freq_d, d_count=0;
   int mult=1;
   char fstr[64];
   //
@@ -1741,9 +1741,11 @@ void num_pad(int val) {
       mult*=1000;
       // FALLTHROUGH
     case -2: // enter as Hz
+      // TODO: calculated the frequency without using atof,
+      //       because of "LOCALE" problems
       if(freq_w) { // handle the decimal point
-        sprintf(fstr, "%ld.%ld", freq_w, freq_d);
-        vfo[rx->id].entered_frequency=(gint64)(atof(fstr)*mult);
+        sprintf(fstr, "%lld.%lld", freq_w, freq_d);
+        vfo[rx->id].entered_frequency=(long long)(atof(fstr)*mult);
       } else
         vfo[rx->id].entered_frequency*=mult;
 
