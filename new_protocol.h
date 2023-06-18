@@ -50,14 +50,10 @@
 // Network buffers
 #define NET_BUFFER_SIZE 4096
 
-#define MIC_SAMPLES 64
-
-extern int data_socket;
-#ifdef __APPLE__
-extern sem_t *response_sem;
-#else
-extern sem_t response_sem;
-#endif
+/////////////////////////////////////////////////////////////////////////////
+//
+// PEDESTRIAN BUFFER MANAGEMENT
+//
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -65,7 +61,7 @@ extern sem_t response_sem;
 // One buffer. The fences can be used to detect over-writing
 // (feature currently not used).
 //
-//
+////////////////////////////////////////////////////////////////////////////
 
 struct mybuffer_ {
    struct mybuffer_ *next;
@@ -77,22 +73,7 @@ struct mybuffer_ {
 
 typedef struct mybuffer_ mybuffer;
 
-/*
-extern long response_sequence;
-*/
-// DL1YCF: "response" is global (used in new_protocol_programmer.c)
-extern int response;
-
-/*
-extern unsigned int exciter_power;
-extern unsigned int alex_forward_power;
-extern unsigned int alex_reverse_power;
-*/
-
-/*
-extern int send_high_priority;
-extern int send_general;
-*/
+#define MIC_SAMPLES 64
 
 extern void schedule_high_priority(void);
 extern void schedule_general(void);

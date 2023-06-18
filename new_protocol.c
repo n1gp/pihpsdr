@@ -88,9 +88,9 @@ static int dash=0;
 static int dot=0;
 
 #ifdef __APPLE__
-sem_t *response_sem;
+static sem_t *response_sem;
 #else
-sem_t response_sem;
+static sem_t response_sem;
 #endif
 
 static struct sockaddr_in base_addr;
@@ -227,6 +227,7 @@ sem_t *apple_sem(int initial_value) {
 // This ONLY applies to the network buffers filled with data in
 // new_protocol_thread(), so this need not be thread-safe.
 //
+////////////////////////////////////////////////////////////////////////////
 
 //
 // number of buffers allocated (for statistics)
@@ -830,7 +831,8 @@ static void new_protocol_high_priority() {
     }
 
 //
-//  ANAN-7000/8000: route TXout to XvtrOut out when using XVTR input
+//  ANAN-7000/8000 and G2:
+//                  route TXout to XvtrOut out when using XVTR input
 //                  (this is the condition also implemented in old_protocol)
 //                  Note: the firmware does a logical AND with the T/R bit
 //                  such that upon RX, Xvtr port is input, and on TX, Xvrt port
@@ -893,7 +895,7 @@ static void new_protocol_high_priority() {
       case NEW_DEVICE_SATURN:
       case NEW_DEVICE_ORION2:
 //
-//	new ANAN-7000/8000 band-pass RX filters
+//      new ANAN-7000/8000/G2 band-pass RX filters
 //
 //	To support the ANAN-8000 we
 //	should bypass BPFs while transmitting in PureSignal,
@@ -1285,7 +1287,7 @@ static void new_protocol_receive_specific() {
 
     for(i=0;i<receivers;i++) {
 	// note that for HERMES, receiver[i] is associated with DDC(i) but beyond
-	// (that is, ANGELIA, ORION, ORION2) receiver[i] is associated with DDC(i+2)
+        // (that is, ANGELIA, ORION, ORION2, G2) receiver[i] is associated with DDC(i+2)
         int ddc=i;
         if (device==NEW_DEVICE_ANGELIA || device==NEW_DEVICE_ORION ||
             device == NEW_DEVICE_ORION2|| device == NEW_DEVICE_SATURN) ddc=2+i;

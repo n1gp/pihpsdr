@@ -763,7 +763,7 @@ void *highprio_thread(void *data) {
     printf("HP: StepAtt0 = %d\n", stepatt0);
      }
      // rxatt0 depends both on ALEX att and Step Att, so re-calc. it each time
-     if (NEWDEVICE == NEW_DEVICE_ORION2) {
+     if (NEWDEVICE == NDEV_ORION2 || NEWDEVICE == NDEV_SATURN) {
     // There is no step attenuator on ANAN7000
     rxatt0_dbl=pow(10.0, -0.05*stepatt0);
      } else {
@@ -890,7 +890,6 @@ void *rx_thread(void *data) {
     // ADC1 TX: HERMES only: original TX signal
     // ADC2   : original TX signal
     //
-    
         p=buffer;
         *p++ =(seqnum >> 24) & 0xFF;
         *p++ =(seqnum >> 16) & 0xFF;
@@ -936,13 +935,18 @@ void *rx_thread(void *data) {
           i0sample += irsample *fac;
           q0sample += qrsample *fac;
         }
-        i1sample = irsample * 0.2899;
-        q1sample = qrsample * 0.2899;
+        if (NEWDEVICE == NDEV_SATURN) {
+          i1sample = irsample * 0.6121;
+          q1sample = qrsample * 0.6121;
+        } else {
+          i1sample = irsample * 0.2899;
+          q1sample = qrsample * 0.2899;
+        }
       } else if (do_tone) {
         i0sample += cos(tonearg) * 0.0002239 * rxatt0_dbl;
         q0sample += sin(tonearg) * 0.0002239 * rxatt0_dbl;
             tonearg += tonedelta;
-            if (tonearg > 6.3)  tonearg -= 6.283185307179586476925286766559;         
+            if (tonearg > 6.3)  tonearg -= 6.283185307179586476925286766559;
             if (tonearg < -6.3) tonearg += 6.283185307179586476925286766559;
       }
       if (diversity && !sync && myadc == 0) {

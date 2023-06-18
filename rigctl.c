@@ -4477,7 +4477,8 @@ void launch_andromeda (int id) {
      // This is a no-op if the serial client is NOT running
      //
      if (SerialPorts[id].andromeda && serial_client[id].running) {
-       g_timeout_add(700,andromeda_init,&serial_client[id]);           // executed once, but init is delayed 700ms
+       usleep(700000L); // Need to wait for andromedas serial to settle, Andromeda FP Version: h/w:01 s/w:006
+       g_idle_add(andromeda_init, &serial_client[id]);           // executed once
        serial_client[id].andromeda_timer=g_timeout_add(500,andromeda_handler,&serial_client[id]);  // executed periodically
      }
 }
