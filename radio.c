@@ -1013,11 +1013,6 @@ void start_radio() {
     case SOAPYSDR_USB_DEVICE:
       sprintf(property_path,"%s.props",radio->name);
       break;
-    case NEW_DEVICE_SATURN:
-      if(have_saturn_xdma) {
-        sprintf(property_path,"%s.props",radio->name);
-        break;
-      } // else fall through since using network
     default:
       sprintf(property_path,"%02X-%02X-%02X-%02X-%02X-%02X.props",
               radio->info.network.mac_address[0],
