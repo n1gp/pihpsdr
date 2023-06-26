@@ -242,6 +242,28 @@ void saturn_register_init()
 //RRK disable DDCs here?
 }
 
+// is there already a pihpsdr running and using xdma?
+int is_already_running()
+{
+
+  FILE *fp;
+  char path[1035];
+
+  fp = popen("lsof /dev/xdma0_user | grep pihpsdr", "r");
+  if (fp == NULL) {
+    printf("Failed to run command\n" );
+    exit(1);
+  }
+
+  while (fgets(path, sizeof(path), fp) != NULL) {
+    printf("%s", path);
+  }
+
+  pclose(fp);
+
+  return (strstr(path, "pihpsdr")==NULL)?0:1;
+}
+
 void saturn_discovery()
 {
     if(devices<MAX_DEVICES)
@@ -255,6 +277,7 @@ void saturn_discovery()
 
         if (stat("/dev/xdma/card0", &sb) == 0 && S_ISDIR(sb.st_mode))
         {
+            discovered[devices].status = (is_already_running())?STATE_SENDING:STATE_AVAILABLE;
             saturn_register_init();
             discovered[devices].protocol = NEW_PROTOCOL;
             discovered[devices].device = NEW_DEVICE_SATURN;
@@ -279,7 +302,6 @@ void saturn_discovery()
             {
                 discovered[devices].info.network.mac_address[i]=0;
             }
-            discovered[devices].status = STATE_AVAILABLE;
             discovered[devices].info.network.address_length=0;
             discovered[devices].info.network.interface_length=0;
             strcpy(discovered[devices].info.network.interface_name,"XDMA");
