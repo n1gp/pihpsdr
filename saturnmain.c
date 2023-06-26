@@ -255,9 +255,7 @@ int is_already_running()
     exit(1);
   }
 
-  while (fgets(path, sizeof(path), fp) != NULL) {
-    printf("%s", path);
-  }
+  while (fgets(path, sizeof(path), fp) != NULL) {}
 
   pclose(fp);
 
