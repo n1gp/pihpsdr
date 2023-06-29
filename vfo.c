@@ -1544,7 +1544,15 @@ vfo_press_event_cb (GtkWidget *widget,
                GdkEventButton *event,
                gpointer        data)
 {
-  start_vfo(event->x<300?VFO_A:VFO_B);
+  switch (event->button) {
+    case GDK_BUTTON_PRIMARY:
+      g_idle_add(ext_start_vfo,GINT_TO_POINTER(event->x<300?VFO_A:VFO_B));
+      break;
+    case GDK_BUTTON_SECONDARY:
+      // do not discriminate between A and B
+      g_idle_add(ext_start_band, NULL);
+      break;
+  }
   return TRUE;
 }
 
