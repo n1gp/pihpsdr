@@ -52,6 +52,7 @@ bool ExitRequested = false;                 // true if "exit checking" thread re
 bool SkipExitCheck = false;                 // true to skip "exit checking", if running as a service
 bool ThreadError = false;                   // true if a thread reports an error
 bool ServerActive = false;
+bool saturn_server_en = false;
 
 #define VDISCOVERYSIZE 60                   // discovery packet
 #define VDISCOVERYREPLYSIZE 60              // reply packet
@@ -207,20 +208,20 @@ void* CheckForActivity(void *arg)
 }
 
 //
-// Shutdown()
 // perform ordely shutdown of the program
 //
-void Shutdown()
+void shutdown_saturn_server()
 {
+  ServerActive=false;
   close(SocketData[0].Socketid);                          // close incoming data socket
   ExitRequested = true;
-  saturn_exit();
   printf("Shutdown COMPLETE\n");
 }
 
 
 void start_saturn_server()
 {
+  ExitRequested=false;
   if(pthread_create(&saturn_server_thread, NULL, saturn_server, NULL) < 0)
   {
     perror("pthread_create saturn_server thread");
@@ -470,7 +471,7 @@ void* saturn_server(void *arg)
   // clean exit
   //
   printf("Exiting\n");
-  Shutdown();
+  shutdown_saturn_server();
   return NULL;
 }
 

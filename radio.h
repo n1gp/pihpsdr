@@ -61,6 +61,10 @@ extern DISCOVERED *radio;
 extern gboolean radio_is_remote;
 #endif
 
+#ifdef SATURN
+extern gboolean saturn_server_en;
+#endif
+
 extern GtkWidget *fixed;
 
 extern long long frequency_calibration;

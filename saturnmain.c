@@ -55,6 +55,7 @@ extern sem_t CodecRegMutex;                 // protect writes to codec
 bool IsTXMode;                              // true if in TX
 bool SDRActive;                             // true if this SDR is running at the moment
 bool Exiting = false;
+extern bool saturn_server_en;
 extern bool ServerActive;
 
 #define SDRBOARDID 1                        // Hermes
@@ -1099,7 +1100,6 @@ void saturn_init()
     start_saturn_receive_thread();
     start_saturn_micaudio_thread();
     start_saturn_high_priority_thread();
-    start_saturn_server();
 }
 
 void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer)

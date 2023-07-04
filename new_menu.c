@@ -67,6 +67,9 @@
 #include "midi.h"
 #include "midi_menu.h"
 #endif
+#ifdef SATURN
+#include "saturn_menu.h"
+#endif
 
 
 GtkWidget *main_menu=NULL;
@@ -115,6 +118,14 @@ static gboolean restart_cb (GtkWidget *widget, GdkEventButton *event, gpointer d
   protocol_restart();
   return TRUE;
 }
+
+#ifdef SATURN
+static gboolean saturn_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+  cleanup();
+  saturn_menu(top_window);
+  return TRUE;
+}
+#endif
 
 static gboolean about_b_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   cleanup();
@@ -577,6 +588,13 @@ void new_menu()
     GtkWidget *server_b=gtk_button_new_with_label("Server");
     g_signal_connect (server_b, "button-press-event", G_CALLBACK(server_cb), NULL);
     gtk_grid_attach(GTK_GRID(grid),server_b,(i%5),i/5,1,1);
+    i++;
+#endif
+
+#ifdef SATURN
+    GtkWidget *saturn_b=gtk_button_new_with_label("Saturn");
+    g_signal_connect (saturn_b, "button-press-event", G_CALLBACK(saturn_cb), NULL);
+    gtk_grid_attach(GTK_GRID(grid),saturn_b,(i%5),i/5,1,1);
     i++;
 #endif
 

@@ -81,6 +81,7 @@
 #endif
 #ifdef SATURN
 #include "saturnmain.h"
+#include "saturnserver.h"
 #endif
 
 #define min(x,y) (x<y?x:y)
@@ -1348,6 +1349,12 @@ void start_radio() {
   }
 #endif
 
+#ifdef SATURN
+  if(saturn_server_en) {
+    start_saturn_server();
+  }
+#endif
+
 #ifdef CLIENT_SERVER
   if(hpsdr_server) {
     create_hpsdr_server();
@@ -2244,6 +2251,10 @@ g_print("radioRestoreState: %s\n",property_path);
     value=getProperty("optimize_touchscreen");
     if (value) optimize_for_touchscreen=atoi(value);
 
+#ifdef SATURN
+    value=getProperty("saturn_server");
+    if (value) saturn_server_en=atoi(value);
+#endif
 
     filterRestoreState();
     bandRestoreState();
@@ -2720,6 +2731,11 @@ g_print("radioSaveState: %s\n",property_path);
 	
     sprintf(value,"%d",optimize_for_touchscreen);
     setProperty("optimize_touchscreen", value);
+
+#ifdef SATURN
+    sprintf(value,"%d",saturn_server_en);
+    setProperty("saturn_server", value);
+#endif
 
 #ifdef CLIENT_SERVER
     sprintf(value,"%d",hpsdr_server);

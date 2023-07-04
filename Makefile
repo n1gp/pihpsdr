@@ -88,17 +88,20 @@ SATURN_SOURCES= \
 saturndrivers.c \
 saturnregisters.c \
 saturnserver.c \
-saturnmain.c
+saturnmain.c \
+saturn_menu.c
 SATURN_HEADERS= \
 saturndrivers.h \
 saturnregisters.h \
 saturnserver.h \
-saturnmain.h
+saturnmain.h \
+saturn_menu.h
 SATURN_OBJS= \
 saturndrivers.o \
 saturnregisters.o \
 saturnserver.o \
-saturnmain.o
+saturnmain.o \
+saturn_menu.o
 endif
 
 #
