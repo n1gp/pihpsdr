@@ -29,7 +29,6 @@
 #include "receiver.h"
 #include "meter.h"
 #include "radio.h"
-#include "wdsp.h"
 #include "radio.h"
 #include "version.h"
 #include "mode.h"
@@ -132,7 +131,7 @@ void meter_update(RECEIVER *rx,int meter_type,double value,double reverse,double
   char *units="W";
   double interval=10.0;
   cairo_t *cr = cairo_create (meter_surface);
-  BAND *band=band_get_current_band();
+  const BAND *band=band_get_current_band();
 
   //
   // First, do all the work that  does not depend on whether the

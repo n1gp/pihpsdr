@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <wdsp.h>
 
 #include "appearance.h"
 #include "audio.h"
@@ -39,7 +40,6 @@
 #ifdef GPIO
 #include "gpio.h"
 #endif
-#include "wdsp.h"
 #include "new_menu.h"
 #include "radio.h"
 #include "version.h"
@@ -68,7 +68,7 @@ GtkWidget *topgrid;
 
 static GtkWidget *status_label;
 
-void status_text(char *text) {
+void status_text(const char *text) {
   gtk_label_set_text(GTK_LABEL(status_label),text);
   usleep(100000);
   while (gtk_events_pending ())

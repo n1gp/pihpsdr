@@ -34,6 +34,7 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
+#include <signal.h>
 #include <wdsp.h>
 
 #include "audio.h"
@@ -45,7 +46,6 @@
 #include "radio.h"
 #include "receiver.h"
 #include "transmitter.h"
-#include "signal.h"
 #include "vfo.h"
 #include "ext.h"
 #include "iambic.h"
@@ -1241,8 +1241,8 @@ void ozy_send_buffer() {
   int txmode=get_tx_mode();
   int txvfo=get_tx_vfo();
   int i;
-  BAND *rxband=band_get_band(vfo[VFO_A].band);
-  BAND *txband=band_get_band(vfo[txvfo].band);
+  const BAND *rxband=band_get_band(vfo[VFO_A].band);
+  const BAND *txband=band_get_band(vfo[txvfo].band);
   int power;
   int num_hpsdr_receivers=how_many_receivers();
   int rx1channel = first_receiver_channel();

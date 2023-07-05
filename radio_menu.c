@@ -82,11 +82,14 @@ static void rx_gain_element_changed_cb(GtkWidget *widget, gpointer data) {
 }
 
 static void tx_gain_element_changed_cb(GtkWidget *widget, gpointer data) {
-  int gain;
   if(device==SOAPYSDR_USB_DEVICE) {
-    gain=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+    int gain=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
     soapy_protocol_set_tx_gain_element(transmitter,(char *)gtk_widget_get_name(widget),gain);
   }
+}
+
+static void iqswap_cb(GtkWidget *widget, gpointer data) {
+  iqswap=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 }
 
 static void agc_changed_cb(GtkWidget *widget, gpointer data) {
@@ -132,9 +135,6 @@ static void bias_cb(GtkWidget *widget, gpointer data) {
   mic_bias_enabled=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 }
 
-static void iqswap_cb(GtkWidget *widget, gpointer data) {
-  iqswap=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
-}
 
 static void touchscreen_cb(GtkWidget *widget, gpointer data) {
   optimize_for_touchscreen=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
@@ -752,7 +752,7 @@ void radio_menu(GtkWidget *parent) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(hl2audio_b), hl2_audio_codec);
     gtk_grid_attach(GTK_GRID(grid),hl2audio_b,col,row,1,1);
     g_signal_connect(hl2audio_b,"toggled",G_CALLBACK(hl2audio_cb),NULL);
-    col++;
+    col++;  // value used below if SOAPY is active
   }
 
 #ifdef SOAPYSDR
@@ -798,10 +798,10 @@ void radio_menu(GtkWidget *parent) {
   gtk_grid_attach(GTK_GRID(grid),rx_gain_calibration_b,col,row,1,1);
   g_signal_connect(rx_gain_calibration_b,"value_changed",G_CALLBACK(rx_gain_calibration_value_changed_cb),NULL);
 
+#ifdef SOAPYSDR
   row++;
 
   col=0;
-#ifdef SOAPYSDR
   if(device==SOAPYSDR_USB_DEVICE) {
     //
     // If there is only a single RX or TX gain element, then we need not display it

@@ -168,7 +168,7 @@ static int send_bytes(int s,char *buffer,int bytes) {
   return bytes_sent;
 }
 
-void remote_audio(RECEIVER *rx,short left_sample,short right_sample) {
+void remote_audio(const RECEIVER *rx,short left_sample,short right_sample) {
   int i=audio_buffer_index*2;
   audio_data.sample[i]=htons(left_sample);
   audio_data.sample[i+1]=htons(right_sample);
@@ -243,7 +243,7 @@ g_print("send_spectrum: no more receivers\n");
   return result;
 }
 
-void send_radio_data(REMOTE_CLIENT *client) {
+void send_radio_data(const REMOTE_CLIENT *client) {
   RADIO_DATA radio_data;
   radio_data.header.sync=REMOTE_SYNC;
   radio_data.header.data_type=htons(INFO_RADIO);
@@ -279,7 +279,7 @@ g_print("send_radio_data: %d\n",bytes_sent);
   }
 }
 
-void send_adc_data(REMOTE_CLIENT *client,int i) {
+void send_adc_data(const REMOTE_CLIENT *client,int i) {
   ADC_DATA adc_data;
   adc_data.header.sync=REMOTE_SYNC;
   adc_data.header.data_type=htons(INFO_ADC);
@@ -304,7 +304,7 @@ void send_adc_data(REMOTE_CLIENT *client,int i) {
   }
 }
 
-void send_receiver_data(REMOTE_CLIENT *client,int rx) {
+void send_receiver_data(const REMOTE_CLIENT *client,int rx) {
   RECEIVER_DATA receiver_data;
   receiver_data.header.sync=REMOTE_SYNC;
   receiver_data.header.data_type=htons(INFO_RECEIVER);
@@ -318,10 +318,9 @@ void send_receiver_data(REMOTE_CLIENT *client,int rx) {
   receiver_data.display_waterfall=receiver[rx]->display_waterfall;
   receiver_data.fps=htons(receiver[rx]->fps);
   receiver_data.agc=receiver[rx]->agc;
-  short s=(short)receiver[rx]->agc_hang;
-  receiver_data.agc_hang=htons(s);
-  s=(short)receiver[rx]->agc_thresh;
-  receiver_data.agc_thresh=htons(s);
+  receiver_data.agc_hang=htond(receiver[rx]->agc_hang);
+  receiver_data.agc_thresh=htond(receiver[rx]->agc_thresh);
+  receiver_data.agc_hang_thresh=htond(receiver[rx]->agc_hang_threshold);
   receiver_data.nb=receiver[rx]->nb;
   receiver_data.nr=receiver[rx]->nr;
   receiver_data.anf=receiver[rx]->anf;
@@ -352,7 +351,7 @@ void send_receiver_data(REMOTE_CLIENT *client,int rx) {
   }
 }
 
-void send_vfo_data(REMOTE_CLIENT *client,int v) {
+void send_vfo_data(const REMOTE_CLIENT *client,int v) {
   VFO_DATA vfo_data;
   vfo_data.header.sync=REMOTE_SYNC;
   vfo_data.header.data_type=htons(INFO_VFO);
@@ -1262,19 +1261,17 @@ g_print("send_agc rx=%d agc=%d\n",rx,agc);
   }
 }
 
-void send_agc_gain(int s,int rx,int gain,int hang,int thresh) {
+void send_agc_gain(int s,int rx, double gain, double hang, double thresh, double hang_thresh) {
   AGC_GAIN_COMMAND command;
-  short g=(short)gain;
-  short h=(short)hang;
-  short t=(short)thresh;
-g_print("send_agc_gain rx=%d gain=%d\n",rx,gain);
+g_print("send_agc_gain rx=%d gain=%f hang=%f thresh=%f hang_thresh=%f\n",rx,gain,hang,thresh,hang_thresh);
   command.header.sync=REMOTE_SYNC;
   command.header.data_type=htons(CMD_RESP_RX_AGC_GAIN);
   command.header.version=htonl(CLIENT_SERVER_VERSION);
   command.id=rx;
-  command.gain=htons(g);
-  command.hang=htons(h);
-  command.thresh=htons(t);
+  command.gain=htond(gain);
+  command.hang=htond(hang);
+  command.thresh=htond(thresh);
+  command.hang_thresh=htond(hang_thresh);
   int bytes_sent=send_bytes(s,(char *)&command,sizeof(command));
   if(bytes_sent<0) {
     perror("send_command");
@@ -1832,7 +1829,7 @@ static char server_host[128];
 static int delay=0;
 
 gint start_spectrum(void *data) {
-  RECEIVER *rx=(RECEIVER *)data;
+  const RECEIVER *rx=(RECEIVER *)data;
 
   if(delay!=3) {
     delay++;
@@ -1968,15 +1965,14 @@ g_print("INFO_RECEIVER: %d\n",bytes_read);
         receiver[rx]->display_waterfall=receiver_data.display_waterfall;
         receiver[rx]->fps=ntohs(receiver_data.fps);
         receiver[rx]->agc=receiver_data.agc;
-        short s=ntohs(receiver_data.agc_hang);
-        receiver[rx]->agc_hang=(double)s;
-        s=ntohs(receiver_data.agc_thresh);
-        receiver[rx]->agc_thresh=(double)s;
+        receiver[rx]->agc_hang=ntohd(receiver_data.agc_hang);
+        receiver[rx]->agc_thresh=ntohd(receiver_data.agc_thresh);
+        receiver[rx]->agc_hang_threshold=ntohd(receiver_data.agc_hang_thresh);
         receiver[rx]->nb=receiver_data.nb;
         receiver[rx]->nr=receiver_data.nr;
         receiver[rx]->anf=receiver_data.anf;
         receiver[rx]->snb=receiver_data.snb;
-        s=ntohs(receiver_data.filter_low);
+        short s=ntohs(receiver_data.filter_low);
         receiver[rx]->filter_low=(int)s;
         s=ntohs(receiver_data.filter_high);
         receiver[rx]->filter_high=(int)s;
@@ -2199,12 +2195,10 @@ g_print("AGC_COMMAND: rx=%d agc=%d\n",rx,a);
           return NULL;
         }
         int rx=agc_gain_cmd.id;
-        short gain=ntohs(agc_gain_cmd.gain);
-        short hang=ntohs(agc_gain_cmd.hang);
-        short thresh=ntohs(agc_gain_cmd.thresh);
-        receiver[rx]->agc_gain=(double)gain;
-        receiver[rx]->agc_hang=(double)hang;
-        receiver[rx]->agc_thresh=(double)thresh;
+        receiver[rx]->agc_gain=ntohd(agc_gain_cmd.gain);
+        receiver[rx]->agc_hang=ntohd(agc_gain_cmd.hang);
+        receiver[rx]->agc_thresh=ntohd(agc_gain_cmd.thresh);
+        receiver[rx]->agc_hang_threshold=ntohd(agc_gain_cmd.hang_thresh);
         }
         break;
       case CMD_RESP_RX_GAIN:
@@ -2545,7 +2539,7 @@ g_print("radio_connect_remote: socket %d bound to %s:%d\n",client_socket,host,po
 
 static int remote_command(void *data) {
   HEADER *header=(HEADER *)data;
-  REMOTE_CLIENT *client=header->context.client;
+  const REMOTE_CLIENT *client=header->context.client;
   int temp;
   switch(ntohs(header->data_type)) {
     case CMD_RESP_RX_FREQ:
@@ -2643,10 +2637,13 @@ static int remote_command(void *data) {
       AGC_GAIN_COMMAND *agc_gain_command=(AGC_GAIN_COMMAND *)data;
       int r=agc_gain_command->id;
       CHECK_RX(r);
-      temp=ntohs(agc_gain_command->gain);
-      set_agc_gain(r,(double)temp);
       RECEIVER *rx=receiver[r];
-      send_agc_gain(client->socket,rx->id,(int)rx->agc_gain,(int)rx->agc_hang,(int)rx->agc_thresh);
+      rx->agc_hang=ntohd(agc_gain_command->hang);
+      rx->agc_thresh=ntohd(agc_gain_command->thresh);
+      rx->agc_hang_threshold=ntohd(agc_gain_command->hang_thresh);
+      set_agc_gain(r,ntohd(agc_gain_command->gain));
+      set_agc(rx, rx->agc);
+      send_agc_gain(client->socket,rx->id,rx->agc_gain,rx->agc_hang,rx->agc_thresh,rx->agc_hang_threshold);
       }
       break;
     case CMD_RESP_RX_GAIN:
@@ -2676,7 +2673,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_RX_NOISE:
       {
-      NOISE_COMMAND *noise_command=(NOISE_COMMAND *)data;
+      const NOISE_COMMAND *noise_command=(NOISE_COMMAND *)data;
       int r=noise_command->id;
       CHECK_RX(r);
       RECEIVER *rx=receiver[r];
@@ -2727,7 +2724,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_SPLIT:
       {
-      SPLIT_COMMAND *split_command=(SPLIT_COMMAND *)data;
+      const SPLIT_COMMAND *split_command=(SPLIT_COMMAND *)data;
       if(can_transmit) {
         split=split_command->split;
         tx_set_mode(transmitter,get_tx_mode());
@@ -2738,7 +2735,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_SAT:
       {
-      SAT_COMMAND *sat_command=(SAT_COMMAND *)data;
+      const SAT_COMMAND *sat_command=(SAT_COMMAND *)data;
       sat_mode=sat_command->sat;
       g_idle_add(ext_vfo_update, NULL);
       send_sat(client->socket,sat_mode);
@@ -2746,7 +2743,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_DUP:
       {
-      DUP_COMMAND *dup_command=(DUP_COMMAND *)data;
+      const DUP_COMMAND *dup_command=(DUP_COMMAND *)data;
       duplex=dup_command->dup;
       g_idle_add(ext_vfo_update, NULL);
       send_dup(client->socket,duplex);
@@ -2754,7 +2751,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_LOCK:
       {
-      LOCK_COMMAND *lock_command=(LOCK_COMMAND *)data;
+      const LOCK_COMMAND *lock_command=(LOCK_COMMAND *)data;
       locked=lock_command->lock;
       g_idle_add(ext_vfo_update, NULL);
       send_lock(client->socket,locked);
@@ -2762,7 +2759,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_CTUN:
       {
-      CTUN_COMMAND *ctun_command=(CTUN_COMMAND *)data;
+      const CTUN_COMMAND *ctun_command=(CTUN_COMMAND *)data;
       int v=ctun_command->id;
       vfo[v].ctun=ctun_command->ctun;
       if(!vfo[v].ctun) {
@@ -2777,7 +2774,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_RX_FPS:
       {
-      FPS_COMMAND *fps_command=(FPS_COMMAND *)data;
+      const FPS_COMMAND *fps_command=(FPS_COMMAND *)data;
       int rx=fps_command->id;
       CHECK_RX(rx);
       receiver[rx]->fps=fps_command->fps;
@@ -2788,7 +2785,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_RX_SELECT:
       {
-      RX_SELECT_COMMAND *rx_select_command=(RX_SELECT_COMMAND *)data;
+      const RX_SELECT_COMMAND *rx_select_command=(RX_SELECT_COMMAND *)data;
       int rx=rx_select_command->id;
       CHECK_RX(rx);
       receiver_set_active(receiver[rx]);
@@ -2797,7 +2794,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_VFO:
       {
-      VFO_COMMAND *vfo_command=(VFO_COMMAND *)data;
+      const VFO_COMMAND *vfo_command=(VFO_COMMAND *)data;
       int action=vfo_command->id;
       switch(action) {
         case VFO_A_TO_B:
@@ -2816,7 +2813,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_RIT_UPDATE:
       {
-      RIT_UPDATE_COMMAND *rit_update_command=(RIT_UPDATE_COMMAND *)data;
+      const RIT_UPDATE_COMMAND *rit_update_command=(RIT_UPDATE_COMMAND *)data;
       int rx=rit_update_command->id;
       vfo_rit_update(rx);
       send_vfo_data(client,rx);
@@ -2824,7 +2821,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_RIT_CLEAR:
       {
-      RIT_CLEAR_COMMAND *rit_clear_command=(RIT_CLEAR_COMMAND *)data;
+      const RIT_CLEAR_COMMAND *rit_clear_command=(RIT_CLEAR_COMMAND *)data;
       int rx=rit_clear_command->id;
       vfo_rit_clear(rx);
       send_vfo_data(client,rx);
@@ -2874,7 +2871,7 @@ static int remote_command(void *data) {
       break;
     case CMD_RESP_RECEIVERS:
       {
-      RECEIVERS_COMMAND *receivers_command=(RECEIVERS_COMMAND *)data;
+      const RECEIVERS_COMMAND *receivers_command=(RECEIVERS_COMMAND *)data;
       int r=receivers_command->receivers;
       radio_change_receivers(r);
       send_receivers(client->socket,receivers);

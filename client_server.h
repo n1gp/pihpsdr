@@ -185,6 +185,7 @@ typedef struct __attribute__((__packed__)) _receiver_data {
   uint8_t agc;
   uint16_t agc_hang;
   uint16_t agc_thresh;
+  uint16_t agc_hang_thresh;
   uint8_t nb;
   uint8_t nr;
   uint8_t anf;
@@ -337,6 +338,7 @@ typedef struct __attribute__((__packed__)) _agc_gain_command {
   uint16_t gain;
   uint16_t hang;
   uint16_t thresh;
+  uint16_t hang_thresh;
 } AGC_GAIN_COMMAND;
 
 typedef struct __attribute__((__packed__)) _attenuation_command {
@@ -480,10 +482,10 @@ extern int destroy_hpsdr_server(void);
 
 extern int radio_connect_remote(char *host, int port);
 
-extern void send_radio_data(REMOTE_CLIENT *client);
-extern void send_adc_data(REMOTE_CLIENT *client,int i);
-extern void send_receiver_data(REMOTE_CLIENT *client,int rx);
-extern void send_vfo_data(REMOTE_CLIENT *client,int v);
+extern void send_radio_data(const REMOTE_CLIENT *client);
+extern void send_adc_data(const REMOTE_CLIENT *client,int i);
+extern void send_receiver_data(const REMOTE_CLIENT *client,int rx);
+extern void send_vfo_data(const REMOTE_CLIENT *client,int v);
 
 extern void send_start_spectrum(int s,int rx);
 extern void send_vfo_frequency(int s,int rx,long long hz);
@@ -496,7 +498,7 @@ extern void send_zoom(int s,int rx,int zoom);
 extern void send_pan(int s,int rx,int pan);
 extern void send_volume(int s,int rx,double volume);
 extern void send_agc(int s,int rx,int agc);
-extern void send_agc_gain(int s,int rx,int gain,int hang,int thresh);
+extern void send_agc_gain(int s,int rx,double gain,double hang,double thresh,double hang_thresh);
 extern void send_attenuation(int s,int rx,int attenuation);
 extern void send_rfgain(int s,int rx, double gain);
 extern void send_squelch(int s,int rx,int enable,int squelch);
@@ -524,6 +526,6 @@ extern void send_region(int s,int region);
 extern void send_mute_rx(int s,int mute);
 
 
-extern void remote_audio(RECEIVER *rx,short left_sample,short right_sample);
+extern void remote_audio(const RECEIVER *rx,short left_sample,short right_sample);
 
 #endif

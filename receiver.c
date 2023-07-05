@@ -78,7 +78,7 @@ void receiver_weak_notify(gpointer data,GObject  *obj) {
 }
 
 gboolean receiver_button_press_event(GtkWidget *widget, GdkEventButton *event, gpointer data) {
-  RECEIVER *rx=(RECEIVER *)data;
+  const RECEIVER *rx=(RECEIVER *)data;
   //
   // TEMPORARY FIX:
   //
@@ -167,7 +167,7 @@ gboolean receiver_button_release_event(GtkWidget *widget, GdkEventButton *event,
 gboolean receiver_motion_notify_event(GtkWidget *widget, GdkEventMotion *event, gpointer data) {
   int x, y;
   GdkModifierType state;
-  RECEIVER *rx=(RECEIVER *)data;
+  const RECEIVER *rx=(RECEIVER *)data;
   //
   // if !pressed, we may come from the destruction
   // of a menu, and should not move the VFO.
@@ -204,7 +204,7 @@ gboolean receiver_motion_notify_event(GtkWidget *widget, GdkEventMotion *event, 
   return TRUE;
 }
 
-gboolean receiver_scroll_event(GtkWidget *widget, GdkEventScroll *event, gpointer data) {
+gboolean receiver_scroll_event(GtkWidget *widget, const GdkEventScroll *event, gpointer data) {
   if(event->direction==GDK_SCROLL_UP) {
     vfo_step(1);
   } else {
@@ -710,6 +710,7 @@ static gint update_display(gpointer data) {
   return FALSE;
 }
 
+#ifdef CLIENT_SERVER
 void receiver_remote_update_display(RECEIVER *rx) {
   if(rx->displaying) {
     if(rx->pixels>0) {
@@ -727,6 +728,7 @@ void receiver_remote_update_display(RECEIVER *rx) {
     }
   }
 }
+#endif
 
 void set_displaying(RECEIVER *rx,int state) {
   rx->displaying=state;
@@ -756,7 +758,7 @@ void set_mode(RECEIVER *rx,int m) {
 void set_filter(RECEIVER *rx) {
   int m=vfo[rx->id].mode;
   FILTER *mode_filters=filters[m];
-  FILTER *filter=&mode_filters[vfo[rx->id].filter]; // ignored in FMN
+  const FILTER *filter=&mode_filters[vfo[rx->id].filter]; // ignored in FMN
 
   if ((m == modeCWU || m == modeCWL) && cw_audio_peak_filter) {
     //
@@ -1185,7 +1187,7 @@ g_print("%s: id=%d sample_rate=%d\n",__FUNCTION__,rx->id, rx->sample_rate);
   rx->nr4_post_filter_threshold = -10.0;
 #endif
 
-  BAND *b=band_get_band(vfo[rx->id].band);
+  const BAND *b=band_get_band(vfo[rx->id].band);
   rx->alex_antenna=b->alexRxAntenna;
   if (have_alex_att) {
   rx->alex_attenuation=b->alexAttenuation;

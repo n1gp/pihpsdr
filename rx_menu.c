@@ -204,14 +204,13 @@ void rx_menu(GtkWidget *parent) {
   g_signal_connect (close_b, "button_press_event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid),close_b,0,0,1,1);
 
-  int row;
   int col=0;
 
   if (protocol == ORIGINAL_PROTOCOL || protocol == NEW_PROTOCOL) {
     //
     // Everything in the first two columns does not apply to SOAPY
     //
-  row=1;
+    int row=1;
   switch(protocol) {
     case NEW_PROTOCOL:  // Sample rate in RX menu only for P2
       {
