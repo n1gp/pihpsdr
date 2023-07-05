@@ -70,6 +70,7 @@ extern bool ServerActive;
 #define VBASE 0x1000                        // offset into I/Q buffer for DMA to start
 #define VIQSAMPLESPERFRAME 238
 #define VIQBYTESPERFRAME 6*VIQSAMPLESPERFRAME       // total bytes in one outgoing frame
+#define VIQDUCSAMPLESPERFRAME 240
 
 #define VSPKSAMPLESPERFRAME 64                      // samples per UDP frame
 #define VMEMWORDSPERFRAME 32                        // 8 byte writes per UDP msg
@@ -394,10 +395,10 @@ void saturn_handle_duc_iq(bool FromNetwork, uint8_t *UDPInBuffer)
         DepthDUC = ReadFIFOMonitorChannel(eTXDUCDMA, &FIFDUCOOverflow);       // read the FIFO free locations
     }
     // copy data from UDP Buffer & DMA write it
-//    memcpy(DUCIQBasePtr, UDPInBuffer + 4, VDMADUCTRANSFERSIZE);                // copy out I/Q samples
+    //memcpy(DUCIQBasePtr, UDPInBuffer + 4, VDMADUCTRANSFERSIZE);                // copy out I/Q samples
     SrcPtr = (UDPInBuffer + 4);
     DestPtr = DUCIQBasePtr;
-    for (Cntr=0; Cntr < VIQSAMPLESPERFRAME; Cntr++)                     // samplecounter
+    for (Cntr=0; Cntr < VIQDUCSAMPLESPERFRAME; Cntr++)                     // samplecounter
     {
         *DestPtr++ = *(SrcPtr+3);                           // get I sample (3 bytes)
         *DestPtr++ = *(SrcPtr+4);
