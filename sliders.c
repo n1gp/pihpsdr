@@ -292,7 +292,8 @@ static void agcgain_value_changed_cb(GtkWidget *widget, gpointer data) {
   active_receiver->agc_gain=gtk_range_get_value(GTK_RANGE(agc_scale));
 #ifdef CLIENT_SERVER
   if(radio_is_remote) {
-    send_agc_gain(client_socket,active_receiver->id,(int)active_receiver->agc_gain,(int)active_receiver->agc_hang,(int)active_receiver->agc_thresh);
+    send_agc_gain(client_socket,active_receiver->id,active_receiver->agc_gain,active_receiver->agc_hang,
+                  active_receiver->agc_thresh,active_receiver->agc_hang_threshold);
   } else {
 #endif
   set_agc(active_receiver, active_receiver->agc);
@@ -586,7 +587,11 @@ void set_mic_gain(double value) {
 }
 
 void set_drive(double value) {
-  g_print("%s\n",__FUNCTION__);
+  g_print("%s val=%f\n",__FUNCTION__,value);
+  int txmode = get_tx_mode();
+  if (txmode == modeDIGU || txmode == modeDIGL) {
+    if (value > drive_digi_max) value = drive_digi_max;
+  }
   setDrive(value);
   if(display_sliders) {
     gtk_range_set_value (GTK_RANGE(drive_scale),value);
@@ -619,7 +624,14 @@ void set_drive(double value) {
 }
 
 static void drive_value_changed_cb(GtkWidget *widget, gpointer data) {
-  setDrive(gtk_range_get_value(GTK_RANGE(drive_scale)));
+  double value=gtk_range_get_value(GTK_RANGE(drive_scale));
+  g_print("%s: value=%f\n", __FUNCTION__, value);
+  int txmode = get_tx_mode();
+  if (txmode == modeDIGU || txmode == modeDIGL) {
+    if (value > drive_digi_max) value = drive_digi_max;
+  }
+  gtk_range_set_value (GTK_RANGE(drive_scale),value);
+  setDrive(value);
 }
 
 void set_filter_cut_high(int rx,int var) {

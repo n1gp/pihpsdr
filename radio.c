@@ -256,9 +256,7 @@ int adc_overload;
 int pll_locked;
 unsigned int exciter_power;
 unsigned int average_temperature;
-unsigned int pa_current;
 unsigned int average_current;
-unsigned int n_current;
 unsigned int tx_fifo_underrun;
 unsigned int tx_fifo_overrun;
 unsigned int alex_forward_power;
@@ -320,7 +318,6 @@ int pre_emphasize=0;
 int vox_setting=0;
 int vox_enabled=0;
 double vox_threshold=0.001;
-double vox_gain=10.0;
 double vox_hang=250.0;
 int vox=0;
 int CAT_cw_is_active=0;
@@ -340,7 +337,8 @@ int optimize_for_touchscreen=0;
 gboolean duplex=FALSE;
 gboolean mute_rx_while_transmitting=FALSE;
 
-double drive_max=100;
+double drive_max=100.0;
+double drive_digi_max=100.0;  // maximum drive in DIGU/DIGL
 
 gboolean display_sequence_errors=TRUE;
 gboolean display_swr_protection=FALSE;
@@ -446,10 +444,8 @@ g_print("reconfigure_radio: receivers=%d\n",receivers);
     }
   }
 
-  if(can_transmit) {
-    if(!duplex) {
+  if(can_transmit && !duplex) {
       reconfigure_transmitter(transmitter,display_width,rx_height);
-    }
   }
 }
 
@@ -466,8 +462,10 @@ static gboolean save_cb(gpointer data) {
 
 static GtkWidget *hide_b;
 //
-// These variables are defined outside hideall_cb, since
-// their value is written to the props file if "Hide"ing
+// These variables are defined outside hideall_cb.
+// If the props file is written while "Hide"-ing,
+// these values are written instead of the current
+// hide/show status of the Zoom/Sliders/Toolbar area.
 //
 static int hide_status=0;
 static int old_zoom=0;
@@ -475,6 +473,12 @@ static int old_tool=0;
 static int old_slid=0;
 
 static gboolean hideall_cb  (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+  //
+  // reconfigure_radio must not be called during TX
+  //
+  if (isTransmitting()) {
+    if (!duplex) return TRUE;
+  }
   if (hide_status == 0) {
     //
     // Hide everything but store old status
@@ -826,6 +830,7 @@ void start_radio() {
       pa_power=PA_1W;
       break;
   }
+  drive_digi_max=drive_max; // To be updated when reading props file
 
   switch(pa_power) {
     case PA_1W:
@@ -1213,11 +1218,9 @@ void start_radio() {
 #endif
 
   average_temperature=0;
-  pa_current=0;
   average_current=0;
   tx_fifo_underrun=0;
   tx_fifo_overrun=0;
-  n_current=0;
 
   display_sequence_errors=TRUE;
 
@@ -1481,7 +1484,7 @@ static void rxtx(int state) {
       }
     }
 
-    if(duplex) {
+    if(transmitter->dialog) {
       gtk_widget_show_all(transmitter->dialog);
       if(transmitter->dialog_x!=-1 && transmitter->dialog_y!=-1) {
        gtk_window_move(GTK_WINDOW(transmitter->dialog),transmitter->dialog_x,transmitter->dialog_y);
@@ -1511,7 +1514,7 @@ static void rxtx(int state) {
     }
     SetChannelState(transmitter->id,0,1);
     tx_set_displaying(transmitter,0);
-    if(duplex) {
+    if(transmitter->dialog) {
       gtk_window_get_position(GTK_WINDOW(transmitter->dialog),&transmitter->dialog_x,&transmitter->dialog_y);
       gtk_widget_hide(transmitter->dialog);
     } else {
@@ -2055,8 +2058,6 @@ g_print("radioRestoreState: %s\n",property_path);
 
 #ifdef CLIENT_SERVER
   if(radio_is_remote) {
-#ifdef CLIENT_SERVER
-#endif
   } else {
 #endif
 
@@ -2214,10 +2215,6 @@ g_print("radioRestoreState: %s\n",property_path);
     if(value) vox_enabled=atoi(value);
     value=getProperty("vox_threshold");
     if(value) vox_threshold=atof(value);
-/*
-    value=getProperty("vox_gain");
-    if(value) vox_gain=atof(value);
-*/
     value=getProperty("vox_hang");
     if(value) vox_hang=atof(value);
 
@@ -2250,6 +2247,12 @@ g_print("radioRestoreState: %s\n",property_path);
 
     value=getProperty("optimize_touchscreen");
     if (value) optimize_for_touchscreen=atoi(value);
+
+    value=getProperty("drive_digi_max");
+    if (value) {
+      drive_digi_max=atof(value);
+      if (drive_digi_max > drive_max) drive_digi_max=drive_max;
+    }
 
 #ifdef SATURN
     value=getProperty("saturn_server");
@@ -2444,6 +2447,9 @@ g_print("radioSaveState: %s\n",property_path);
   sprintf(value,"%d",hide_status ? old_tool : display_toolbar);
   setProperty("display_toolbar",value);
 
+#ifdef CLIENT_SERVER
+  if(!radio_is_remote) {
+#endif
   if(can_transmit) {
     // The only variables of interest in this receiver are
     // the alex_antenna an the adc
@@ -2453,9 +2459,6 @@ g_print("radioSaveState: %s\n",property_path);
     transmitter_save_state(transmitter);
   }
 
-#ifdef CLIENT_SERVER
-  if(!radio_is_remote) {
-#endif
     sprintf(value,"%d",radio_sample_rate);
     setProperty("radio_sample_rate",value);
     sprintf(value,"%d",diversity_enabled);
@@ -2580,12 +2583,6 @@ g_print("radioSaveState: %s\n",property_path);
     setProperty("smeter",value);
     sprintf(value,"%d",alc);
     setProperty("alc",value);
-//    sprintf(value,"%d",local_audio);
-//    setProperty("local_audio",value);
-//    sprintf(value,"%d",n_selected_output_device);
-//    setProperty("n_selected_output_device",value);
-//    sprintf(value,"%d",local_microphone);
-//    setProperty("local_microphone",value);
 
     sprintf(value,"%d",enable_tx_equalizer);
     setProperty("enable_tx_equalizer",value);
@@ -2731,6 +2728,9 @@ g_print("radioSaveState: %s\n",property_path);
 	
     sprintf(value,"%d",optimize_for_touchscreen);
     setProperty("optimize_touchscreen", value);
+
+    sprintf(value,"%f",drive_digi_max);
+    setProperty("drive_digi_max", value);
 
 #ifdef SATURN
     sprintf(value,"%d",saturn_server_en);
@@ -2878,6 +2878,8 @@ int remote_start(void *data) {
       break;
   }
   RECEIVERS=2;
+  PS_RX_FEEDBACK=2;
+  PS_TX_FEEDBACK=2;
   radioRestoreState();
   create_visual();
   if (can_transmit) {

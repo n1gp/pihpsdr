@@ -216,9 +216,7 @@ extern int adc_overload;
 extern int pll_locked;
 extern unsigned int exciter_power;
 extern unsigned int average_temperature;
-extern unsigned int pa_current;
 extern unsigned int average_current;
-extern unsigned int n_current;
 extern unsigned int tx_fifo_underrun;
 extern unsigned int tx_fifo_overrun;
 extern unsigned int alex_forward_power;
@@ -269,7 +267,6 @@ extern int pre_emphasize;
 extern int vox_setting;
 extern int vox_enabled;
 extern double vox_threshold;
-extern double vox_gain;
 extern double vox_hang;
 extern int vox;
 extern int CAT_cw_is_active;
@@ -290,16 +287,14 @@ extern int have_alex_att;        // ALEX board does have 0/10/20/30 dB attenuato
 extern int have_saturn_xdma;     // Saturn can use Network or XDMA interface
 extern int rx_gain_calibration;  // used to calibrate the input signal
 
-extern double drive_max;
+extern double drive_max;         // maximum value of the drive slider
+extern double drive_digi_max;    // maximum value allowed in DIGU/DIGL
 
 extern gboolean display_sequence_errors;
 extern gboolean display_swr_protection;
 extern gint sequence_errors;
 extern GMutex property_mutex;
 
-#ifdef CLIENT_SERVER
-//extern gboolean server;
-#endif
 
 extern int hl2_audio_codec;
 

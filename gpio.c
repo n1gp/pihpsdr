@@ -649,12 +649,10 @@ void gpio_set_defaults(int ctrlr) {
   g_print("%s: %d\n",__FUNCTION__,ctrlr);
   switch(ctrlr) {
     case NO_CONTROLLER:
+      CWL_BUTTON=7;
       CWR_BUTTON=21;
       PTT_BUTTON=14;
-#ifndef SATURN
-      CWL_BUTTON=7;
       CWKEY_BUTTON=10;
-#endif
       encoders=encoders_no_controller;
       switches=switches_controller1[0];
       break;
@@ -678,6 +676,10 @@ void gpio_set_defaults(int ctrlr) {
       //
       // no GPIO lines available for CW etc.
       //
+      CWL_BUTTON=-1;
+      CWR_BUTTON=-1;
+      PTT_BUTTON=-1;
+      CWKEY_BUTTON=-1;
       encoders=encoders_controller2_v2;
       switches=switches_controller2_v2;
       break;
@@ -685,6 +687,10 @@ void gpio_set_defaults(int ctrlr) {
       //
       // no GPIO lines available for CW etc.
       //
+      CWL_BUTTON=-1;
+      CWR_BUTTON=-1;
+      PTT_BUTTON=-1;
+      CWKEY_BUTTON=-1;
       encoders=encoders_g2_frontpanel;
       switches=switches_g2_frontpanel;
       break;
