@@ -36,7 +36,6 @@
 #include <net/if.h>
 #include <semaphore.h>
 #include <sys/stat.h>
-#include <byteswap.h>
 
 #include "saturnregisters.h"              // register I/O for Saturn
 #include "saturndrivers.h"                      // version I/O for Saturn
@@ -553,62 +552,40 @@ static gpointer saturn_high_priority_thread(gpointer arg)
         //
         while(SDRActive)                               // main loop
         {
+            mybuffer *mybuf = get_my_buffer(HPMYBUF);
+            ReadStatusRegister();
+            Byte = (uint8_t)GetP2PTTKeyInputs();
+            *(uint8_t *)(UDPBuffer+4) = *(uint8_t *)(mybuf->buffer+4) = Byte;
+            Byte = (uint8_t)GetADCOverflow();
+            *(uint8_t *)(UDPBuffer+5) = *(uint8_t *)(mybuf->buffer+5) = Byte;
+            Byte = (uint8_t)GetUserIOBits();                                              // user I/O bits
+            *(uint8_t *)(UDPBuffer+59) = *(uint8_t *)(mybuf->buffer+59) = Byte;
+            Word = (uint16_t)GetAnalogueIn(4);
+            *(uint16_t *)(UDPBuffer+6) = *(uint16_t *)(mybuf->buffer+6) = htons(Word);    // exciter power
+            Word = (uint16_t)GetAnalogueIn(0);
+            *(uint16_t *)(UDPBuffer+14) = *(uint16_t *)(mybuf->buffer+14) = htons(Word);  // forward power
+            Word = (uint16_t)GetAnalogueIn(1);
+            *(uint16_t *)(UDPBuffer+22) = *(uint16_t *)(mybuf->buffer+22) = htons(Word);  // reverse power
+            Word = (uint16_t)GetAnalogueIn(5);
+            *(uint16_t *)(UDPBuffer+49) = *(uint16_t *)(mybuf->buffer+49) = htons(Word);  // supply voltage
+            Word = (uint16_t)GetAnalogueIn(2);
+            *(uint16_t *)(UDPBuffer+57) = *(uint16_t *)(mybuf->buffer+57) = htons(Word);  // AIN3 user_analog1
+            Word = (uint16_t)GetAnalogueIn(3);
+            *(uint16_t *)(UDPBuffer+55) = *(uint16_t *)(mybuf->buffer+55) = htons(Word);  // AIN4 user_analog2
+
             if(TXActive != 2)
             {
-              // do the bytes first
-              mybuffer *mybuf = get_my_buffer(HPMYBUF);
-              *(uint32_t *)mybuf->buffer = bswap_32(SequenceCounter++);        // add sequence count
-              ReadStatusRegister();
-              Byte = (uint8_t)GetP2PTTKeyInputs();
-              *(uint8_t *)(mybuf->buffer+4) = Byte;
-              Byte = (uint8_t)GetADCOverflow();
-              *(uint8_t *)(mybuf->buffer+5) = Byte;
-              Byte = (uint8_t)GetUserIOBits();                  // user I/O bits
-              *(uint8_t *)(mybuf->buffer+59) = Byte;
-              Word = (uint16_t)GetAnalogueIn(4);
-              *(uint16_t *)(mybuf->buffer+6) = bswap_16(Word);                // exciter power
-              Word = (uint16_t)GetAnalogueIn(0);
-              *(uint16_t *)(mybuf->buffer+14) = bswap_16(Word);               // forward power
-              Word = (uint16_t)GetAnalogueIn(1);
-              *(uint16_t *)(mybuf->buffer+22) = bswap_16(Word);               // reverse power
-              Word = (uint16_t)GetAnalogueIn(5);
-              *(uint16_t *)(mybuf->buffer+49) = bswap_16(Word);               // supply voltage
-
-              Word = (uint16_t)GetAnalogueIn(2);
-              *(uint16_t *)(mybuf->buffer+57) = bswap_16(Word);               // AIN3 user_analog1
-              Word = (uint16_t)GetAnalogueIn(3);
-              *(uint16_t *)(mybuf->buffer+55) = bswap_16(Word);               // AIN4 user_analog2
-
+              *(uint32_t *)mybuf->buffer = htonl(SequenceCounter++);       // add sequence count
               saturn_post_high_priority(mybuf);
             }
+	    else
+              mybuf->free = 1;
 
             if (ServerActive)
             {
               if(TXActive != 1)
               {
                 *(uint32_t *)UDPBuffer = htonl(SequenceCounter2++);        // add sequence count
-                ReadStatusRegister();
-                Byte = (uint8_t)GetP2PTTKeyInputs();
-                *(uint8_t *)(UDPBuffer+4) = Byte;
-                Byte = (uint8_t)GetADCOverflow();
-                *(uint8_t *)(UDPBuffer+5) = Byte;
-                Word = (uint16_t)GetAnalogueIn(4);
-                *(uint16_t *)(UDPBuffer+6) = htons(Word);                // exciter power
-                Word = (uint16_t)GetAnalogueIn(0);
-                *(uint16_t *)(UDPBuffer+14) = htons(Word);               // forward power
-                Word = (uint16_t)GetAnalogueIn(1);
-                *(uint16_t *)(UDPBuffer+22) = htons(Word);               // reverse power
-                Word = (uint16_t)GetAnalogueIn(5);
-                *(uint16_t *)(UDPBuffer+49) = htons(Word);               // supply voltage
-
-                Word = (uint16_t)GetAnalogueIn(2);
-                *(uint16_t *)(UDPBuffer+57) = htons(Word);               // AIN3 user_analog1
-                Word = (uint16_t)GetAnalogueIn(3);
-                *(uint16_t *)(UDPBuffer+55) = htons(Word);               // AIN4 user_analog2
-
-                Byte = (uint8_t)GetUserIOBits();                  // user I/O bits
-                *(uint8_t *)(UDPBuffer+59) = Byte;
-
                 iovecinst.iov_base = UDPBuffer;
                 memcpy(&DestAddr, &reply_addr, sizeof(struct sockaddr_in));           // local copy of PC destination address (reply_addr is global)
                 Error = sendmsg(SocketData[VPORTHIGHPRIORITYFROMSDR].Socketid, &datagram, 0);
@@ -743,7 +720,7 @@ static gpointer saturn_micaudio_thread(gpointer arg)
 
             // create the packet
             mybuffer *mybuf = get_my_buffer(MICMYBUF);
-            *(uint32_t*)mybuf->buffer = bswap_32(SequenceCounter++);        // add sequence count
+            *(uint32_t*)mybuf->buffer = htonl(SequenceCounter++);        // add sequence count
             if(TXActive == 2)
               memset(mybuf->buffer+4, 0, VDMAMICTRANSFERSIZE);       // copy in mic samples
             else
@@ -917,10 +894,10 @@ static gpointer saturn_rx_thread(gpointer arg)
                 {
 //                    printf("enough data for packet: DDC= %d\n", DDC);
                     mybuffer *mybuf=get_my_buffer(DDCMYBUF);
-                    *(uint32_t*)mybuf->buffer = bswap_32(SequenceCounter[DDC]++);     // add sequence count
+                    *(uint32_t*)mybuf->buffer = htonl(SequenceCounter[DDC]++);     // add sequence count
                     memset(mybuf->buffer + 4, 0, 8);                               // clear the timestamp data
-                    *(uint16_t*)(mybuf->buffer + 12) = bswap_16(24);                  // bits per sample
-                    *(uint16_t*)(mybuf->buffer + 14) = bswap_16(VIQSAMPLESPERFRAME);  // I/Q samples for ths frame
+                    *(uint16_t*)(mybuf->buffer + 12) = htons(24);                  // bits per sample
+                    *(uint16_t*)(mybuf->buffer + 14) = htons(VIQSAMPLESPERFRAME);  // I/Q samples for ths frame
                     //
                     // now add I/Q data & post outgoing packet
                     //
