@@ -582,10 +582,13 @@ void new_menu()
 #endif
 
 #ifdef SATURN
-    GtkWidget *saturn_b=gtk_button_new_with_label("Saturn");
-    g_signal_connect (saturn_b, "button-press-event", G_CALLBACK(saturn_cb), NULL);
-    gtk_grid_attach(GTK_GRID(grid),saturn_b,(i%5),i/5,1,1);
-    i++;
+    if(have_saturn_xdma) // only display on the xdma client
+    {
+      GtkWidget *saturn_b=gtk_button_new_with_label("Saturn");
+      g_signal_connect (saturn_b, "button-press-event", G_CALLBACK(saturn_cb), NULL);
+      gtk_grid_attach(GTK_GRID(grid),saturn_b,(i%5),i/5,1,1);
+      i++;
+    }
 #endif
 
     GtkWidget *about_b=gtk_button_new_with_label("About");
