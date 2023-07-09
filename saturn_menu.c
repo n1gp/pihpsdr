@@ -33,6 +33,7 @@
 #include "radio.h"
 
 extern gboolean saturn_server_en;
+extern gboolean client_enable_tx;
 
 static GtkWidget *dialog=NULL;
 
@@ -62,6 +63,10 @@ static void server_enable_cb(GtkWidget *widget, gpointer data) {
     shutdown_saturn_server();
 }
 
+static void client_enable_tx_cb(GtkWidget *widget, gpointer data) {
+  client_enable_tx=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+}
+
 void saturn_menu(GtkWidget *parent) {
   GtkWidget *widget;
 
@@ -89,6 +94,12 @@ void saturn_menu(GtkWidget *parent) {
   gtk_widget_show(server_enable_b);
   gtk_grid_attach(GTK_GRID(grid),server_enable_b,0,2,1,1);
   g_signal_connect(server_enable_b,"toggled",G_CALLBACK(server_enable_cb),NULL);
+
+  GtkWidget *client_enable_tx_b=gtk_check_button_new_with_label("Client Transmit Enable");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (client_enable_tx_b), client_enable_tx);
+  gtk_widget_show(client_enable_tx_b);
+  gtk_grid_attach(GTK_GRID(grid),client_enable_tx_b,0,3,1,1);
+  g_signal_connect(client_enable_tx_b,"toggled",G_CALLBACK(client_enable_tx_cb),NULL);
 
   gtk_container_add(GTK_CONTAINER(content),grid);
 

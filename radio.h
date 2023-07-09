@@ -63,6 +63,7 @@ extern gboolean radio_is_remote;
 
 #ifdef SATURN
 extern gboolean saturn_server_en;
+extern gboolean client_enable_tx;
 #endif
 
 extern GtkWidget *fixed;

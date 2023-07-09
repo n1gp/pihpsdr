@@ -2257,6 +2257,8 @@ g_print("radioRestoreState: %s\n",property_path);
 #ifdef SATURN
     value=getProperty("saturn_server");
     if (value) saturn_server_en=atoi(value);
+    value=getProperty("client_enable_tx");
+    if (value) client_enable_tx=atoi(value);
 #endif
 
     filterRestoreState();
@@ -2735,6 +2737,8 @@ g_print("radioSaveState: %s\n",property_path);
 #ifdef SATURN
     sprintf(value,"%d",saturn_server_en);
     setProperty("saturn_server", value);
+    sprintf(value,"%d",client_enable_tx);
+    setProperty("client_enable_tx", value);
 #endif
 
 #ifdef CLIENT_SERVER

@@ -55,6 +55,7 @@ bool IsTXMode;                              // true if in TX
 bool SDRActive;                             // true if this SDR is running at the moment
 bool Exiting = false;
 extern bool saturn_server_en;
+extern bool client_enable_tx;
 extern bool ServerActive;
 
 #define SDRBOARDID 1                        // Hermes
@@ -1128,7 +1129,7 @@ void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer)
 
       if(TXActive == 1) return;
 
-      TXActive = (IsTXMode)?2:0;
+      TXActive = (IsTXMode && client_enable_tx)?2:0;
     }
     else
     {
@@ -1139,7 +1140,7 @@ void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer)
       TXActive = (IsTXMode)?1:0;
     }
 
-    SetMOX(IsTXMode);
+    SetMOX(IsTXMode && (client_enable_tx && FromNetwork));
     //
     // DUC frequency & drive level
     //
