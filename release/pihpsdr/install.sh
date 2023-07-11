@@ -2,6 +2,7 @@ echo "installing fftw"
 sudo apt-get -y install libfftw3-3
 echo "installing gppiod"
 sudo apt-get -y install libgpiod2
+sudo apt-get -y install libgpiod-dev
 echo "installing pulseaudio"
 sudo apt-get -y install libpulse0
 sudo apt-get -y install libpulse-mainloop-glib0
@@ -40,6 +41,8 @@ echo "removing old versions of shared libraries"
 sudo rm -rf /usr/local/lib/libwdsp.so
 echo "copying udev rules"
 sudo cp 90-ozy.rules /etc/udev/rules.d/
+sudo cp 60-xdma.rules xdma-udev-command.sh /etc/udev/rules.d/
+sudo cp udev-rules/64-limesuite.rules /etc/udev/rules.d/
 sudo udevadm control --reload-rules
 sudo udevadm trigger
 echo "installing pihpsdr"
@@ -48,16 +51,3 @@ echo "installing shared libraries"
 sudo cp libwdsp.so /usr/local/lib
 cd /usr/local/lib
 sudo ldconfig
-if test -f "/boot/config.txt"; then
-  if grep -q "gpio=4-13,16-27=ip,pu" /boot/config.txt; then
-    echo "/boot/config.txt already contains gpio setup."
-  else
-    echo "/boot/config.txt does not contain gpio setup - adding it."
-    echo "Please reboot system for this to take effect."
-    cat <<EGPIO | sudo tee -a /boot/config.txt > /dev/null
-[all]
-# setup GPIO for pihpsdr controllers
-gpio=4-13,16-27=ip,pu
-EGPIO
-  fi
-fi
