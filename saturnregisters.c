@@ -18,6 +18,7 @@
 
 
 #include "saturnregisters.h"
+#include "message.h"
 #include <stdlib.h>                     // for function min()
 #include <math.h>
 #include <unistd.h>

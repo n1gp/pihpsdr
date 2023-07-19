@@ -37,6 +37,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "message.h"
+
 #define VMEMBUFFERSIZE 32768										// memory buffer to reserve
 #define AXIBaseAddress 0x10000									// address of StreamRead/Writer IP
 
