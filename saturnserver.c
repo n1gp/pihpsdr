@@ -42,6 +42,7 @@
 #include "saturnserver.h"
 #include "saturndrivers.h"
 #include "saturnmain.h"
+#include "message.h"
 
 struct sockaddr_in reply_addr;              // destination address for outgoing data
 
@@ -143,7 +144,7 @@ int MakeSocket(struct ThreadSocketData* Ptr, int DDCid)
   //
   if((Ptr->Socketid = socket(AF_INET, SOCK_DGRAM, 0)) < 0)
   {
-    perror("socket fail");
+    t_perror("socket fail");
     return EXIT_FAILURE;
   }
 
@@ -165,14 +166,14 @@ int MakeSocket(struct ThreadSocketData* Ptr, int DDCid)
 
   if(bind(Ptr->Socketid, (struct sockaddr *)&Ptr->addr_cmddata, sizeof(struct sockaddr_in)) < 0)
   {
-    perror("bind");
+    t_perror("bind");
     return EXIT_FAILURE;
   }
 
   struct sockaddr_in checkin;
   socklen_t len = sizeof(checkin);
   if(getsockname(Ptr->Socketid, (struct sockaddr *)&checkin, &len)==-1)
-    perror("getsockname");
+    t_perror("getsockname");
 
   Ptr->DDCid = DDCid;                       // set DDC number, for outgoing ports
   return 0;
@@ -200,12 +201,12 @@ void* CheckForActivity(void *arg)
         for(int i=4; i<VNUMDDC; i++)               // disable upper bank of DDCs
           SetP2SampleRate(i, false, 48, false);
         WriteP2DDCRateRegister();
-        printf("Reverted to Inactive State after no activity\n");
+        t_print("Reverted to Inactive State after no activity\n");
       }
     }
     NewMessageReceived = false;
   }
-  printf("ENDING CheckForActivity thread\n");
+  t_print("ENDING CheckForActivity thread\n");
 }
 
 //
@@ -216,7 +217,7 @@ void shutdown_saturn_server()
   ServerActive=false;
   close(SocketData[0].Socketid);                          // close incoming data socket
   ExitRequested = true;
-  printf("Shutdown COMPLETE\n");
+  t_print("Shutdown COMPLETE\n");
 }
 
 
@@ -225,7 +226,7 @@ void start_saturn_server()
   ExitRequested=false;
   if(pthread_create(&saturn_server_thread, NULL, saturn_server, NULL) < 0)
   {
-    perror("pthread_create saturn_server thread");
+    t_perror("pthread_create saturn_server thread");
     return;
   }
   pthread_detach(saturn_server_thread);
@@ -272,7 +273,7 @@ void* saturn_server(void *arg)
 //
   if(pthread_create(&CheckForNoActivityThread, NULL, CheckForActivity, NULL) < 0)
   {
-    perror("pthread_create check for exit");
+    t_perror("pthread_create check for exit");
     return NULL;
   }
   pthread_detach(CheckForNoActivityThread);
@@ -293,7 +294,7 @@ void* saturn_server(void *arg)
   MakeSocket(SocketData+VPORTDDCSPECIFIC, 0);            // create and bind a socket
   if(pthread_create(&DDCSpecificThread, NULL, IncomingDDCSpecific, (void*)&SocketData[VPORTDDCSPECIFIC]) < 0)
   {
-    perror("pthread_create DDC specific");
+    t_perror("pthread_create DDC specific");
     return NULL;
   }
   pthread_detach(DDCSpecificThread);
@@ -301,7 +302,7 @@ void* saturn_server(void *arg)
   MakeSocket(SocketData+VPORTDUCSPECIFIC, 0);            // create and bind a socket
   if(pthread_create(&DUCSpecificThread, NULL, IncomingDUCSpecific, (void*)&SocketData[VPORTDUCSPECIFIC]) < 0)
   {
-    perror("pthread_create DUC specific");
+    t_perror("pthread_create DUC specific");
     return NULL;
   }
   pthread_detach(DUCSpecificThread);
@@ -309,7 +310,7 @@ void* saturn_server(void *arg)
   MakeSocket(SocketData+VPORTHIGHPRIORITYTOSDR, 0);            // create and bind a socket
   if(pthread_create(&HighPriorityToSDRThread, NULL, IncomingHighPriority, (void*)&SocketData[VPORTHIGHPRIORITYTOSDR]) < 0)
   {
-    perror("pthread_create High priority to SDR");
+    t_perror("pthread_create High priority to SDR");
     return NULL;
   }
   pthread_detach(HighPriorityToSDRThread);
@@ -318,7 +319,7 @@ void* saturn_server(void *arg)
   MakeSocket(SocketData+VPORTSPKRAUDIO, 0);            // create and bind a socket
   if(pthread_create(&SpkrAudioThread, NULL, IncomingSpkrAudio, (void*)&SocketData[VPORTSPKRAUDIO]) < 0)
   {
-    perror("pthread_create speaker audio");
+    t_perror("pthread_create speaker audio");
     return NULL;
   }
   pthread_detach(SpkrAudioThread);
@@ -327,7 +328,7 @@ void* saturn_server(void *arg)
   MakeSocket(SocketData+VPORTDUCIQ, 0);            // create and bind a socket
   if(pthread_create(&DUCIQThread, NULL, IncomingDUCIQ, (void*)&SocketData[VPORTDUCIQ]) < 0)
   {
-    perror("pthread_create DUC I/Q");
+    t_perror("pthread_create DUC I/Q");
     return NULL;
   }
   pthread_detach(DUCIQThread);
@@ -342,7 +343,7 @@ void* saturn_server(void *arg)
 #if 0
   if(pthread_create(&MicThread, NULL, OutgoingMicSamples, (void*)&SocketData[VPORTMICAUDIO]) < 0)
   {
-    perror("pthread_create Mic");
+    t_perror("pthread_create Mic");
     return NULL;
   }
   pthread_detach(MicThread);
@@ -358,7 +359,7 @@ void* saturn_server(void *arg)
 #if 0
   if(pthread_create(&HighPriorityFromSDRThread, NULL, OutgoingHighPriority, (void*)&SocketData[VPORTHIGHPRIORITYFROMSDR]) < 0)
   {
-    perror("pthread_create outgoing hi priority");
+    t_perror("pthread_create outgoing hi priority");
     return NULL;
   }
   pthread_detach(HighPriorityFromSDRThread);
@@ -401,7 +402,7 @@ void* saturn_server(void *arg)
     size = recvmsg(SocketData[0].Socketid, &datagram, 0);         // get one message. If it times out, gets size=-1
     if(size < 0 && errno != EAGAIN)
     {
-      perror("recvfrom, port 1024");
+      t_perror("recvfrom, port 1024");
       return NULL;
     }
     if(ThreadError)
@@ -421,7 +422,7 @@ void* saturn_server(void *arg)
         // general packet. Get the port numbers and establish listener threads
         //
         case 0:
-          //printf("P2 General packet to SDR, size= %d\n", size);
+          //t_print("P2 General packet to SDR, size= %d\n", size);
           //
           // get "from" MAC address and port; this is where the data goes back to
           //
@@ -439,7 +440,7 @@ void* saturn_server(void *arg)
         // discovery packet
         //
         case 2:
-          printf("P2 Discovery packet\n");
+          t_print("P2 Discovery packet\n");
 
           if(ServerActive)
             DiscoveryReply[4] = 3;                             // response 2 if not active, 3 if running
@@ -454,7 +455,7 @@ void* saturn_server(void *arg)
         case 3:
         case 4:
         case 5:
-          printf("Unsupported packet\n");
+          t_print("Unsupported packet\n");
           break;
 
         default:
@@ -467,11 +468,11 @@ void* saturn_server(void *arg)
 //
   } //while(1)
   if(ThreadError)
-    printf("Thread error reported - exiting\n");
+    t_print("Thread error reported - exiting\n");
   //
   // clean exit
   //
-  printf("Exiting\n");
+  t_print("Exiting\n");
   shutdown_saturn_server();
   return NULL;
 }
@@ -491,7 +492,7 @@ void *IncomingHighPriority(void *arg)                   // listener thread
 
   ThreadData = (struct ThreadSocketData *)arg;
   ThreadData->Active = true;
-  printf("spinning up high priority incoming thread with port %d\n", ThreadData->Portid);
+  t_print("spinning up high priority incoming thread with port %d\n", ThreadData->Portid);
 
   //
   // main processing loop
@@ -509,8 +510,8 @@ void *IncomingHighPriority(void *arg)                   // listener thread
     size = recvmsg(ThreadData->Socketid, &datagram, 0);         // get one message. If it times out, ges size=-1
     if(size < 0 && errno != EAGAIN)
     {
-      perror("recvfrom, high priority");
-      printf("error number = %d\n", errno);
+      t_perror("recvfrom, high priority");
+      t_print("error number = %d\n", errno);
       return NULL;
     }
 
@@ -547,7 +548,7 @@ void *IncomingDDCSpecific(void *arg)                    // listener thread
 
   ThreadData = (struct ThreadSocketData *)arg;
   ThreadData->Active = true;
-  printf("spinning up DDC specific thread with port %d\n", ThreadData->Portid);
+  t_print("spinning up DDC specific thread with port %d\n", ThreadData->Portid);
   //
   // main processing loop
   //
@@ -564,7 +565,7 @@ void *IncomingDDCSpecific(void *arg)                    // listener thread
     size = recvmsg(ThreadData->Socketid, &datagram, 0);         // get one message. If it times out, ges size=-1
     if(size < 0 && errno != EAGAIN)
     {
-      perror("recvfrom, DDC Specific");
+      t_perror("recvfrom, DDC Specific");
       return NULL;
     }
     if(size == VDDCSPECIFICSIZE)
@@ -597,7 +598,7 @@ void *IncomingDUCSpecific(void *arg)                    // listener thread
 
     ThreadData = (struct ThreadSocketData *)arg;
     ThreadData->Active = true;
-    printf("spinning up DUC specific thread with port %d\n", ThreadData->Portid);
+    t_print("spinning up DUC specific thread with port %d\n", ThreadData->Portid);
     //
     // main processing loop
     //
@@ -614,7 +615,7 @@ void *IncomingDUCSpecific(void *arg)                    // listener thread
       size = recvmsg(ThreadData->Socketid, &datagram, 0);         // get one message. If it times out, ges size=-1
       if(size < 0 && errno != EAGAIN)
       {
-          perror("recvfrom, DUC specific");
+          t_perror("recvfrom, DUC specific");
           return NULL;
       }
       if(size == VDUCSPECIFICSIZE)
@@ -670,7 +671,7 @@ void *IncomingSpkrAudio(void *arg)                      // listener thread
 
     ThreadData = (struct ThreadSocketData *)arg;
     ThreadData->Active = true;
-    printf("spinning up speaker audio thread with port %d\n", ThreadData->Portid);
+    t_print("spinning up speaker audio thread with port %d\n", ThreadData->Portid);
 
     //
     // setup DMA buffer
@@ -678,7 +679,7 @@ void *IncomingSpkrAudio(void *arg)                      // listener thread
     posix_memalign((void**)&SpkWriteBuffer, VALIGNMENT, SpkBufferSize);
     if (!SpkWriteBuffer)
     {
-        printf("spkr write buffer allocation failed\n");
+        t_print("spkr write buffer allocation failed\n");
     }
     SpkBasePtr = SpkWriteBuffer + VBASE;
     memset(SpkWriteBuffer, 0, SpkBufferSize);
@@ -689,7 +690,7 @@ void *IncomingSpkrAudio(void *arg)                      // listener thread
     DMAWritefile_fd = open(VSPKDMADEVICE, O_RDWR);
     if (DMAWritefile_fd < 0)
     {
-        printf("XDMA write device open failed for spk data\n");
+        t_print("XDMA write device open failed for spk data\n");
     }
 	ResetDMAStreamFIFO(eSpkCodecDMA);
 
@@ -709,7 +710,7 @@ void *IncomingSpkrAudio(void *arg)                      // listener thread
         size = recvmsg(ThreadData->Socketid, &datagram, 0);     // get one message. If it times out, sets size=-1
         if(size < 0 && errno != EAGAIN)
         {
-            perror("recvfrom fail, Speaker data");
+            t_perror("recvfrom fail, Speaker data");
             return NULL;
         }
         if(size == VSPEAKERAUDIOSIZE)                           // we have received a packet!
@@ -717,7 +718,7 @@ void *IncomingSpkrAudio(void *arg)                      // listener thread
             NewMessageReceived = true;
             RegVal += 1;            //debug
             Depth = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOOverflow);        // read the FIFO free locations
-            printf("speaker packet received; depth = %d\n", Depth);
+            t_print("speaker packet received; depth = %d\n", Depth);
             while (Depth < VMEMWORDSPERFRAME)       // loop till space available
             {
                 usleep(1000);								                    // 1ms wait
@@ -762,7 +763,7 @@ void *IncomingDUCIQ(void *arg)                          // listener thread
 
     ThreadData = (struct ThreadSocketData *)arg;
     ThreadData->Active = true;
-    printf("spinning up incoming DUC I/Q thread with port %d\n", ThreadData->Portid);
+    t_print("spinning up incoming DUC I/Q thread with port %d\n", ThreadData->Portid);
                                                           //
   //
   // main processing loop
@@ -780,7 +781,7 @@ void *IncomingDUCIQ(void *arg)                          // listener thread
         size = recvmsg(ThreadData->Socketid, &datagram, 0);         // get one message. If it times out, ges size=-1
         if(size < 0 && errno != EAGAIN)
         {
-            perror("recvfrom fail, TX I/Q data");
+            t_perror("recvfrom fail, TX I/Q data");
             return NULL;
         }
         if(size == VDUCIQSIZE)

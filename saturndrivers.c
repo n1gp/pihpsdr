@@ -57,11 +57,11 @@ int OpenXDMADriver(void)
     int Result = 0;
 	if ((register_fd = open("/dev/xdma0_user", O_RDWR)) == -1)
     {
-		printf("register R/W address space not available\n");
+		t_print("register R/W address space not available\n");
     }
     else
     {
-		printf("register access connected to /dev/xdma0_user\n");
+		t_print("register access connected to /dev/xdma0_user\n");
         Result = 1;
     }
     return Result;
@@ -87,8 +87,8 @@ int DMAWriteToFPGA(int fd, unsigned char*SrcData, uint32_t Length, uint32_t AXIA
 	rc = lseek(fd, OffsetAddr, SEEK_SET);
 	if (rc != OffsetAddr)
 	{
-		printf("seek off 0x%lx != 0x%lx.\n", rc, OffsetAddr);
-		perror("seek file");
+		t_print("seek off 0x%lx != 0x%lx.\n", rc, OffsetAddr);
+		t_perror("seek file");
 		return -EIO;
 	}
 
@@ -96,8 +96,8 @@ int DMAWriteToFPGA(int fd, unsigned char*SrcData, uint32_t Length, uint32_t AXIA
 	rc = write(fd, SrcData, Length);
 	if (rc < 0)
 	{
-		printf("write 0x%x @ 0x%lx failed %ld.\n", Length, OffsetAddr, rc);
-		perror("DMA write");
+		t_print("write 0x%x @ 0x%lx failed %ld.\n", Length, OffsetAddr, rc);
+		t_perror("DMA write");
 		return -EIO;
 	}
 	return 0;
@@ -120,8 +120,8 @@ int DMAReadFromFPGA(int fd, unsigned char*DestData, uint32_t Length, uint32_t AX
 	rc = lseek(fd, OffsetAddr, SEEK_SET);
 	if (rc != OffsetAddr)
 	{
-		printf("seek off 0x%lx != 0x%lx.\n", rc, OffsetAddr);
-		perror("seek file");
+		t_print("seek off 0x%lx != 0x%lx.\n", rc, OffsetAddr);
+		t_perror("seek file");
 		return -EIO;
 	}
 
@@ -129,8 +129,8 @@ int DMAReadFromFPGA(int fd, unsigned char*DestData, uint32_t Length, uint32_t AX
 	rc = read(fd, DestData, Length);
 	if (rc < 0)
 	{
-		printf("read 0x%x @ 0x%lx failed %ld.\n", Length, OffsetAddr, rc);
-		perror("DMA read");
+		t_print("read 0x%x @ 0x%lx failed %ld.\n", Length, OffsetAddr, rc);
+		t_perror("DMA read");
 		return -EIO;
 	}
 	return 0;
@@ -145,7 +145,7 @@ uint32_t RegisterRead(uint32_t Address)
 
     ssize_t nread = pread(register_fd, &result, sizeof(result), (off_t) Address);
     if (nread != sizeof(result))
-        printf("ERROR: register read: addr=0x%08X   error=%s\n",Address, strerror(errno));
+        t_print("ERROR: register read: addr=0x%08X   error=%s\n",Address, strerror(errno));
 	
     return result;
 }
@@ -157,7 +157,7 @@ void RegisterWrite(uint32_t Address, uint32_t Data)
 {
     ssize_t nsent = pwrite(register_fd, &Data, sizeof(Data), (off_t) Address); 
     if (nsent != sizeof(Data))
-        printf("ERROR: Write: addr=0x%08X   error=%s\n",Address, strerror(errno));
+        t_print("ERROR: Write: addr=0x%08X   error=%s\n",Address, strerror(errno));
 }
 // END hwaccess.c
 

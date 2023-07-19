@@ -44,7 +44,7 @@ void CodecRegisterWrite(uint32_t Address, uint32_t Data)
 	WriteData = (Address << 9) | (Data & 0x01FFUL);
     sem_wait(&CodecRegMutex);                       // get protected access
 	RegisterWrite(VADDRCODECSPIREG, WriteData);  	// and write to it
-	//printf("Codec write: send %03x to Codec register address %02x, written=%04x\n", Data, Address, WriteData);
+	//t_print("Codec write: send %03x to Codec register address %02x, written=%04x\n", Data, Address, WriteData);
     sem_post(&CodecRegMutex);                       // clear protected access
 }
 //END codecwrite.c
@@ -1432,7 +1432,7 @@ void InitialiseCWKeyerRamp(bool Protocol2, uint32_t Length_us)
     {
         Sample = (uint32_t)((RampSample[Cntr]/LargestSample) * 8388607.0);
         RegisterWrite(VADDRCWKEYERRAM + 4*Cntr, Sample);
-//        printf("sample: %d = %d\n", Cntr, Sample);
+//        t_print("sample: %d = %d\n", Cntr, Sample);
     }
     for(Cntr = RampLength; Cntr < VRAMPSIZE; Cntr++)
         RegisterWrite(VADDRCWKEYERRAM + 4*Cntr, 8388607);
