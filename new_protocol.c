@@ -697,7 +697,7 @@ static void new_protocol_high_priority() {
     unsigned long phase;
     int xmit, txvfo, txmode;
 
-    if(data_socket==-1) {
+    if(data_socket==-1 && !have_saturn_xdma) {
       return;
     }
 

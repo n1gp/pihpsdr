@@ -54,10 +54,10 @@
 #ifdef CLIENT_SERVER
 #include "client_server.h"
 #endif
-#include "message.h"
 #ifdef SATURN
 #include "saturnmain.h"
 #endif
+#include "message.h"
 
 
 #define min(x,y) (x<y?x:y)

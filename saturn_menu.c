@@ -64,7 +64,8 @@ static void server_enable_cb(GtkWidget *widget, gpointer data) {
 }
 
 static void client_enable_tx_cb(GtkWidget *widget, gpointer data) {
-  client_enable_tx=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if(!saturn_server_en) gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget), 0);
+  else client_enable_tx=gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 }
 
 void saturn_menu(GtkWidget *parent) {
