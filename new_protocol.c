@@ -59,6 +59,7 @@
 #include "vox.h"
 #include "ext.h"
 #include "iambic.h"
+#include "message.h"
 #ifdef SATURN
 #include "saturnmain.h"
 #endif
@@ -201,7 +202,7 @@ sem_t *apple_sem(int initial_value) {
     break;
   }
   if (sem == SEM_FAILED) {
-    perror("NewProtocol:SemOpen");
+    t_perror("NewProtocol:SemOpen");
     exit (-1);
   }
   // we can unlink the semaphore NOW. It will remain functional
@@ -317,7 +318,7 @@ static mybuffer *get_my_buffer() {
     buflist=bp;
     num_buf++;
   }
-  g_print("NewProtocol: number of buffer increased to %d\n", num_buf);
+  t_print("NewProtocol: number of buffer increased to %d\n", num_buf);
   // Mark the first buffer in list as used and return that one.
   buflist->free=0;
   return buflist;
@@ -420,7 +421,7 @@ void update_action_table() {
         }
 	break;
     default:
-	g_print("ACTION TABLE: case not handled: %d\n", flag);
+        t_print("ACTION TABLE: case not handled: %d\n", flag);
 	break;
   }
 }
@@ -432,10 +433,10 @@ void new_protocol_init(int pixels) {
     // This is the hard (compile-time) limit on the number of DDCs
     //
     if (MAX_DDC < 1 || MAX_DDC > 7) {
-      g_print("%s: MAX_DDC=%d exceeds allowed range\n", __FUNCTION__,MAX_DDC);
+      t_print("%s: MAX_DDC=%d exceeds allowed range\n", __FUNCTION__,MAX_DDC);
       exit(-1);
     }
-    g_print("new_protocol_init: MIC_SAMPLES=%d\n",MIC_SAMPLES);
+    t_print("new_protocol_init: MIC_SAMPLES=%d\n",MIC_SAMPLES);
 
     memset(rxcase      , 0, sizeof(rxcase));
     memset(rxid        , 0, sizeof(rxid));
@@ -444,7 +445,7 @@ void new_protocol_init(int pixels) {
 
     if(transmitter->local_microphone) {
       if(audio_open_input()!=0) {
-        g_print("audio_open_input failed\n");
+        t_print("audio_open_input failed\n");
         transmitter->local_microphone=0;
       }
     }
@@ -463,7 +464,7 @@ void new_protocol_init(int pixels) {
     (void)sem_init(&command_response_sem_buffer, 0, 0); // check return value!
 #endif
     command_response_thread_id = g_thread_new( "command_response thread",command_response_thread, NULL);
-    g_print( "command_response_thread: id=%p\n",command_response_thread_id);
+    t_print( "command_response_thread: id=%p\n",command_response_thread_id);
 #ifdef __APPLE__
     high_priority_sem_ready=apple_sem(0);
     high_priority_sem_buffer=apple_sem(0);
@@ -472,7 +473,7 @@ void new_protocol_init(int pixels) {
     (void)sem_init(&high_priority_sem_buffer, 0, 0); // check return value!
 #endif
     high_priority_thread_id = g_thread_new( "high_priority thread", high_priority_thread, NULL);
-    g_print( "high_priority_thread: id=%p\n",high_priority_thread_id);
+    t_print( "high_priority_thread: id=%p\n",high_priority_thread_id);
 #ifdef __APPLE__
     mic_line_sem_ready=apple_sem(0);
     mic_line_sem_buffer=apple_sem(0);
@@ -481,7 +482,7 @@ void new_protocol_init(int pixels) {
     (void)sem_init(&mic_line_sem_buffer, 0, 0); // check return value!
 #endif
     mic_line_thread_id = g_thread_new( "mic_line thread", mic_line_thread, NULL);
-    g_print( "mic_line_thread: id=%p\n",mic_line_thread_id);
+    t_print( "mic_line_thread: id=%p\n",mic_line_thread_id);
 
 //
 //  Spawn off one IQ reading thread for each DDC to be used
@@ -510,62 +511,99 @@ void new_protocol_init(int pixels) {
     } else {
       data_socket=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP);
       if(data_socket<0) {
-          g_print("NewProtocol: create socket failed for data_socket\n");
+        t_perror("NewProtocol: create data_socket:");
           exit(-1);
       }
 
       int optval = 1;
-      setsockopt(data_socket, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
-      setsockopt(data_socket, SOL_SOCKET, SO_REUSEPORT, &optval, sizeof(optval));
+      socklen_t optlen = sizeof(optval);
+      setsockopt(data_socket, SOL_SOCKET, SO_REUSEADDR, &optval, optlen);
+      setsockopt(data_socket, SOL_SOCKET, SO_REUSEPORT, &optval, optlen);
+      //
+      // We need a receive buffer with a decent size, to be able to
+      // store several incoming packets if they arrive in a burst.
+      // My personal feeling is to let the kernel decide, but other
+      // program explicitly specify the buffer sizes. What I  do here
+      // is to query the buffer sizes after they have been set.
+      // Note in the UDP case one normally does not need a large
+      // send buffer because data is sent immediately.
+      //
+      // UDP RaspPi default values: RCVBUF: 0x34000, SNDBUF: 0x34000
+      //            we set them to: RCVBUF: 0x40000, SNDBUF: 0x10000
+      // then getsockopt() returns: RCVBUF: 0x68000, SNDBUF: 0x20000
+      //
+      // UDP MacOS  default values: RCVBUF: 0xC01D0, SNDBUF: 0x02400
+      //            we set them to: RCVBUF: 0x40000, SNDBUF: 0x10000
+      // then getsockopt() returns: RCVBUF: 0x40000, SNDBUF: 0x10000
+      //
+      optval=0x40000;
+      if (setsockopt(data_socket, SOL_SOCKET, SO_RCVBUF, &optval, optlen)<0) {
+        t_perror("data_socket: set SO_RCVBUF");
+      }
+      optval=0x10000;
+      if (setsockopt(data_socket, SOL_SOCKET, SO_SNDBUF, &optval, optlen)<0) {
+        t_perror("data_socket: set SO_SNDBUF");
+      }
+      optlen=sizeof(optval);
+      if (getsockopt(data_socket, SOL_SOCKET, SO_RCVBUF, &optval, &optlen)<0) {
+        t_perror("data_socket: get SO_RCVBUF");
+      } else {
+        if (optlen==sizeof(optval)) t_print("UDP Socket RCV buf size=%d\n", optval);
+      }
+      optlen=sizeof(optval);
+      if (getsockopt(data_socket, SOL_SOCKET, SO_SNDBUF, &optval, &optlen)<0) {
+        t_perror("data_socket: get SO_SNDBUF");
+      } else {
+        if (optlen==sizeof(optval)) t_print("UDP Socket SND buf size=%d\n", optval);
+      }
 #ifdef __APPLE__
       //optval = 0x10;  // IPTOS_LOWDELAY
       optval = 0xb8;  // DSCP EF
       if(setsockopt(data_socket, IPPROTO_IP, IP_TOS, &optval, sizeof(optval))<0) {
-        perror("data_socket: IP_TOS");
-        exit (-1);
+      t_perror("data_socket: IP_TOS");
       }
 #endif
 
       // bind to the interface
       if(bind(data_socket,(struct sockaddr*)&radio->info.network.interface_address,radio->info.network.interface_length)<0) {
-          g_print("metis: bind socket failed for data_socket\n");
+        t_perror("bind socket failed for data_socket:");
           exit(-1);
       }
 
-g_print("new_protocol_init: data_socket %d bound to interface %s:%d\n",data_socket,inet_ntoa(radio->info.network.interface_address.sin_addr),ntohs(radio->info.network.interface_address.sin_port));
+t_print("new_protocol_init: data_socket %d bound to interface %s:%d\n",data_socket,inet_ntoa(radio->info.network.interface_address.sin_addr),ntohs(radio->info.network.interface_address.sin_port));
 
       memcpy(&base_addr,&radio->info.network.address,radio->info.network.address_length);
       base_addr_length=radio->info.network.address_length;
       base_addr.sin_port=htons(GENERAL_REGISTERS_FROM_HOST_PORT);
 
-//g_print("base_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
+//t_print("base_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
 
       memcpy(&receiver_addr,&radio->info.network.address,radio->info.network.address_length);
       receiver_addr_length=radio->info.network.address_length;
       receiver_addr.sin_port=htons(RECEIVER_SPECIFIC_REGISTERS_FROM_HOST_PORT);
-//g_print("receive_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
+//t_print("receive_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
 
       memcpy(&transmitter_addr,&radio->info.network.address,radio->info.network.address_length);
       transmitter_addr_length=radio->info.network.address_length;
       transmitter_addr.sin_port=htons(TRANSMITTER_SPECIFIC_REGISTERS_FROM_HOST_PORT);
-//g_print("transmit_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
+//t_print("transmit_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
 
       memcpy(&high_priority_addr,&radio->info.network.address,radio->info.network.address_length);
       high_priority_addr_length=radio->info.network.address_length;
       high_priority_addr.sin_port=htons(HIGH_PRIORITY_FROM_HOST_PORT);
-//g_print("high_priority_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
+//t_print("high_priority_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
 
-//g_print("new_protocol_thread: high_priority_addr setup for port %d\n",HIGH_PRIORITY_FROM_HOST_PORT);
+//t_print("new_protocol_thread: high_priority_addr setup for port %d\n",HIGH_PRIORITY_FROM_HOST_PORT);
 
       memcpy(&audio_addr,&radio->info.network.address,radio->info.network.address_length);
       audio_addr_length=radio->info.network.address_length;
       audio_addr.sin_port=htons(AUDIO_FROM_HOST_PORT);
-//g_print("audio_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
+//t_print("audio_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
 
       memcpy(&iq_addr,&radio->info.network.address,radio->info.network.address_length);
       iq_addr_length=radio->info.network.address_length;
       iq_addr.sin_port=htons(TX_IQ_FROM_HOST_PORT);
-//g_print("iq_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
+//t_print("iq_addr=%s\n",inet_ntoa(radio->info.network.address.sin_addr));
 
 
       for(i=0;i<MAX_DDC;i++) {
@@ -612,7 +650,7 @@ static void new_protocol_general() {
       general_buffer[58]=0x01;  // enable PA
     }
 
-// g_print("new_protocol_general: PA Enable=%02X\n",general_buffer[58]);
+// t_print("new_protocol_general: PA Enable=%02X\n",general_buffer[58]);
 
     if(filter_board==APOLLO) {
       general_buffer[58]|=0x02; // enable APOLLO tuner
@@ -626,8 +664,8 @@ static void new_protocol_general() {
       }
     }
 
-//g_print("Alex Enable=%02X\n",general_buffer[59]);
-//g_print("new_protocol_general: %s:%d\n",inet_ntoa(base_addr.sin_addr),ntohs(base_addr.sin_port));
+//t_print("Alex Enable=%02X\n",general_buffer[59]);
+//t_print("new_protocol_general: %s:%d\n",inet_ntoa(base_addr.sin_addr),ntohs(base_addr.sin_port));
 
   if(have_saturn_xdma) {
 #ifdef SATURN
@@ -635,12 +673,12 @@ static void new_protocol_general() {
 #endif
   } else {
     if((rc=sendto(data_socket,general_buffer,sizeof(general_buffer),0,(struct sockaddr*)&base_addr,base_addr_length))<0) {
-        g_print("sendto socket failed for general\n");
+        t_perror("sendto socket failed for general:");
         exit(1);
     }
 
     if(rc!=sizeof(general_buffer)) {
-      g_print("sendto socket for general: %d rather than %ld",rc,(long)sizeof(general_buffer));
+      t_print("sendto socket for general: %d rather than %ld",rc,(long)sizeof(general_buffer));
     }
   }
 
@@ -659,7 +697,7 @@ static void new_protocol_high_priority() {
     unsigned long phase;
     int xmit, txvfo, txmode;
 
-    if(data_socket==-1 && !have_saturn_xdma) {
+    if(data_socket==-1) {
       return;
     }
 
@@ -1092,7 +1130,7 @@ static void new_protocol_high_priority() {
       // Out of paranoia: print warning and choose ANT1
       //
       if (i<0 || i>2) {
-	  g_print("WARNING: illegal TX antenna chosen, using ANT1\n");
+          t_print("WARNING: illegal TX antenna chosen, using ANT1\n");
 	  transmitter->alex_antenna=0;
 	  i=0;
       }
@@ -1120,13 +1158,13 @@ static void new_protocol_high_priority() {
     high_priority_buffer_to_radio[1434]=(alex0>>8)&0xFF;
     high_priority_buffer_to_radio[1435]=alex0&0xFF;
 
-//g_print("ALEX0 bits:  %02X %02X %02X %02X for rx=%lld tx=%lld\n",high_priority_buffer_to_radio[1432],high_priority_buffer_to_radio[1433],high_priority_buffer_to_radio[1434],high_priority_buffer_to_radio[1435],rxFrequency,txFrequency);
+//t_print("ALEX0 bits:  %02X %02X %02X %02X for rx=%lld tx=%lld\n",high_priority_buffer_to_radio[1432],high_priority_buffer_to_radio[1433],high_priority_buffer_to_radio[1434],high_priority_buffer_to_radio[1435],rxFrequency,txFrequency);
 
     if (device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN) {
 
         high_priority_buffer_to_radio[1430]=(alex1>>8)&0xFF;
         high_priority_buffer_to_radio[1431]=alex1&0xFF;
-//g_print("ALEX1 bits: rx1: %02X %02X for rx=%lld\n",high_priority_buffer_to_radio[1430],high_priority_buffer_to_radio[1431],rxFrequency);
+//t_print("ALEX1 bits: rx1: %02X %02X for rx=%lld\n",high_priority_buffer_to_radio[1430],high_priority_buffer_to_radio[1431],rxFrequency);
     }
 
 
@@ -1151,7 +1189,7 @@ static void new_protocol_high_priority() {
 //
 //  Voila mes amis. Envoyons les 1444 octets "high priority" au radio
 //
-//g_print("new_protocol_high_priority: %s:%d\n",inet_ntoa(high_priority_addr.sin_addr),ntohs(high_priority_addr.sin_port));
+//t_print("new_protocol_high_priority: %s:%d\n",inet_ntoa(high_priority_addr.sin_addr),ntohs(high_priority_addr.sin_port));
     if (have_saturn_xdma) {
 #ifdef SATURN
       saturn_handle_high_priority(false, high_priority_buffer_to_radio);
@@ -1159,12 +1197,12 @@ static void new_protocol_high_priority() {
     } else {
       int rc;
       if((rc=sendto(data_socket,high_priority_buffer_to_radio,sizeof(high_priority_buffer_to_radio),0,(struct sockaddr*)&high_priority_addr,high_priority_addr_length))<0) {
-        g_print("sendto socket failed for high priority: rc=%d errno=%d\n",rc,errno);
-        abort();
+        t_perror("sendto socket failed for high priority:");
+        exit(-1);
       }
 
       if(rc!=sizeof(high_priority_buffer_to_radio)) {
-        g_print("sendto socket for high_priority: %d rather than %ld",rc,(long)sizeof(high_priority_buffer_to_radio));
+        t_print("sendto socket for high_priority: %d rather than %ld",rc,(long)sizeof(high_priority_buffer_to_radio));
       }
     }
 
@@ -1246,20 +1284,20 @@ static void new_protocol_transmit_specific() {
     // Attenuator for ADC0 upon TX
     transmit_specific_buffer[59]=transmitter->attenuation;
 
-//g_print("new_protocol_transmit_specific: %s:%d\n",inet_ntoa(transmitter_addr.sin_addr),ntohs(transmitter_addr.sin_port));
+//t_print("new_protocol_transmit_specific: %s:%d\n",inet_ntoa(transmitter_addr.sin_addr),ntohs(transmitter_addr.sin_port));
 
     if(have_saturn_xdma) {
 #ifdef SATURN
       saturn_handle_duc_specific(false, transmit_specific_buffer);
 #endif
     } else {
-    if((rc=sendto(data_socket,transmit_specific_buffer,sizeof(transmit_specific_buffer),0,(struct sockaddr*)&transmitter_addr,transmitter_addr_length))<0) {
-        g_print("sendto socket failed for tx specific: %d\n",rc);
-        exit(1);
-    }
+      if((rc=sendto(data_socket,transmit_specific_buffer,sizeof(transmit_specific_buffer),0,(struct sockaddr*)&transmitter_addr,transmitter_addr_length))<0) {
+          t_perror("sendto socket failed for tx specific:");
+          exit(1);
+      }
 
-    if(rc!=sizeof(transmit_specific_buffer)) {
-      g_print("sendto socket for transmit_specific: %d rather than %ld",rc,(long)sizeof(transmit_specific_buffer));
+      if(rc!=sizeof(transmit_specific_buffer)) {
+        t_print("sendto socket for transmit_specific: %d rather than %ld",rc,(long)sizeof(transmit_specific_buffer));
       }
     }
 
@@ -1359,20 +1397,20 @@ static void new_protocol_receive_specific() {
       receive_specific_buffer[7]=1; 						// enable  DDC0 but disable all others
     }
 
-//g_print("new_protocol_receive_specific: %s:%d enable=%02X\n",inet_ntoa(receiver_addr.sin_addr),ntohs(receiver_addr.sin_port),receive_specific_buffer[7]);
+//t_print("new_protocol_receive_specific: %s:%d enable=%02X\n",inet_ntoa(receiver_addr.sin_addr),ntohs(receiver_addr.sin_port),receive_specific_buffer[7]);
 
     if(have_saturn_xdma) {
 #ifdef SATURN
       saturn_handle_ddc_specific(false, receive_specific_buffer);
 #endif
     } else {
-    if((rc=sendto(data_socket,receive_specific_buffer,sizeof(receive_specific_buffer),0,(struct sockaddr*)&receiver_addr,receiver_addr_length))<0) {
-      g_print("sendto socket failed for receive_specific: %d\n",rc);
-      exit(1);
-    }
+      if((rc=sendto(data_socket,receive_specific_buffer,sizeof(receive_specific_buffer),0,(struct sockaddr*)&receiver_addr,receiver_addr_length))<0) {
+        t_perror("sendto socket failed for receive_specific:");
+        exit(1);
+      }
 
-    if(rc!=sizeof(receive_specific_buffer)) {
-      g_print("sendto socket for receive_specific: %d rather than %ld",rc,(long)sizeof(receive_specific_buffer));
+      if(rc!=sizeof(receive_specific_buffer)) {
+        t_print("sendto socket for receive_specific: %d rather than %ld",rc,(long)sizeof(receive_specific_buffer));
       }
     }
 
@@ -1385,7 +1423,7 @@ static void new_protocol_start() {
     new_protocol_transmit_specific();
     new_protocol_receive_specific();
     new_protocol_timer_thread_id = g_thread_new( "new protocol timer", new_protocol_timer_thread, NULL);
-    g_print( "new_protocol_timer_thread: id=%p\n",new_protocol_timer_thread_id);
+    t_print( "new_protocol_timer_thread: id=%p\n",new_protocol_timer_thread_id);
 
 }
 
@@ -1484,7 +1522,7 @@ static gpointer new_protocol_thread(gpointer data) {
     int bytesread;
     mybuffer *mybuf;
 
-g_print("new_protocol_thread\n");
+t_print("new_protocol_thread\n");
 
     iqindex=4;
 
@@ -1510,13 +1548,13 @@ g_print("new_protocol_thread\n");
 	}
 
         if(bytesread<0) {
-            g_print("recvfrom socket failed for new_protocol_thread");
+            t_perror("recvfrom socket failed for new_protocol_thread:");
             exit(-1);
         }
 
         sourceport=ntohs(addr.sin_port);
 
-//g_print("new_protocol_thread: recvd %d bytes on port %d\n",bytesread,sourceport);
+//t_print("new_protocol_thread: recvd %d bytes on port %d\n",bytesread,sourceport);
 
         switch(sourceport) {
             case RX_IQ_TO_HOST_PORT_0:
@@ -1528,9 +1566,9 @@ g_print("new_protocol_thread\n");
             case RX_IQ_TO_HOST_PORT_6:
             case RX_IQ_TO_HOST_PORT_7:
               ddc=sourceport-RX_IQ_TO_HOST_PORT_0;
-//g_print("iq packet from port=%d ddc=%d\n",sourceport,ddc);
+//t_print("iq packet from port=%d ddc=%d\n",sourceport,ddc);
               if(ddc>=MAX_DDC)  {
-                g_print("unexpected iq data from ddc %d\n",ddc);
+                t_print("unexpected iq data from ddc %d\n",ddc);
                 mybuf->free=1;
               } else {
 #ifdef __APPLE__
@@ -1587,7 +1625,7 @@ g_print("new_protocol_thread\n");
 #endif
               break;
             default:
-g_print("new_protocol_thread: Unknown port %d\n",sourceport);
+t_print("new_protocol_thread: Unknown port %d\n",sourceport);
               mybuf->free=1;
               break;
         }
@@ -1597,7 +1635,7 @@ g_print("new_protocol_thread: Unknown port %d\n",sourceport);
 }
 
 static gpointer command_response_thread(gpointer data) {
-  g_print("command_response_thread\n");
+  t_print("command_response_thread\n");
   while(1) {
 #ifdef __APPLE__
     sem_post(command_response_sem_ready);
@@ -1613,7 +1651,7 @@ static gpointer command_response_thread(gpointer data) {
 }
 
 static gpointer high_priority_thread(gpointer data) {
-g_print("high_priority_thread\n");
+t_print("high_priority_thread\n");
   while(1) {
 #ifdef __APPLE__
     sem_post(high_priority_sem_ready);
@@ -1629,7 +1667,7 @@ g_print("high_priority_thread\n");
 }
 
 static gpointer mic_line_thread(gpointer data) {
-g_print("mic_line_thread\n");
+t_print("mic_line_thread\n");
   while(1) {
 #ifdef __APPLE__
     sem_post(mic_line_sem_ready);
@@ -1698,7 +1736,7 @@ static gpointer iq_thread(gpointer data) {
   int ddc=GPOINTER_TO_INT(data);
   long sequence;
   unsigned char *buffer;
-  g_print("iq_thread: ddc=%d\n",ddc);
+  t_print("iq_thread: ddc=%d\n",ddc);
   while(1) {
 #ifdef __APPLE__
     sem_post(iq_sem_ready[ddc]);
@@ -1714,7 +1752,7 @@ static gpointer iq_thread(gpointer data) {
 //
     sequence=((buffer[0]&0xFF)<<24)+((buffer[1]&0xFF)<<16)+((buffer[2]&0xFF)<<8)+(buffer[3]&0xFF);
     if(ddc_sequence[ddc] !=sequence) {
-      g_print("DDC %d sequence error: expected %ld got %ld\n",ddc,ddc_sequence[ddc],sequence);
+      t_print("DDC %d sequence error: expected %ld got %ld\n",ddc,ddc_sequence[ddc],sequence);
       ddc_sequence[ddc]=sequence;
       sequence_errors++;
     }
@@ -1762,7 +1800,7 @@ static void process_iq_data(unsigned char *buffer, RECEIVER *rx) {
            +((long long)(buffer[10]&0xFF)<<8)
            +((long long)(buffer[11]&0xFF)   );
   int bitspersample=((buffer[12]&0xFF)<<8)+(buffer[13]&0xFF);
-  g_print("%s: rx=%d bitspersample=%d samplesperframe=%d\n",__FUNCTION__,rx->id, bitspersample,samplesperframe);
+  t_print("%s: rx=%d bitspersample=%d samplesperframe=%d\n",__FUNCTION__,rx->id, bitspersample,samplesperframe);
 #endif
 
   b=16;
@@ -1811,7 +1849,7 @@ static void process_div_iq_data(unsigned char*buffer) {
            +((long long)(buffer[11]&0xFF)    );
 
   int bitspersample=((buffer[12]&0xFF)<<8)+(buffer[13]&0xFF);
-  g_print("%s: rx=%d bitspersample=%d samplesperframe=%d\n",__FUNCTION__,rx->id, bitspersample,samplesperframe);
+  t_print("%s: rx=%d bitspersample=%d samplesperframe=%d\n",__FUNCTION__,rx->id, bitspersample,samplesperframe);
 #endif
 
   b=16;
@@ -1873,7 +1911,7 @@ static void process_ps_iq_data(unsigned char *buffer) {
            +((long long)(buffer[10]&0xFF)<<8)
            +((long long)(buffer[11]&0xFF)   );
   int bitspersample=((buffer[12]&0xFF)<<8)+(buffer[13]&0xFF);
-  g_print("%s: rx=%d bitspersample=%d samplesperframe=%d\n",__FUNCTION__,rx->id, bitspersample,samplesperframe);
+  t_print("%s: rx=%d bitspersample=%d samplesperframe=%d\n",__FUNCTION__,rx->id, bitspersample,samplesperframe);
 #endif
   b=16;
   int i;
@@ -1900,7 +1938,7 @@ static void process_ps_iq_data(unsigned char *buffer) {
 
     add_ps_iq_samples(transmitter, leftsampledouble1,rightsampledouble1,leftsampledouble0,rightsampledouble0);
 
-//g_print("%06x,%06x %06x,%06x\n",leftsample0,rightsample0,leftsample1,rightsample1);
+//t_print("%06x,%06x %06x,%06x\n",leftsample0,rightsample0,leftsample1,rightsample1);
   }
 }
 
@@ -1910,12 +1948,12 @@ static void process_command_response() {
     const unsigned char *buffer = command_response_buffer->buffer;
     sequence=((buffer[0]&0xFF)<<24)+((buffer[1]&0xFF)<<16)+((buffer[2]&0xFF)<<8)+(buffer[3]&0xFF);
     if (sequence != response_sequence) {
-	g_print("CommRes SeqErr: expected=%ld seen=%ld\n", response_sequence, sequence);
+        t_print("CommRes SeqErr: expected=%ld seen=%ld\n", response_sequence, sequence);
 	response_sequence=sequence;
     }
     response_sequence++;
     response=buffer[4]&0xFF;
-    g_print("CommandResponse with seq=%ld and command=%d\n",sequence,response);
+    t_print("CommandResponse with seq=%ld and command=%d\n",sequence,response);
 #ifdef __APPLE__
     sem_post(response_sem);
 #else
@@ -1932,7 +1970,7 @@ static void process_high_priority() {
 
     sequence=((buffer[0]&0xFF)<<24)+((buffer[1]&0xFF)<<16)+((buffer[2]&0xFF)<<8)+(buffer[3]&0xFF);
     if (sequence != highprio_rcvd_sequence) {
-	g_print("HighPrio SeqErr Expected=%ld Seen=%ld\n", highprio_rcvd_sequence, sequence);
+        t_print("HighPrio SeqErr Expected=%ld Seen=%ld\n", highprio_rcvd_sequence, sequence);
 	highprio_rcvd_sequence=sequence;
         sequence_errors++;
     }
@@ -1986,7 +2024,7 @@ static void process_mic_data(int bytes) {
 
   sequence=((buffer[0]&0xFF)<<24)+((buffer[1]&0xFF)<<16)+((buffer[2]&0xFF)<<8)+(buffer[3]&0xFF);
   if (sequence != micsamples_sequence) {
-    g_print("MicSample SeqErr Expected=%ld Seen=%ld\n", micsamples_sequence, sequence);
+    t_print("MicSample SeqErr Expected=%ld Seen=%ld\n", micsamples_sequence, sequence);
     micsamples_sequence=sequence;
     sequence_errors++;
   }
@@ -2041,7 +2079,7 @@ void new_protocol_cw_audio_samples(short left_audio_sample,short right_audio_sam
       } else {
         int rc=sendto(data_socket,audiobuffer,sizeof(audiobuffer),0,(struct sockaddr*)&audio_addr,audio_addr_length);
         if(rc!=sizeof(audiobuffer)) {
-          g_print("sendto socket failed for %ld bytes of audio: %d\n",(long)sizeof(audiobuffer),rc);
+          t_print("sendto socket failed for %ld bytes of audio: %d\n",(long)sizeof(audiobuffer),rc);
         }
       }
       audioindex=4;
@@ -2083,7 +2121,7 @@ void new_protocol_audio_samples(RECEIVER *rx,short left_audio_sample,short right
     } else {
       int rc=sendto(data_socket,audiobuffer,sizeof(audiobuffer),0,(struct sockaddr*)&audio_addr,audio_addr_length);
       if(rc!=sizeof(audiobuffer)) {
-        g_print("sendto socket failed for %ld bytes of audio: %d\n",(long)sizeof(audiobuffer),rc);
+        t_print("sendto socket failed for %ld bytes of audio: %d\n",(long)sizeof(audiobuffer),rc);
       }
     }
     audioindex=4;
@@ -2113,7 +2151,7 @@ void new_protocol_flush_iq_samples() {
 #endif
   } else {
     if(sendto(data_socket,iqbuffer,sizeof(iqbuffer),0,(struct sockaddr*)&iq_addr,iq_addr_length)<0) {
-      g_print("sendto socket failed for iq\n");
+      t_perror("sendto socket failed for iq:");
       exit(1);
     }
   }
@@ -2142,7 +2180,7 @@ void new_protocol_iq_samples(int isample,int qsample) {
 #endif
     } else {
       if(sendto(data_socket,iqbuffer,sizeof(iqbuffer),0,(struct sockaddr*)&iq_addr,iq_addr_length)<0) {
-        g_print("sendto socket failed for iq\n");
+        t_perror("sendto socket failed for iq:");
         exit(1);
       }
     }

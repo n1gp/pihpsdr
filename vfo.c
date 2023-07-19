@@ -57,6 +57,7 @@
 #include "client_server.h"
 #endif
 #include "ext.h"
+#include "message.h"
 
 static int my_width;
 static int my_height;
@@ -72,7 +73,6 @@ char *step_labels[]={"1Hz","10Hz","25Hz","50Hz","100Hz","250Hz","500Hz","1kHz","
 // This should replace *all* divisions by the step size
 //
 #define ROUND(f,n)  (((f+step/2)/step + n)*step)
-
 
 struct _vfo vfo[MAX_VFOS];
 struct _mode_settings mode_settings[MODES];
@@ -358,7 +358,7 @@ void vfo_xvtr_changed() {
     }
   }
   if (protocol == NEW_PROTOCOL) {
-    schedule_general();   // for disablePA
+    schedule_general();        // for disablePA
     schedule_high_priority();  // for Frequencies
   }
   g_idle_add(ext_vfo_update, NULL);
@@ -469,12 +469,14 @@ void vfo_band_changed(int id,int b) {
 }
 
 void vfo_bandstack_changed(int b) {
+
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
     return;
   }
 #endif
+
   int id=active_receiver->id;
   if(id==0) {
     vfo_save_bandstack();
@@ -554,12 +556,14 @@ void vfo_filter_changed(int f) {
 }
 
 void vfo_a_to_b() {
+
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
     return;
   }
 #endif
+
   vfo[VFO_B].band=vfo[VFO_A].band;
   vfo[VFO_B].bandstack=vfo[VFO_A].bandstack;
   vfo[VFO_B].frequency=vfo[VFO_A].frequency;
@@ -581,12 +585,14 @@ void vfo_a_to_b() {
 }
 
 void vfo_b_to_a() {
+
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
     return;
   }
 #endif
+
   vfo[VFO_A].band=vfo[VFO_B].band;
   vfo[VFO_A].bandstack=vfo[VFO_B].bandstack;
   vfo[VFO_A].frequency=vfo[VFO_B].frequency;
@@ -617,9 +623,10 @@ void vfo_a_swap_b() {
   long long temp_rit;
   long long temp_lo;
   long long temp_offset;
+
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
     return;
   }
 #endif
@@ -717,7 +724,7 @@ void vfo_set_stepsize(int newstep) {
   //
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
     return;
   }
 #endif
@@ -807,10 +814,11 @@ void vfo_id_step(int id, int steps) {
 
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
     return;
   }
 #endif
+
   if(!locked) {
     long long delta;
     if(vfo[id].ctun) {
@@ -859,7 +867,7 @@ void vfo_id_step(int id, int steps) {
 
 //
 // vfo_move (and vfo_id_move) are exclusively used
-// to update the radio while dragging with the 
+// to update the radio while dragging with the
 // pointer device in the panadapter area. Therefore,
 // the behaviour is different whether we use CTUN or not.
 //
@@ -1141,14 +1149,13 @@ void vfo_update() {
         long long af = vfo[0].ctun ? vfo[0].ctun_frequency : vfo[0].frequency;
         long long bf = vfo[1].ctun ? vfo[1].ctun_frequency : vfo[1].frequency;
 
-
 #if 0
-//
+        //
         // DL1YCF:
         // There is no consensus whether the "VFO display frequency" should move if
         // RIT/XIT values are changed. My Kenwood TS590 does so, but some popular
         // other SDR software does not (which in my personal view is a bug, not a feature).
-//
+        //
         // The strongest argument to prefer the "TS590" behaviour is that during TX,
         // the frequency actually used for transmit should be displayed.
         // Then, to preserve symmetry, during RX the effective RX frequency
@@ -1189,6 +1196,7 @@ void vfo_update() {
               cairo_set_source_rgba(cr, COLOUR_OK_WEAK);
         else
               cairo_set_source_rgba(cr, COLOUR_OK);
+
         f_m = af / 1000000LL;
         f_k = (af - 1000000LL*f_m) / 1000;
         f_h = (af - 1000000LL*f_m - 1000*f_k);
@@ -1201,7 +1209,7 @@ void vfo_update() {
         } else if (vfo[0].entered_frequency[0]) {
           snprintf(temp_text,sizeof(temp_text),"%s",vfo[0].entered_frequency);
           cairo_show_text(cr, temp_text);
-            } else {
+        } else {
           //
           // poor man's right alignment:
           // If the frequency is small, print some blanks
@@ -1220,9 +1228,9 @@ void vfo_update() {
           cairo_restore(cr);
           sprintf(temp_text,"%0d.%03d", f_m,f_k);
           cairo_show_text(cr, temp_text);
-        cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
+          cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
           sprintf(temp_text,"%03d", f_h);
-        cairo_show_text(cr, temp_text);
+          cairo_show_text(cr, temp_text);
         }
 
         //
@@ -1237,6 +1245,7 @@ void vfo_update() {
               cairo_set_source_rgba(cr, COLOUR_OK_WEAK);
         else
               cairo_set_source_rgba(cr, COLOUR_OK);
+
         f_m = bf / 1000000LL;
         f_k = (bf - 1000000LL*f_m) / 1000;
         f_h = (bf - 1000000LL*f_m - 1000*f_k);
@@ -1249,7 +1258,7 @@ void vfo_update() {
         } else if (vfo[1].entered_frequency[0]) {
           snprintf(temp_text,sizeof(temp_text),"%s",vfo[1].entered_frequency);
           cairo_show_text(cr, temp_text);
-            } else {
+        } else {
           //
           // poor man's right alignment:
           // If the frequency is small, print some blanks
@@ -1267,7 +1276,7 @@ void vfo_update() {
             cairo_show_text(cr, "0");
           cairo_restore(cr);
           sprintf(temp_text,"%0d.%03d", f_m,f_k);
-        cairo_show_text(cr, temp_text);
+          cairo_show_text(cr, temp_text);
           cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
           sprintf(temp_text,"%03d", f_h);
           cairo_show_text(cr, temp_text);
@@ -1278,11 +1287,11 @@ void vfo_update() {
         //
         cairo_move_to(cr, 55, 54);
         if(active_receiver->zoom>1) {
-            cairo_set_source_rgba(cr, COLOUR_ATTN);
-          } else {
-            cairo_set_source_rgba(cr, COLOUR_SHADE);
-          }
-          cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
+          cairo_set_source_rgba(cr, COLOUR_ATTN);
+        } else {
+          cairo_set_source_rgba(cr, COLOUR_SHADE);
+        }
+        cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
         sprintf(temp_text,"Zoom x%d",active_receiver->zoom);
         cairo_show_text(cr, temp_text);
 
@@ -1292,11 +1301,11 @@ void vfo_update() {
         if ((protocol == ORIGINAL_PROTOCOL || protocol == NEW_PROTOCOL) && can_transmit) {
           cairo_move_to(cr, 240, 54);
           if(transmitter->puresignal) {
-          cairo_set_source_rgba(cr, COLOUR_ATTN);
-        } else {
-          cairo_set_source_rgba(cr, COLOUR_SHADE);
-        }
-        cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
+            cairo_set_source_rgba(cr, COLOUR_ATTN);
+          } else {
+            cairo_set_source_rgba(cr, COLOUR_SHADE);
+          }
+          cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
           cairo_show_text(cr, "PS");
         }
 
@@ -1335,16 +1344,16 @@ void vfo_update() {
         cairo_move_to(cr, 270, 28);
         switch(active_receiver->nb) {
           case 1:
-          cairo_set_source_rgba(cr, COLOUR_ATTN);
-          cairo_show_text(cr, "NB");
+            cairo_set_source_rgba(cr, COLOUR_ATTN);
+            cairo_show_text(cr, "NB");
             break;
           case 2:
-          cairo_set_source_rgba(cr, COLOUR_ATTN);
-          cairo_show_text(cr, "NB2");
+            cairo_set_source_rgba(cr, COLOUR_ATTN);
+            cairo_show_text(cr, "NB2");
             break;
           default:
-          cairo_set_source_rgba(cr, COLOUR_SHADE);
-          cairo_show_text(cr, "NB");
+            cairo_set_source_rgba(cr, COLOUR_SHADE);
+            cairo_show_text(cr, "NB");
             break;
         }
 
@@ -1354,8 +1363,8 @@ void vfo_update() {
         cairo_move_to(cr, 240, 28);
         switch (active_receiver->nr) {
           case 1:
-          cairo_set_source_rgba(cr, COLOUR_ATTN);
-          cairo_show_text(cr, "NR");
+            cairo_set_source_rgba(cr, COLOUR_ATTN);
+            cairo_show_text(cr, "NR");
             break;
         case 2:
           cairo_set_source_rgba(cr, COLOUR_ATTN);
@@ -1441,6 +1450,7 @@ void vfo_update() {
               cairo_show_text(cr, "CMPR");
           }
         }
+
         //
         // X = 500 - 530, Y = 41-54: Equalizer indicator
         //
@@ -1454,7 +1464,7 @@ void vfo_update() {
           cairo_show_text(cr, "RxEQ");
         } else {
           cairo_set_source_rgba(cr, COLOUR_SHADE);
-        cairo_show_text(cr, "EQ");
+          cairo_show_text(cr, "EQ");
         }
 
         //
@@ -1571,7 +1581,7 @@ void vfo_update() {
         cairo_destroy (cr);
         gtk_widget_queue_draw (vfo_panel);
     } else {
-g_print("%s: no surface!\n",__FUNCTION__);
+t_print("%s: no surface!\n",__FUNCTION__);
     }
 }
 
@@ -1648,10 +1658,11 @@ long long get_tx_freq() {
     return vfo[txvfo].frequency;
   }
 }
+
 void vfo_rit_update(int id) {
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
     return;
   }
 #endif
@@ -1665,7 +1676,7 @@ void vfo_rit_update(int id) {
 void vfo_rit_clear(int id) {
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n", __FUNCTION__);
     return;
   }
 #endif
@@ -1680,7 +1691,7 @@ void vfo_rit_clear(int id) {
 void vfo_rit(int id,int i) {
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n",__FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n",__FUNCTION__);
     return;
   }
 #endif
@@ -1711,7 +1722,7 @@ void vfo_rit(int id,int i) {
 void vfo_set_frequency(int v,long long f) {
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n",__FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n",__FUNCTION__);
     return;
   }
 #endif
@@ -1753,7 +1764,7 @@ void vfo_ctun_update(int id,int state) {
   if (vfo[id].ctun == state) return;  // no-op if no change
 #ifdef CLIENT_SERVER
   if (radio_is_remote) {
-    g_print("%s: TODO: send VFO change to remote\n",__FUNCTION__);
+    t_print("%s: TODO: send VFO change to remote\n",__FUNCTION__);
     return;
   }
 #endif
@@ -1774,5 +1785,3 @@ void vfo_ctun_update(int id,int state) {
     }
   }
 }
-
-

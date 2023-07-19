@@ -17,12 +17,12 @@
 
 void DoTheMidi(int action, enum ACTIONtype type, int val) {
 
-    //g_print("%s: action=%d type=%d val=%d\n",__FUNCTION__,action,type,val);
+    //t_print("%s: action=%d type=%d val=%d\n",__FUNCTION__,action,type,val);
 
     switch(type) {
       case MIDI_KEY:
         schedule_action(action, val?PRESSED:RELEASED, 0);
-	break;
+        break;
       case MIDI_KNOB:
         schedule_action(action, ABSOLUTE, val);
         break;

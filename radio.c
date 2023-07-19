@@ -79,6 +79,7 @@
 #ifdef CLIENT_SERVER
 #include "client_server.h"
 #endif
+#include "message.h"
 #ifdef SATURN
 #include "saturnmain.h"
 #include "saturnserver.h"
@@ -164,6 +165,14 @@ int atlas_janus=0;
 //
 int hl2_audio_codec=0;
 
+//
+// if anan10E is set, we have a limited-capacity HERMES board
+// with 2 RX channels max, and the PureSignal TX DAC feedback
+// is hard-coded to RX1, while for the PureSignal RX feedback
+// one must use RX0. This is the case for Anan-10E and Anan-100B
+// radios.
+//
+int anan10E=0;
 int classE=0;
 
 int tx_out_of_band=0;
@@ -359,15 +368,19 @@ void set_backgnd(GtkWidget *widget) {
 
 void radio_stop() {
   if(can_transmit) {
-g_print("radio_stop: TX: CloseChannel: %d\n",transmitter->id);
+t_print("radio_stop: TX: stop display update\n");
+    tx_set_displaying(transmitter, 0);
+t_print("radio_stop: TX: CloseChannel: %d\n",transmitter->id);
     CloseChannel(transmitter->id);
   }
+t_print("radio_stop: RX0: stop display update\n");
   set_displaying(receiver[0],0);
-g_print("radio_stop: RX0: CloseChannel: %d\n",receiver[0]->id);
+t_print("radio_stop: RX0: CloseChannel: %d\n",receiver[0]->id);
   CloseChannel(receiver[0]->id);
   if (RECEIVERS == 2) {
+t_print("radio_stop: RX1: stop display update\n");
     set_displaying(receiver[1],0);
-g_print("radio_stop: RX1: CloseChannel: %d\n",receiver[1]->id);
+t_print("radio_stop: RX1: CloseChannel: %d\n",receiver[1]->id);
     CloseChannel(receiver[1]->id);
   }
 }
@@ -375,7 +388,7 @@ g_print("radio_stop: RX1: CloseChannel: %d\n",receiver[1]->id);
 void reconfigure_radio() {
   int i;
   int y;
-g_print("reconfigure_radio: receivers=%d\n",receivers);
+t_print("reconfigure_radio: receivers=%d\n",receivers);
   rx_height=display_height-VFO_HEIGHT;
   if(display_zoompan) {
     rx_height-=ZOOMPAN_HEIGHT;
@@ -517,11 +530,11 @@ static void create_visual() {
   gtk_container_remove(GTK_CONTAINER(top_window),topgrid);
   gtk_container_add(GTK_CONTAINER(top_window), fixed);
 
-//g_print("radio: vfo_init\n");
+//t_print("radio: vfo_init\n");
   vfo_panel = vfo_init(VFO_WIDTH,VFO_HEIGHT);
   gtk_fixed_put(GTK_FIXED(fixed),vfo_panel,0,y);
 
-//g_print("radio: meter_init\n");
+//t_print("radio: meter_init\n");
   meter = meter_init(METER_WIDTH,METER_HEIGHT);
   gtk_fixed_put(GTK_FIXED(fixed),meter,VFO_WIDTH,y);
 
@@ -601,7 +614,7 @@ static void create_visual() {
 #ifdef CLIENT_SERVER
 if(!radio_is_remote) {
 #endif
-  //g_print("Create transmitter\n");
+  //t_print("Create transmitter\n");
   if(can_transmit) {
     if(duplex) {
       transmitter=create_transmitter(CHANNEL_TX, buffer_size, fft_size, updates_per_second, display_width/4, display_height/2);
@@ -669,20 +682,16 @@ if(!radio_is_remote) {
 }
 #endif
 
-#ifdef AUDIO_WATERFALL
-  audio_waterfall=audio_waterfall_init(200,100);
-  gtk_fixed_put(GTK_FIXED(fixed),audio_waterfall,0,VFO_HEIGHT+20);
-#endif
 
 #ifdef GPIO
     if(gpio_init()<0) {
-      g_print("GPIO failed to initialize\n");
+      t_print("GPIO failed to initialize\n");
     }
 #endif
 
   // init local keyer if enabled
   if (cw_keyer_internal == 0) {
-	g_print("Initialize keyer.....\n");
+        t_print("Initialize keyer.....\n");
     keyer_update();
   }
 
@@ -713,7 +722,7 @@ if(!radio_is_remote) {
   }
 
   if(display_sliders) {
-//g_print("create sliders\n");
+//t_print("create sliders\n");
     sliders = sliders_init(display_width,SLIDERS_HEIGHT);
     gtk_fixed_put(GTK_FIXED(fixed),sliders,0,y);
     y+=SLIDERS_HEIGHT;
@@ -731,11 +740,11 @@ if(!radio_is_remote) {
 // the number of receivers otherwise radio_change_receivers
 // will do nothing.
 //
-g_print("create_visual: receivers=%d RECEIVERS=%d\n",receivers,RECEIVERS);
+t_print("create_visual: receivers=%d RECEIVERS=%d\n",receivers,RECEIVERS);
   if (receivers != RECEIVERS) {
     int r=receivers;
     receivers=RECEIVERS;
-g_print("create_visual: calling radio_change_receivers: receivers=%d r=%d\n",receivers,r);
+t_print("create_visual: calling radio_change_receivers: receivers=%d r=%d\n",receivers,r);
     radio_change_receivers(r);
   }
 
@@ -746,7 +755,7 @@ g_print("create_visual: calling radio_change_receivers: receivers=%d r=%d\n",rec
 
 void start_radio() {
   int i;
-//g_print("start_radio: selected radio=%p device=%d\n",radio,radio->device);
+//t_print("start_radio: selected radio=%p device=%d\n",radio,radio->device);
   gdk_window_set_cursor(gtk_widget_get_window(top_window),gdk_cursor_new(GDK_WATCH));
 
   //
@@ -936,7 +945,7 @@ void start_radio() {
 #ifdef SOAPYSDR
     case SOAPYSDR_PROTOCOL:
       can_transmit=(radio->info.soapy.tx_channels!=0);
-      g_print("start_radio: can_transmit=%d tx_channels=%d\n",can_transmit,(int)radio->info.soapy.tx_channels);
+      t_print("start_radio: can_transmit=%d tx_channels=%d\n",can_transmit,(int)radio->info.soapy.tx_channels);
       break;
 #endif
   }
@@ -1224,17 +1233,17 @@ void start_radio() {
 
   display_sequence_errors=TRUE;
 
-  g_print("%s: setup RECEIVERS protocol=%d\n",__FUNCTION__,protocol);
+  t_print("%s: setup RECEIVERS protocol=%d\n",__FUNCTION__,protocol);
   switch(protocol) {
     case SOAPYSDR_PROTOCOL:
-  g_print("%s: setup RECEIVERS SOAPYSDR\n",__FUNCTION__);
+  t_print("%s: setup RECEIVERS SOAPYSDR\n",__FUNCTION__);
       RECEIVERS=1;
       PS_TX_FEEDBACK=1;
       PS_RX_FEEDBACK=1;
       MAX_DDC=1;  // unused in SOAPY protocol
       break;
     default:
-  g_print("%s: setup RECEIVERS default\n",__FUNCTION__);
+  t_print("%s: setup RECEIVERS default\n",__FUNCTION__);
       RECEIVERS=2;
       PS_TX_FEEDBACK=(RECEIVERS);
       PS_RX_FEEDBACK=(RECEIVERS+1);
@@ -1327,7 +1336,7 @@ void start_radio() {
     }
     soapy_protocol_start_receiver(rx);
 
-//g_print("radio: set rf_gain=%f\n",rx->rf_gain);
+//t_print("radio: set rf_gain=%f\n",rx->rf_gain);
     soapy_protocol_set_gain(rx);
 
   }
@@ -1366,13 +1375,13 @@ void start_radio() {
 }
 
 void disable_rigctl() {
-   g_print("RIGCTL: disable_rigctl()\n");
+   t_print("RIGCTL: disable_rigctl()\n");
    close_rigctl_ports();
 }
 
 
 void radio_change_receivers(int r) {
-g_print("radio_change_receivers: from %d to %d\n",receivers,r);
+t_print("radio_change_receivers: from %d to %d\n",receivers,r);
   // The button in the radio menu will call this function even if the
   // number of receivers has not changed.
   if (receivers == r) return;  // This is always the case if RECEIVERS==1
@@ -1620,40 +1629,6 @@ void vox_changed(int state) {
   }
 }
 
-void frequency_changed(RECEIVER *rx) {
-//g_print("frequency_changed: channel=%d frequency=%ld lo=%ld error=%ld ctun=%d offset=%ld\n",rx->channel,rx->frequency_a,rx->lo_a,rx->error_a,rx->ctun,rx->offset);
-  if(vfo[0].ctun) {
-    SetRXAShiftFreq(rx->id, (double)vfo[0].offset);
-    RXANBPSetShiftFrequency(rx->id, (double)vfo[0].offset);
-#ifdef SOAPYSDR
-    if(protocol==SOAPYSDR_PROTOCOL) {
-/*
-      if(radio->can_transmit) {
-        if(radio->transmitter!=NULL && radio->transmitter->rx==rx) {
-          //soapy_protocol_set_tx_frequency(radio->transmitter);
-        }
-      }
-*/
-    }
-#endif
-  } else {
-    if(protocol==NEW_PROTOCOL) {
-      schedule_high_priority();
-#ifdef SOAPYSDR
-    } else if(protocol==SOAPYSDR_PROTOCOL) {
-      soapy_protocol_set_rx_frequency(rx,VFO_A);
-/*
-      if(radio->can_transmit) {
-        if(radio->transmitter!=NULL && radio->transmitter->rx==rx) {
-          soapy_protocol_set_tx_frequency(radio->transmitter);
-        }
-      }
-*/
-#endif
-    }
-    vfo[0].band=get_band_from_frequency(vfo[0].frequency);
-  }
-}
 
 
 void setTune(int state) {
@@ -1835,12 +1810,97 @@ static int calcLevel(double d) {
 }
 
 void calcDriveLevel() {
+  int level;
   if (tune && !transmitter->tune_use_drive) {
-    transmitter->drive_level=calcLevel(transmitter->tune_drive);
-g_print("calcDriveLevel: tune=%d drive_level=%d\n",transmitter->tune_drive,transmitter->drive_level);
+    level=calcLevel(transmitter->tune_drive);
   } else {
-    transmitter->drive_level=calcLevel(transmitter->drive);
-g_print("calcDriveLevel: drive=%d drive_level=%d\n",transmitter->drive,transmitter->drive_level);
+    level=calcLevel(transmitter->drive);
+  }
+  //
+  // For most of the radios, just copy the "level" and switch off scaling
+  //
+  transmitter->do_scale=0;
+  transmitter->drive_level=level;
+  //
+  // For the original Penelope transmitter, the drive level has no effect. Instead, the TX IQ
+  // samples must be scaled.
+  // The HermesLite-II needs a combination of hardware attenuation and TX IQ scaling.
+  // The inverse of the scale factor is needed to reverse the scaling for the TX DAC feedback
+  // samples used in the PureSignal case.
+  //
+  // The constants have been rounded off so the drive_scale is slightly (0.01%) smaller then needed
+  // so we have to reduce the inverse a little bit to avoid overflows.
+  //
+  if((device==NEW_DEVICE_ATLAS || device==DEVICE_OZY || device==DEVICE_METIS) && atlas_penelope == 1) {
+    transmitter->drive_scale = level * 0.0039215;
+    transmitter->drive_level = 255;
+    transmitter->drive_iscal = 0.9999 / transmitter->drive_scale;
+    transmitter->do_scale=1;
+  }
+  if (device == DEVICE_HERMES_LITE2 || device == NEW_DEVICE_HERMES_LITE2) {
+    //
+    // Calculate a combination of TX attenuation (values from -7.5 to 0 dB are encoded as 0, 16, 32, ..., 240)
+    // and a TX IQ scaling. If level is above 107, the scale factor will be between 0.94 and 1.00, but if
+    // level is smaller than 107 it may adopt any value between 0.0 and 1.0
+    //
+    double d = level;
+
+    if (level > 240) {
+      transmitter->drive_level = 240;                     //  0.0 dB hardware ATT
+      transmitter->drive_scale = d * 0.0039215;
+    } else if (level > 227) {
+      transmitter->drive_level = 224;                     // -0.5 dB hardware ATT
+      transmitter->drive_scale = d * 0.0041539;
+    } else if (level > 214) {
+      transmitter->drive_level = 208;                     // -1.0 dB hardware ATT
+      transmitter->drive_scale = d * 0.0044000;
+    } else if (level > 202) {
+      transmitter->drive_level = 192;
+      transmitter->drive_scale = d * 0.0046607;
+    } else if (level > 191) {
+      transmitter->drive_level = 176;
+      transmitter->drive_scale = d * 0.0049369;
+    } else if (level > 180) {
+      transmitter->drive_level = 160;
+      transmitter->drive_scale = d * 0.0052295;
+    } else if (level > 170) {
+      transmitter->drive_level = 144;
+      transmitter->drive_scale = d * 0.0055393;
+    } else if (level > 160) {
+      transmitter->drive_level = 128;
+      transmitter->drive_scale = d * 0.0058675;
+    } else if (level > 151) {
+      transmitter->drive_level = 112;
+      transmitter->drive_scale = d * 0.0062152;
+    } else if (level > 143) {
+      transmitter->drive_level = 96; 
+      transmitter->drive_scale = d * 0.0065835;
+    } else if (level > 135) {
+      transmitter->drive_level = 80;
+      transmitter->drive_scale = d * 0.0069736;
+    } else if (level > 127) {
+      transmitter->drive_level = 64;
+      transmitter->drive_scale = d * 0.0073868;
+    } else if (level > 120) {
+      transmitter->drive_level = 48;
+      transmitter->drive_scale = d * 0.0078245;
+    } else if (level > 113) {
+      transmitter->drive_level = 32; 
+      transmitter->drive_scale = d * 0.0082881;
+    } else if (level > 107) {
+      transmitter->drive_level = 16;
+      transmitter->drive_scale = d * 0.0087793;
+    } else {
+      transmitter->drive_level = 0;
+      transmitter->drive_scale = d * 0.0092995;    // can be between 0.0 and 0.995
+    }
+    transmitter->drive_iscal=0.9999/transmitter->drive_scale;
+    transmitter->do_scale=1;
+  }
+  if (transmitter->do_scale) {
+    //t_print("%s: Level=%d Fac=%f\n", __FUNCTION__, transmitter->drive_level, transmitter->drive_scale);
+  } else {
+    //t_print("%s: Level=%d\n", __FUNCTION__, transmitter->drive_level);
   }
   if(isTransmitting()  && protocol==NEW_PROTOCOL) {
     schedule_high_priority();
@@ -1944,7 +2004,7 @@ void set_attenuation(int value) {
 #ifdef SOAPYSDR
       case SOAPYSDR_PROTOCOL:
         // I think we should never arrive here
-        g_print("%s: NOTREACHED assessment failed\n", __FUNCTION__);
+        t_print("%s: NOTREACHED assessment failed\n", __FUNCTION__);
 	soapy_protocol_set_gain_element(active_receiver,radio->info.soapy.rx_gain[0],(int)adc[0].gain);
 	break;
 #endif
@@ -2041,7 +2101,7 @@ void radioRestoreState() {
   char *value;
   int i;
 
-g_print("radioRestoreState: %s\n",property_path);
+t_print("radioRestoreState: %s\n",property_path);
   g_mutex_lock(&property_mutex);
   loadProperties(property_path);
 
@@ -2093,6 +2153,8 @@ g_print("radioRestoreState: %s\n",property_path);
     if(value) atlas_janus=atoi(value);
     value=getProperty("hl2_audio_codec");
     if(value) hl2_audio_codec=atoi(value);
+    value=getProperty("anan10E");
+    if(value) anan10E=atoi(value);
     value=getProperty("tx_out_of_band");
     if(value) tx_out_of_band=atoi(value);
     value=getProperty("filter_board");
@@ -2423,7 +2485,7 @@ void radioSaveState() {
   char name[64];
 
 
-g_print("radioSaveState: %s\n",property_path);
+t_print("radioSaveState: %s\n",property_path);
 
   g_mutex_lock(&property_mutex);
   clearProperties();
@@ -2493,6 +2555,8 @@ g_print("radioSaveState: %s\n",property_path);
     setProperty("atlas_janus",value);
     sprintf(value,"%d",hl2_audio_codec);
     setProperty("hl2_audio_codec",value);
+    sprintf(value,"%d",anan10E);
+    setProperty("anan10E",value);
     sprintf(value,"%d",filter_board);
     setProperty("filter_board",value);
     sprintf(value,"%d",tx_out_of_band);
@@ -2814,7 +2878,7 @@ void calculate_display_average(RECEIVER *rx) {
 void set_filter_type(int filter_type) {
   int i;
 
-  //g_print("set_filter_type: %d\n",filter_type);
+  //t_print("set_filter_type: %d\n",filter_type);
   for(i=0;i<RECEIVERS;i++) {
     receiver[i]->low_latency=filter_type;
     RXASetMP(receiver[i]->id, filter_type);
@@ -2826,7 +2890,7 @@ void set_filter_type(int filter_type) {
 void set_filter_size(int filter_size) {
   int i;
 
-  //g_print("set_filter_size: %d\n",filter_size);
+  //t_print("set_filter_size: %d\n",filter_size);
   for(i=0;i<RECEIVERS;i++) {
     receiver[i]->fft_size=filter_size;
     RXASetNC(receiver[i]->id, filter_size);
@@ -2889,7 +2953,7 @@ int remote_start(void *data) {
   if (can_transmit) {
     if(transmitter->local_microphone) {
       if(audio_open_input()!=0) {
-        g_print("audio_open_input failed\n");
+        t_print("audio_open_input failed\n");
         transmitter->local_microphone=0;
       }
     }
@@ -2992,6 +3056,11 @@ int max_band() {
 }
 
 void protocol_stop() {
+  //
+  // paranoia ...
+  //
+  mox_update(0);
+  usleep(100000);
   switch(protocol) {
     case ORIGINAL_PROTOCOL:
       old_protocol_stop();

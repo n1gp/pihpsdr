@@ -31,6 +31,7 @@
 #ifdef SOAPYSDR
 #include "soapy_protocol.h"
 #endif
+#include "message.h"
 
 static GtkWidget *dialog=NULL;
 static GtkWidget *grid=NULL;
@@ -188,6 +189,7 @@ static void show_xvtr() {
     xvtr_container=NULL;
     return;
   }
+
   xvtr_container=gtk_fixed_new();
   gtk_grid_attach(GTK_GRID(grid), xvtr_container, 0, 1, 6, 1);
   GtkWidget *mygrid=gtk_grid_new();
@@ -337,7 +339,7 @@ void ant_menu(GtkWidget *parent) {
   if(device==SOAPYSDR_USB_DEVICE) {
     int i;
 
-g_print("rx_antennas=%ld\n",radio->info.soapy.rx_antennas);
+t_print("rx_antennas=%ld\n",radio->info.soapy.rx_antennas);
     if(radio->info.soapy.rx_antennas>0) {
       GtkWidget *antenna_label=gtk_label_new(NULL);
       gtk_label_set_markup(GTK_LABEL(antenna_label), "<b>RX Antenna:</b>");
@@ -354,7 +356,7 @@ g_print("rx_antennas=%ld\n",radio->info.soapy.rx_antennas);
     }
 
     if(can_transmit) {
-      g_print("tx_antennas=%ld\n",radio->info.soapy.tx_antennas);
+      t_print("tx_antennas=%ld\n",radio->info.soapy.tx_antennas);
       if(radio->info.soapy.tx_antennas>0) {
         GtkWidget *antenna_label=gtk_label_new(NULL);
         gtk_label_set_markup(GTK_LABEL(antenna_label), "<b>TX Antenna:</b>");

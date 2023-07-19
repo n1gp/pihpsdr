@@ -33,6 +33,7 @@
 #include "receiver.h"
 #include "sliders.h"
 #include "new_protocol.h"
+#include "message.h"
 
 static GtkWidget *dialog=NULL;
 static GtkWidget *local_audio_b=NULL;
@@ -87,7 +88,7 @@ static void sample_rate_cb(GtkToggleButton *widget, gpointer data) {
   char *p = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
   int samplerate;
 
-  //  
+  //
   // There are so many different possibilities for sample rates, so
   // we just "scanf" from the combobox text entry
   //
@@ -101,7 +102,7 @@ static void adc_cb(GtkToggleButton *widget,gpointer data) {
 }
 
 static void local_audio_cb(GtkWidget *widget, gpointer data) {
-g_print("local_audio_cb: rx=%d\n",active_receiver->id);
+t_print("local_audio_cb: rx=%d\n",active_receiver->id);
 
   if(active_receiver->audio_name!=NULL) {
     g_free(active_receiver->audio_name);
@@ -109,14 +110,13 @@ g_print("local_audio_cb: rx=%d\n",active_receiver->id);
   }
 
   int i=gtk_combo_box_get_active(GTK_COMBO_BOX(output));
-  active_receiver->audio_name=g_new(gchar,strlen(output_devices[i].name)+1);
-  strcpy(active_receiver->audio_name,output_devices[i].name);
+  active_receiver->audio_name=g_strdup(output_devices[i].name);
 
   if(gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget))) {
     if(audio_open_output(active_receiver)==0) {
       active_receiver->local_audio=1;
     } else {
-g_print("local_audio_cb: audio_open_output failed\n");
+t_print("local_audio_cb: audio_open_output failed\n");
       active_receiver->local_audio=0;
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (widget), FALSE);
     }
@@ -126,7 +126,7 @@ g_print("local_audio_cb: audio_open_output failed\n");
       audio_close_output(active_receiver);
     }
   }
-g_print("local_audio_cb: local_audio=%d\n",active_receiver->local_audio);
+t_print("local_audio_cb: local_audio=%d\n",active_receiver->local_audio);
 }
 
 static void mute_audio_cb(GtkWidget *widget, gpointer data) {
@@ -154,9 +154,8 @@ static void local_output_changed_cb(GtkWidget *widget, gpointer data) {
   }
 
   if(i>=0) {
-    g_print("local_output_changed rx=%d %s\n",active_receiver->id,output_devices[i].name);
-    active_receiver->audio_name=g_new(gchar,strlen(output_devices[i].name)+1);
-    strcpy(active_receiver->audio_name,output_devices[i].name);
+    t_print("local_output_changed rx=%d %s\n",active_receiver->id,output_devices[i].name);
+    active_receiver->audio_name=g_strdup(output_devices[i].name);
   }
 
   if(active_receiver->local_audio) {
@@ -165,7 +164,7 @@ static void local_output_changed_cb(GtkWidget *widget, gpointer data) {
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON (local_audio_b),FALSE);
     }
   }
-  g_print("local_output_changed rx=%d local_audio=%d\n",active_receiver->id,active_receiver->local_audio);
+  t_print("local_output_changed rx=%d local_audio=%d\n",active_receiver->id,active_receiver->local_audio);
 }
 
 static void audio_channel_cb(GtkWidget *widget, gpointer data) {
@@ -181,7 +180,7 @@ static void audio_channel_cb(GtkWidget *widget, gpointer data) {
       active_receiver->audio_channel=RIGHT;
       break;
     }
-    g_print("CHANNEL=%d\n", active_receiver->audio_channel);
+    t_print("CHANNEL=%d\n", active_receiver->audio_channel);
 }
 
 void rx_menu(GtkWidget *parent) {
@@ -205,27 +204,28 @@ void rx_menu(GtkWidget *parent) {
   gtk_grid_attach(GTK_GRID(grid),close_b,0,0,1,1);
 
   int col=0;
+ 
 
   if (protocol == ORIGINAL_PROTOCOL || protocol == NEW_PROTOCOL) {
     //
     // Everything in the first two columns does not apply to SOAPY
     //
     int row=1;
-  switch(protocol) {
-    case NEW_PROTOCOL:  // Sample rate in RX menu only for P2
-      {
-      GtkWidget *sample_rate_label=gtk_label_new(NULL);
-      gtk_label_set_markup(GTK_LABEL(sample_rate_label), "<b>Sample Rate</b>");
-      gtk_grid_attach(GTK_GRID(grid),sample_rate_label,0,row,1,1);
+    switch(protocol) {
+      case NEW_PROTOCOL:  // Sample rate in RX menu only for P2
+        {
+        GtkWidget *sample_rate_label=gtk_label_new(NULL);
+        gtk_label_set_markup(GTK_LABEL(sample_rate_label), "<b>Sample Rate</b>");
+        gtk_grid_attach(GTK_GRID(grid),sample_rate_label,0,row,1,1);
 
-      GtkWidget *sample_rate_combo_box=gtk_combo_box_text_new();
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"48000");
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"96000");
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"192000");
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"384000");
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"768000");
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"1536000");
-      switch (active_receiver->sample_rate) {
+        GtkWidget *sample_rate_combo_box=gtk_combo_box_text_new();
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"48000");
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"96000");
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"192000");
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"384000");
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"768000");
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(sample_rate_combo_box),NULL,"1536000");
+        switch (active_receiver->sample_rate) {
          case 48000:
             gtk_combo_box_set_active(GTK_COMBO_BOX(sample_rate_combo_box),0);
             break;
@@ -244,67 +244,67 @@ void rx_menu(GtkWidget *parent) {
          case 1536000:
             gtk_combo_box_set_active(GTK_COMBO_BOX(sample_rate_combo_box),5);
             break;
-      }
-      my_combo_attach(GTK_GRID(grid),sample_rate_combo_box,1,row,1,1);
-      g_signal_connect(sample_rate_combo_box,"changed",G_CALLBACK(sample_rate_cb),NULL);
+        }
+        my_combo_attach(GTK_GRID(grid),sample_rate_combo_box,1,row,1,1);
+        g_signal_connect(sample_rate_combo_box,"changed",G_CALLBACK(sample_rate_cb),NULL);
       }
       row++;
       break;
-  }
-
-  if (filter_board == ALEX && active_receiver->adc == 0 && have_alex_att) {
-    // 
-    // The "Alex ATT" value is stored in receiver[0] no matter how the ADCs are selected
-    //
-    GtkWidget *alex_att_label=gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(alex_att_label), "<b>Alex Attenuator</b>");
-    gtk_grid_attach(GTK_GRID(grid), alex_att_label, 0, row, 1, 1);
-
-    GtkWidget *alex_att_combo_box=gtk_combo_box_text_new();
-    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(alex_att_combo_box),NULL," 0 dB");
-    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(alex_att_combo_box),NULL,"10 dB");
-    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(alex_att_combo_box),NULL,"20 dB");
-    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(alex_att_combo_box),NULL,"30 dB");
-    gtk_combo_box_set_active(GTK_COMBO_BOX(alex_att_combo_box),receiver[0]->alex_attenuation);
-
-    my_combo_attach(GTK_GRID(grid), alex_att_combo_box, 1, row, 1, 1);
-    g_signal_connect(alex_att_combo_box,"changed",G_CALLBACK(alex_att_cb),NULL);
-
-    row++;
-  }
-
-  //
-  // If there is more than one ADC, let the user associate an ADC
-  // with the current receiver.
-  //
-  if(n_adc>1) {
-    GtkWidget *adc_label=gtk_label_new(NULL);
-    gtk_label_set_markup(GTK_LABEL(adc_label), "<b>Select ADC</b>");
-    gtk_grid_attach(GTK_GRID(grid), adc_label, 0, row, 1, 1);
-
-    GtkWidget *adc_combo_box=gtk_combo_box_text_new();
-    for(i=0;i<n_adc;i++) {
-      char label[32];
-      sprintf(label,"ADC-%d",i);
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(adc_combo_box),NULL,label);
     }
-    gtk_combo_box_set_active(GTK_COMBO_BOX(adc_combo_box),active_receiver->adc);
-    my_combo_attach(GTK_GRID(grid), adc_combo_box, 1, row, 1, 1);
-    g_signal_connect(adc_combo_box,"changed",G_CALLBACK(adc_cb),NULL);
-    row++;
-  }
 
-  //
-  // The CHARLY25 board (with RedPitaya) has no support for preamp/dither/random
-  // so those are left out. For Charly25, PreAmps and Alex Attenuator are controlled via
-  // the sliders menu.
-  //
-  // Preamps are switchable only for the very first HPSDR radios
-  //
-  // We assume Alex attenuators are present if we have an ALEX board and no Orion2
-  // (ANAN-7000/8000 do not have these), and if the RX is fed by the first ADC.
-  //
-  if (filter_board != CHARLY25) {
+    if (filter_board == ALEX && active_receiver->adc == 0 && have_alex_att) {
+      //
+      // The "Alex ATT" value is stored in receiver[0] no matter how the ADCs are selected
+      //
+      GtkWidget *alex_att_label=gtk_label_new(NULL);
+      gtk_label_set_markup(GTK_LABEL(alex_att_label), "<b>Alex Attenuator</b>");
+      gtk_grid_attach(GTK_GRID(grid), alex_att_label, 0, row, 1, 1);
+
+      GtkWidget *alex_att_combo_box=gtk_combo_box_text_new();
+      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(alex_att_combo_box),NULL," 0 dB");
+      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(alex_att_combo_box),NULL,"10 dB");
+      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(alex_att_combo_box),NULL,"20 dB");
+      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(alex_att_combo_box),NULL,"30 dB");
+      gtk_combo_box_set_active(GTK_COMBO_BOX(alex_att_combo_box),receiver[0]->alex_attenuation);
+  
+      my_combo_attach(GTK_GRID(grid), alex_att_combo_box, 1, row, 1, 1);
+      g_signal_connect(alex_att_combo_box,"changed",G_CALLBACK(alex_att_cb),NULL);
+
+      row++;
+    }
+
+    //
+    // If there is more than one ADC, let the user associate an ADC
+    // with the current receiver.
+    //
+    if(n_adc>1) {
+      GtkWidget *adc_label=gtk_label_new(NULL);
+      gtk_label_set_markup(GTK_LABEL(adc_label), "<b>Select ADC</b>");
+      gtk_grid_attach(GTK_GRID(grid), adc_label, 0, row, 1, 1);
+
+      GtkWidget *adc_combo_box=gtk_combo_box_text_new();
+      for(i=0;i<n_adc;i++) {
+        char label[32];
+        sprintf(label,"ADC-%d",i);
+        gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(adc_combo_box),NULL,label);
+      }
+      gtk_combo_box_set_active(GTK_COMBO_BOX(adc_combo_box),active_receiver->adc);
+      my_combo_attach(GTK_GRID(grid), adc_combo_box, 1, row, 1, 1);
+      g_signal_connect(adc_combo_box,"changed",G_CALLBACK(adc_cb),NULL);
+      row++;
+    }
+
+    //
+    // The CHARLY25 board (with RedPitaya) has no support for preamp/dither/random
+    // so those are left out. For Charly25, PreAmps and Alex Attenuator are controlled via
+    // the sliders menu.
+    //
+    // Preamps are switchable only for the very first HPSDR radios
+    //
+    // We assume Alex attenuators are present if we have an ALEX board and no Orion2
+    // (ANAN-7000/8000 do not have these), and if the RX is fed by the first ADC.
+    //
+    if (filter_board != CHARLY25) {
       GtkWidget *dither_b=gtk_check_button_new_with_label("Dither");
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (dither_b), active_receiver->dither);
       gtk_grid_attach(GTK_GRID(grid),dither_b,0,row,1,1);
@@ -363,8 +363,7 @@ void rx_menu(GtkWidget *parent) {
       gtk_combo_box_set_active(GTK_COMBO_BOX(output),0);
       if (active_receiver->audio_name != NULL) {
         g_free(active_receiver->audio_name);
-        active_receiver->audio_name=g_new(gchar,strlen(output_devices[0].name)+1);
-        strcpy(active_receiver->audio_name,output_devices[0].name);
+        active_receiver->audio_name=g_strdup(output_devices[0].name);
       }
     }
 

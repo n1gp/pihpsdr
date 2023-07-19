@@ -66,13 +66,9 @@
 #include "midi.h"
 #include "midi_menu.h"
 #endif
-#ifdef SATURN
-#include "saturn_menu.h"
-#endif
 
 
 GtkWidget *main_menu=NULL;
-
 GtkWidget *sub_menu=NULL;
 
 int active_menu=NO_MENU;
@@ -118,15 +114,17 @@ static gboolean restart_cb (GtkWidget *widget, GdkEventButton *event, gpointer d
   return TRUE;
 }
 
-#ifdef SATURN
-static gboolean saturn_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+//
+// This functionality may be useful in full-screen-mode where there is
+// no top bar with an "Iconify" button.
+//
+static gboolean minimize_cb(GtkWidget *widget, GdkEventButton *event, gpointer data) {
   cleanup();
-  saturn_menu(top_window);
+  gtk_window_iconify(GTK_WINDOW(top_window));
   return TRUE;
 }
-#endif
 
-static gboolean about_b_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+static gboolean about_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   cleanup();
   about_menu(top_window);
   return TRUE;
@@ -222,7 +220,6 @@ void start_rx() {
   rx_menu(top_window);
 }
 
-
 void start_meter() {
   cleanup();
   meter_menu(top_window);
@@ -292,7 +289,7 @@ void start_vox() {
   vox_menu(top_window);
 }
 
-static gboolean vox_b_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+static gboolean vox_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   start_vox();
   return TRUE;
 }
@@ -302,7 +299,7 @@ void start_fft() {
   fft_menu(top_window);
 }
 
-static gboolean fft_b_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+static gboolean fft_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   start_fft();
   return TRUE;
 }
@@ -495,13 +492,13 @@ void new_menu()
 
     if(can_transmit) {
       GtkWidget *vox_b=gtk_button_new_with_label("VOX");
-      g_signal_connect (vox_b, "button-press-event", G_CALLBACK(vox_b_cb), NULL);
+      g_signal_connect (vox_b, "button-press-event", G_CALLBACK(vox_cb), NULL);
       gtk_grid_attach(GTK_GRID(grid),vox_b,(i%5),i/5,1,1);
       i++;
     }
 
     GtkWidget *fft_b=gtk_button_new_with_label("FFT");
-    g_signal_connect (fft_b, "button-press-event", G_CALLBACK(fft_b_cb), NULL);
+    g_signal_connect (fft_b, "button-press-event", G_CALLBACK(fft_cb), NULL);
     gtk_grid_attach(GTK_GRID(grid),fft_b,(i%5),i/5,1,1);
     i++;
 
@@ -581,18 +578,13 @@ void new_menu()
     i++;
 #endif
 
-#ifdef SATURN
-    if(have_saturn_xdma) // only display on the xdma client
-    {
-      GtkWidget *saturn_b=gtk_button_new_with_label("Saturn");
-      g_signal_connect (saturn_b, "button-press-event", G_CALLBACK(saturn_cb), NULL);
-      gtk_grid_attach(GTK_GRID(grid),saturn_b,(i%5),i/5,1,1);
-      i++;
-    }
-#endif
+    GtkWidget *minimize_b=gtk_button_new_with_label("Minimize");
+    g_signal_connect (minimize_b, "button-press-event", G_CALLBACK(minimize_cb), NULL);
+    gtk_grid_attach(GTK_GRID(grid),minimize_b,(i%5),i/5,1,1);
+    i++;
 
     GtkWidget *about_b=gtk_button_new_with_label("About");
-    g_signal_connect (about_b, "button-press-event", G_CALLBACK(about_b_cb), NULL);
+    g_signal_connect (about_b, "button-press-event", G_CALLBACK(about_cb), NULL);
     gtk_grid_attach(GTK_GRID(grid),about_b,(i%5),i/5,1,1);
 
     gtk_container_add(GTK_CONTAINER(content),grid);
