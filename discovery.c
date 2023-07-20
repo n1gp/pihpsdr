@@ -346,9 +346,11 @@ t_print("%p Protocol=%d name=%s\n",d,d->protocol,d->name);
           case NEW_PROTOCOL:
             if(d->device==DEVICE_OZY) {
               snprintf(text,sizeof(text),"%s (%s) on USB /dev/ozy", d->name, d->protocol==ORIGINAL_PROTOCOL?"Protocol 1":"Protocol 2");
+#ifdef SATURN
             } else if(d->device==NEW_DEVICE_SATURN && strcmp(d->info.network.interface_name,"XDMA")==0) {
-              snprintf(text,sizeof(text),"%s (%s %s) fpga:%x (%s) on /dev/xdma*", d->name,
-                d->protocol==ORIGINAL_PROTOCOL?"Protocol 1":"Protocol 2", version, d->fpga_version, macStr);
+              snprintf(text,sizeof(text),"%s (%s v%d) fpga:%x (%s) on /dev/xdma*", d->name,
+                d->protocol==ORIGINAL_PROTOCOL?"Protocol 1":"Protocol 2", d->software_version, d->fpga_version, macStr);
+#endif
             } else {
               snprintf(text,sizeof(text),"%s (%s %s) %s (%s) on %s: ",
                             d->name,
