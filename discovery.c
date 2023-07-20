@@ -327,29 +327,35 @@ void discovery() {
     } else {
       char version[16];
       char text[512];
+      char macStr[18];
       for(row=0;row<devices;row++) {
         d=&discovered[row];
 t_print("%p Protocol=%d name=%s\n",d,d->protocol,d->name);
         snprintf(version,sizeof(version), "v%d.%d",
                           d->software_version/10,
                           d->software_version%10);
+        snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X",
+                          d->info.network.mac_address[0],
+                          d->info.network.mac_address[1],
+                          d->info.network.mac_address[2],
+                          d->info.network.mac_address[3],
+                          d->info.network.mac_address[4],
+                          d->info.network.mac_address[5]);
         switch(d->protocol) {
           case ORIGINAL_PROTOCOL:
           case NEW_PROTOCOL:
             if(d->device==DEVICE_OZY) {
               snprintf(text,sizeof(text),"%s (%s) on USB /dev/ozy", d->name, d->protocol==ORIGINAL_PROTOCOL?"Protocol 1":"Protocol 2");
+            } else if(d->device==NEW_DEVICE_SATURN && strcmp(d->info.network.interface_name,"XDMA")==0) {
+              snprintf(text,sizeof(text),"%s (%s %s) fpga:%x (%s) on /dev/xdma*", d->name,
+                d->protocol==ORIGINAL_PROTOCOL?"Protocol 1":"Protocol 2", version, d->fpga_version, macStr);
             } else {
-              snprintf(text,sizeof(text),"%s (%s %s) %s (%02X:%02X:%02X:%02X:%02X:%02X) on %s: ",
+              snprintf(text,sizeof(text),"%s (%s %s) %s (%s) on %s: ",
                             d->name,
                             d->protocol==ORIGINAL_PROTOCOL?"Protocol 1":"Protocol 2",
                             version,
                             inet_ntoa(d->info.network.address.sin_addr),
-                            d->info.network.mac_address[0],
-                            d->info.network.mac_address[1],
-                            d->info.network.mac_address[2],
-                            d->info.network.mac_address[3],
-                            d->info.network.mac_address[4],
-                            d->info.network.mac_address[5],
+                            macStr,
                             d->info.network.interface_name);
             }
             break;
