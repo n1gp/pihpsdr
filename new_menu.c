@@ -66,6 +66,7 @@
 #include "midi.h"
 #include "midi_menu.h"
 #endif
+#include "screen_menu.h"
 #ifdef SATURN
 #include "saturn_menu.h"
 #endif
@@ -320,6 +321,11 @@ void start_diversity() {
   diversity_menu(top_window);
 }
 
+static gboolean screen_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+  cleanup();
+  screen_menu(top_window);
+  return TRUE;
+}
 static gboolean diversity_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   start_diversity();
   return TRUE;
@@ -588,6 +594,10 @@ void new_menu()
     gtk_grid_attach(GTK_GRID(grid),server_b,(i%5),i/5,1,1);
     i++;
 #endif
+
+    GtkWidget *screen_b=gtk_button_new_with_label("Screen");
+    g_signal_connect (screen_b, "button-press-event", G_CALLBACK(screen_cb), NULL);
+    gtk_grid_attach(GTK_GRID(grid),screen_b,(i%5),i/5,1,1);
 
 #ifdef SATURN
     if(have_saturn_xdma) // only display on the xdma client

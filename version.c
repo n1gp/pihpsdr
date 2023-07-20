@@ -22,17 +22,15 @@ char build_version[]=GIT_VERSION;
 
 char version[]=
 #ifdef USBOZY
-" OZY(USB)"
+"OZY(USB), "
 #endif
 #ifdef GPIO
-", GPIO"
+"GPIO, "
 #endif
 #ifdef SOAPYSDR
-", SOAPYSDR"
+"SOAPYSDR, "
 #endif
 #ifdef MIDI
-", MIDI"
+"MIDI, "
 #endif
-"."
-
 ;
