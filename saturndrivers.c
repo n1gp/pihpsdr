@@ -21,7 +21,7 @@
 #include <stdlib.h>                     // for function min()
 #include <math.h>
 #include "saturndrivers.h"
-#include "saturnregisters.h"
+//#include "saturnregisters.h"
 #include <semaphore.h>
 #include <assert.h>
 #include <fcntl.h>
@@ -167,6 +167,19 @@ void RegisterWrite(uint32_t Address, uint32_t Data)
 sem_t DDCResetFIFOMutex;
 
 //
+// DMA FIFO depths
+// this is the number of 64 bit FIFO locations
+//
+uint32_t DMAFIFODepths[VNUMDMAFIFO] =
+{
+    8192,             //  eRXDDCDMA,		selects RX
+    1024,             //  eTXDUCDMA,		selects TX
+    256,              //  eMicCodecDMA,	selects mic samples
+    256               //  eSpkCodecDMA	selects speaker samples
+};
+
+
+//
 // void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt);
 //
 // Setup a single FIFO monitor channel.
@@ -225,7 +238,7 @@ uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed)
 void ResetDMAStreamFIFO(EDMAStreamSelect DDCNum)
 {
 	uint32_t Data;										// DDC register content
-	uint32_t DataBit;
+	uint32_t DataBit = 0;
 
 	switch (DDCNum)
 	{
@@ -264,7 +277,7 @@ void ResetDMAStreamFIFO(EDMAStreamSelect DDCNum)
 // 
 void SetTXAmplitudeEER(bool EEREnabled)
 {
-	GEEREnabled = EEREnabled;								// save value
+	//GEEREnabled = EEREnabled;								// save value
 	//HandlerSetEERMode(EEREnabled);							// I/Q send handler
 }
 

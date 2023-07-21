@@ -130,7 +130,7 @@ unsigned int GTXAmplScaleFactor;                    // values multipled into TX 
 bool GTXAlwaysEnabled;                              // true if TX samples always enabled (for test)
 bool GTXIQInterleaved;                              // true if IQ is interleaved, for EER mode
 bool GTXDUCMuxActive;                               // true if I/Q mux is enabled to transfer data
-bool GEEREnabled;                                   // P2. true if EER is enabled
+//bool GEEREnabled;                                   // P2. true if EER is enabled
 ETXModulationSource GTXModulationSource;            // values added to register
 bool GTXProtocolP2;                                 // true if P2
 uint32_t TXModulationTestReg;                       // modulation test DDS
@@ -177,19 +177,6 @@ unsigned int GCodecAnaloguePath;                    // value written in Codec an
 
 
 
-
-
-//
-// DMA FIFO depths
-// this is the number of 64 bit FIFO locations
-//
-uint32_t DMAFIFODepths[VNUMDMAFIFO] =
-{
-    8192,             //  eRXDDCDMA,		selects RX
-    1024,             //  eTXDUCDMA,		selects TX
-    256,              //  eMicCodecDMA,	selects mic samples
-    256               //  eSpkCodecDMA	selects speaker samples
-};
 
 
 //

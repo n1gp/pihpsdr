@@ -58,6 +58,7 @@ bool Exiting = false;
 extern bool saturn_server_en;
 extern bool client_enable_tx;
 extern bool ServerActive;
+extern bool MOXAsserted;
 
 #define SDRBOARDID 1                        // Hermes
 #define SDRSWVERSION 1                      // version of this software
@@ -801,9 +802,9 @@ static gpointer saturn_rx_thread(gpointer arg)
 //
 // variables for analysing a DDC frame
 //
-    uint32_t FrameLength;                                       // number of words per frame
+    uint32_t FrameLength = 0;                                       // number of words per frame
     uint32_t DDCCounts[VNUMDDC];                                // number of samples per DDC in a frame
-    uint32_t RateWord;                                          // DDC rate word from buffer
+    uint32_t RateWord = 0;                                          // DDC rate word from buffer
     uint32_t HdrWord;                                           // check word read form DMA's data
     uint16_t* SrcWordPtr, * DestWordPtr;                        // 16 bit read & write pointers
     uint32_t *LongWordPtr;

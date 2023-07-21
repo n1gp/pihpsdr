@@ -147,18 +147,6 @@ typedef enum
 
 
 //
-// enum type for FIFO monitor and DMA channel selection
-//
-typedef enum
-{
-    eRXDDCDMA,							// selects RX
-    eTXDUCDMA,							// selects TX
-    eMicCodecDMA,						// selects mic samples
-    eSpkCodecDMA						// selects speaker samples
-} EDMAStreamSelect;
-
-
-//
 // DMA channel allocations
 //
 #define VMICDMADEVICE "/dev/xdma0_c2h_1"
@@ -225,25 +213,20 @@ typedef enum
 //
 // MOX register
 //
-extern bool MOXAsserted;                                   // true if MOX as asserted
+//extern bool MOXAsserted;                                   // true if MOX as asserted
 
 //
 // addresses of the DDC frequency registers
 //
-extern uint32_t DDCRegisters[VNUMDDC];
+//extern uint32_t DDCRegisters[VNUMDDC];
 
 //
 // addresses of the DDC config registers
 //
-extern uint32_t DDCConfigRegs[VNUMDDC];
+//extern uint32_t DDCConfigRegs[VNUMDDC];
 
-//
-// DMA FIFO depths
-// this is the number of 64 bit FIFO locations
-//
-extern uint32_t DMAFIFODepths[VNUMDMAFIFO];
 
-extern bool GEEREnabled;                                   // P2. true if EER is enabled
+//extern bool GEEREnabled;                                   // P2. true if EER is enabled
 
 
 

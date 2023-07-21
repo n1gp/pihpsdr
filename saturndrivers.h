@@ -23,6 +23,17 @@
 #include "saturnregisters.h"
 
 
+//
+// enum type for FIFO monitor and DMA channel selection
+//
+typedef enum
+{
+    eRXDDCDMA,							// selects RX
+    eTXDUCDMA,							// selects TX
+    eMicCodecDMA,						// selects mic samples
+    eSpkCodecDMA						// selects speaker samples
+} EDMAStreamSelect;
+
 
 //
 // void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt);
