@@ -595,10 +595,6 @@ void new_menu()
     i++;
 #endif
 
-    GtkWidget *screen_b=gtk_button_new_with_label("Screen");
-    g_signal_connect (screen_b, "button-press-event", G_CALLBACK(screen_cb), NULL);
-    gtk_grid_attach(GTK_GRID(grid),screen_b,(i%5),i/5,1,1);
-
 #ifdef SATURN
     if(have_saturn_xdma) // only display on the xdma client
     {
@@ -608,6 +604,10 @@ void new_menu()
       i++;
     }
 #endif
+
+    GtkWidget *screen_b=gtk_button_new_with_label("Screen");
+    g_signal_connect (screen_b, "button-press-event", G_CALLBACK(screen_cb), NULL);
+    gtk_grid_attach(GTK_GRID(grid),screen_b,(i%5),i/5,1,1);
 
     GtkWidget *minimize_b=gtk_button_new_with_label("Minimize");
     g_signal_connect (minimize_b, "button-press-event", G_CALLBACK(minimize_cb), NULL);
