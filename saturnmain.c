@@ -242,7 +242,7 @@ void saturn_register_init()
     SetTXAmplitudeScaling(VCONSTTXAMPLSCALEFACTOR);
     SetTXEnable(true);
     EnableAlexManualFilterSelect(true);
-    SetBalancedMicInput(false);
+    SetBalancedMicInput(0);
 //RRK disable DDCs here?
 }
 

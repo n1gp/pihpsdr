@@ -222,6 +222,7 @@ int mic_boost=0;
 int mic_bias_enabled=0;
 int mic_ptt_enabled=0;
 int mic_ptt_tip_bias_ring=0;
+int mic_input_xlr=0;
 
 
 int receivers;
@@ -2362,6 +2363,8 @@ t_print("radioRestoreState: %s\n",property_path);
     if (value) saturn_server_en=atoi(value);
     value=getProperty("client_enable_tx");
     if (value) client_enable_tx=atoi(value);
+    value=getProperty("mic_input_xlr");
+    if(value) mic_input_xlr=atoi(value);
 #endif
 
     filterRestoreState();
@@ -2844,6 +2847,8 @@ t_print("radioSaveState: %s\n",property_path);
     setProperty("saturn_server", value);
     sprintf(value,"%d",client_enable_tx);
     setProperty("client_enable_tx", value);
+    sprintf(value,"%d",mic_input_xlr);
+    setProperty("mic_input_xlr",value);
 #endif
 
 #ifdef CLIENT_SERVER

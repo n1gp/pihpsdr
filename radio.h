@@ -102,6 +102,9 @@ extern TRANSMITTER *transmitter;
 #define KEYER_MODE_A 1
 #define KEYER_MODE_B 2
 
+#define MIC3P55MM 0
+#define MICXLR 1
+
 enum {
   SAT_NONE,
   SAT_MODE,
@@ -168,6 +171,7 @@ extern int mic_boost;
 extern int mic_bias_enabled;
 extern int mic_ptt_enabled;
 extern int mic_ptt_tip_bias_ring;
+extern int mic_input_xlr;
 
 
 extern int receivers;
