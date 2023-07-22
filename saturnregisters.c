@@ -1146,11 +1146,11 @@ void SetOrionMicOptions(bool MicRing, bool EnableBias, bool EnablePTT)
 
 
 //
-// SetBalancedMicInput(int Balanced)
+// SetBalancedMicInput(bool Balanced)
 // selects the balanced microphone input, not supported by current protocol code.
 // just set the bit into GPIO
 //
-void SetBalancedMicInput(int Balanced)
+void SetBalancedMicInput(bool Balanced)
 {
     uint32_t Register;                              // FPGA register content
 

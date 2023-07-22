@@ -2240,6 +2240,10 @@ t_print("radioRestoreState: %s\n",property_path);
     if(value) mic_bias_enabled=atof(value);
     value=getProperty("mic_ptt_tip_bias_ring");
     if(value) mic_ptt_tip_bias_ring=atof(value);
+    if(device==NEW_DEVICE_SATURN) {
+      value=getProperty("mic_input_xlr");
+      if(value) mic_input_xlr=atoi(value);
+    }
 
     value=getProperty("tx_filter_low");
     if(value) tx_filter_low=atoi(value);
@@ -2363,8 +2367,6 @@ t_print("radioRestoreState: %s\n",property_path);
     if (value) saturn_server_en=atoi(value);
     value=getProperty("client_enable_tx");
     if (value) client_enable_tx=atoi(value);
-    value=getProperty("mic_input_xlr");
-    if(value) mic_input_xlr=atoi(value);
 #endif
 
     filterRestoreState();
@@ -2635,6 +2637,10 @@ t_print("radioSaveState: %s\n",property_path);
     setProperty("mic_bias_enabled",value);
     sprintf(value,"%d",mic_ptt_tip_bias_ring);
     setProperty("mic_ptt_tip_bias_ring",value);
+    if(device==NEW_DEVICE_SATURN) {
+      sprintf(value,"%d",mic_input_xlr);
+      setProperty("mic_input_xlr",value);
+    }
     sprintf(value,"%d",tx_filter_low);
     setProperty("tx_filter_low",value);
     sprintf(value,"%d",tx_filter_high);
@@ -2847,8 +2853,6 @@ t_print("radioSaveState: %s\n",property_path);
     setProperty("saturn_server", value);
     sprintf(value,"%d",client_enable_tx);
     setProperty("client_enable_tx", value);
-    sprintf(value,"%d",mic_input_xlr);
-    setProperty("mic_input_xlr",value);
 #endif
 
 #ifdef CLIENT_SERVER

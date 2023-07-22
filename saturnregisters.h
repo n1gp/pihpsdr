@@ -513,10 +513,10 @@ void SetOrionMicOptions(bool MicRing, bool EnableBias, bool EnablePTT);
 
 
 //
-// SetBalancedMicInput(int Balanced)
+// SetBalancedMicInput(bool Balanced)
 // selects the balanced microphone input, not supported by current protocol code.
 //
-void SetBalancedMicInput(int Balanced);
+void SetBalancedMicInput(bool Balanced);
 
 
 //

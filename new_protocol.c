@@ -618,7 +618,7 @@ t_print("new_protocol_init: data_socket %d bound to interface %s:%d\n",data_sock
       // is is set before starting the timer thread sending the HP packet.
       running=1;
       new_protocol_thread_id = g_thread_new( "new protocol", new_protocol_thread, NULL);
-      g_print( "new_protocol_thread: id=%p\n",new_protocol_thread_id);
+      t_print( "new_protocol_thread: id=%p\n",new_protocol_thread_id);
     }
 
     new_protocol_general();
@@ -1276,6 +1276,9 @@ static void new_protocol_transmit_specific() {
     }
     if(mic_bias_enabled) {
       transmit_specific_buffer[50]|=0x10;
+    }
+    if(mic_input_xlr) {
+      transmit_specific_buffer[50]|=0x20;
     }
 
     // 0..31

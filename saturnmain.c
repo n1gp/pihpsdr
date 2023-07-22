@@ -242,7 +242,7 @@ void saturn_register_init()
     SetTXAmplitudeScaling(VCONSTTXAMPLSCALEFACTOR);
     SetTXEnable(true);
     EnableAlexManualFilterSelect(true);
-    SetBalancedMicInput(0);
+    SetBalancedMicInput(false);
 //RRK disable DDCs here?
 }
 
@@ -1397,6 +1397,7 @@ void saturn_handle_duc_specific(bool FromNetwork, unsigned char *UDPInBuffer)
     SetMicBoost((bool)((Byte >> 1)&1));
     SetMicLineInput((bool)(Byte&1));
     SetOrionMicOptions((bool)((Byte >> 3)&1), (bool)((Byte >> 4)&1), (bool)((~Byte >> 2)&1));
+    SetBalancedMicInput((bool)((Byte >> 5)&1));
     Byte = *(uint8_t*)(UDPInBuffer+51);                     // line in gain
     SetCodecLineInGain(Byte);
     return;

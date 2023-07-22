@@ -48,9 +48,6 @@
 #ifdef CLIENT_SERVER
 #include "client_server.h"
 #endif
-#ifdef SATURN
-#include "saturnregisters.h"
-#endif
 
 static GtkWidget *dialog=NULL;
 
@@ -278,7 +275,6 @@ static void filter_cb(GtkWidget *widget, gpointer data) {
   load_filters();
 }
 
-#ifdef SATURN
 static void mic_input_cb(GtkWidget *widget, gpointer data) {
   int val = gtk_combo_box_get_active (GTK_COMBO_BOX(widget));
   switch (val) {
@@ -290,9 +286,7 @@ static void mic_input_cb(GtkWidget *widget, gpointer data) {
     mic_input_xlr=MICXLR;
     break;
   }
-  SetBalancedMicInput(mic_input_xlr);
 }
-#endif
 
 static void sample_rate_cb(GtkToggleButton *widget, gpointer data) {
   char *p = gtk_combo_box_text_get_active_text(GTK_COMBO_BOX_TEXT(widget));
@@ -718,7 +712,6 @@ void radio_menu(GtkWidget *parent) {
       g_signal_connect(ptt_tip_b,"toggled",G_CALLBACK(ptt_tip_cb),NULL);
       row++;
 
-#ifdef SATURN
       if(device==NEW_DEVICE_SATURN) {
         GtkWidget *mic_input_label=gtk_label_new(NULL);
         gtk_label_set_markup(GTK_LABEL(mic_input_label), "<b>Mic Input:</b>");
@@ -739,7 +732,6 @@ void radio_menu(GtkWidget *parent) {
         my_combo_attach(GTK_GRID(grid), mic_input_combo, col+1, row+1, 2, 1);
         g_signal_connect(mic_input_combo,"changed",G_CALLBACK(mic_input_cb),NULL);
       }
-#endif
 
       GtkWidget *ptt_b=gtk_check_button_new_with_label("PTT Enabled");
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ptt_b), mic_ptt_enabled);
