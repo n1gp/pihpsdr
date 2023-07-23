@@ -1078,10 +1078,10 @@ void start_radio() {
     case ORIGINAL_PROTOCOL:
     case NEW_PROTOCOL:
       if(have_saturn_xdma) {
-        sprintf(text,"piHPSDR: %s (%s %s) on %s",
+        sprintf(text,"piHPSDR: %s (%s v%d) on %s",
                    radio->name,
                    p,
-                   version,
+                   radio->software_version,
                    iface);
       } else {
         sprintf(text,"piHPSDR: %s (%s %s) %s (%s) on %s",
