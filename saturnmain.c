@@ -1366,7 +1366,7 @@ void saturn_handle_duc_specific(bool FromNetwork, unsigned char *UDPInBuffer)
     //t_print("DUC specific %sbuffer received\n", (FromNetwork)?"network ":"");
     if(FromNetwork)
     {
-      if(TXActive == 1) return;
+      if(TXActive == 1 || !client_enable_tx) return;
     }
     else
     {
