@@ -1142,7 +1142,7 @@ void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer)
       TXActive = (IsTXMode)?1:0;
     }
 
-    SetMOX(IsTXMode && (client_enable_tx && FromNetwork));
+    SetMOX((bool)TXActive);
     //
     // DUC frequency & drive level
     //
