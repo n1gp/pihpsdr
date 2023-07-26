@@ -52,7 +52,7 @@ static void cleanup() {
   }
 }
 
-static gboolean default_cb (GtkWidget *widget, gpointer data) {
+static gboolean default_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   int mode=vfo[active_receiver->id].mode;
   int f=GPOINTER_TO_INT(data);
   int low, high;
@@ -79,7 +79,8 @@ static gboolean default_cb (GtkWidget *widget, gpointer data) {
   }
 
   //
-  // Determine value(s) for spin button(s)
+  // Determine value(s) for spin button(s), this also emits a signal
+  // that calls the spin button callbacks.
   //
   if (mode == modeCWL || mode == modeCWU) {
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(spinlow),(double)(high-low));
@@ -106,7 +107,7 @@ int filter_select(void *data) {
   return 0;
 }
 
-static gboolean filter_select_cb (GtkWidget *widget, gpointer        data) {
+static gboolean filter_select_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   filter_select(data);
   set_button_text_color(last_filter,"default");
   last_filter=widget;
@@ -114,7 +115,7 @@ static gboolean filter_select_cb (GtkWidget *widget, gpointer        data) {
   return FALSE;
 }
 
-static gboolean deviation_select_cb (GtkWidget *widget, gpointer data) {
+static gboolean deviation_select_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   active_receiver->deviation=GPOINTER_TO_UINT(data);
   transmitter->deviation=GPOINTER_TO_UINT(data);
   set_filter(active_receiver);
@@ -143,8 +144,13 @@ static void var_spin_low_cb (GtkWidget *widget, gpointer data) {
     filter->low = val;
   }
   t_print("%s: new values=(%d:%d)\n", __FUNCTION__,filter->low,filter->high);
-  if(f==vfo[id].filter) {
-    vfo_filter_changed(f);
+  //
+  // Change all receivers that use *this* variable filter
+  //
+  for (int i=0; i<receivers; i++) {
+    if (vfo[i].filter == f) {
+      receiver_filter_changed(receiver[i]);
+    }
   }
 }
 
@@ -157,8 +163,13 @@ static void var_spin_high_cb (GtkWidget *widget, gpointer data) {
 
   filter->high=gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
   t_print("%s: new values=(%d:%d)\n", __FUNCTION__,filter->low,filter->high);
-  if(f==vfo[id].filter) {
-    vfo_filter_changed(f);
+  //
+  // Change all receivers that use *this* variable filter
+  //
+  for (int i=0; i<receivers; i++) {
+    if (vfo[i].filter == f) {
+      receiver_filter_changed(receiver[i]);
+    }
   }
 }
 
@@ -183,7 +194,7 @@ void filter_menu(GtkWidget *parent) {
   gtk_grid_set_row_spacing (GTK_GRID(grid),5);
 
   GtkWidget *close_b=gtk_button_new_with_label("Close");
-  g_signal_connect (close_b, "pressed", G_CALLBACK(close_cb), NULL);
+  g_signal_connect (close_b, "button-press-event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid),close_b,0,0,1,1);
 
   FILTER* band_filters=filters[vfo[active_receiver->id].mode];
@@ -201,7 +212,7 @@ void filter_menu(GtkWidget *parent) {
       } else {
         set_button_text_color(b,"default");
       }
-      g_signal_connect(b,"pressed",G_CALLBACK(deviation_select_cb),(gpointer)(long)2500);
+      g_signal_connect(b,"button-press-event",G_CALLBACK(deviation_select_cb),(gpointer)(long)2500);
       gtk_grid_attach(GTK_GRID(grid),b,1,1,1,1);
 
       b=gtk_button_new_with_label("5.0K");
@@ -211,7 +222,7 @@ void filter_menu(GtkWidget *parent) {
       } else {
         set_button_text_color(b,"default");
       }
-      g_signal_connect(b,"pressed",G_CALLBACK(deviation_select_cb),(gpointer)(long)5000);
+      g_signal_connect(b,"button-press-event",G_CALLBACK(deviation_select_cb),(gpointer)(long)5000);
       gtk_grid_attach(GTK_GRID(grid),b,2,1,1,1);
       }
       break;
@@ -226,7 +237,7 @@ void filter_menu(GtkWidget *parent) {
           set_button_text_color(b,"default");
         }
         gtk_grid_attach(GTK_GRID(grid),b,i%5,1+(i/5),1,1);
-        g_signal_connect(b,"pressed",G_CALLBACK(filter_select_cb),(gpointer)(long)i);
+        g_signal_connect(b,"button-press-event",G_CALLBACK(filter_select_cb),(gpointer)(long)i);
       }
 
       // last 2 are var1 and var2
@@ -242,7 +253,7 @@ void filter_menu(GtkWidget *parent) {
         set_button_text_color(b,"default");
       }
       gtk_grid_attach(GTK_GRID(grid),b,col,row,1,1);
-      g_signal_connect(b,"pressed",G_CALLBACK(filter_select_cb),(gpointer)(long)i);
+      g_signal_connect(b,"button-press-event",G_CALLBACK(filter_select_cb),(gpointer)(long)i);
 
       col++;
       //
@@ -269,7 +280,7 @@ void filter_menu(GtkWidget *parent) {
       }
 
       GtkWidget *var1_default_b=gtk_button_new_with_label("Default");
-      g_signal_connect (var1_default_b, "pressed", G_CALLBACK(default_cb), GINT_TO_POINTER(i));
+      g_signal_connect (var1_default_b, "button-press-event", G_CALLBACK(default_cb), GINT_TO_POINTER(i));
       gtk_grid_attach(GTK_GRID(grid),var1_default_b,col,row,1,1);
 
 
@@ -285,7 +296,7 @@ void filter_menu(GtkWidget *parent) {
         set_button_text_color(b,"default");
       }
       gtk_grid_attach(GTK_GRID(grid),b,col,row,1,1);
-      g_signal_connect(b,"pressed",G_CALLBACK(filter_select_cb),(gpointer)(long)i);
+      g_signal_connect(b,"button-press-event",G_CALLBACK(filter_select_cb),(gpointer)(long)i);
       col++;
 
       var2_spin_low=gtk_spin_button_new_with_range(-8000.0,+8000.0,1.0);
@@ -310,7 +321,7 @@ void filter_menu(GtkWidget *parent) {
       }
 
       GtkWidget *var2_default_b=gtk_button_new_with_label("Default");
-      g_signal_connect (var2_default_b, "pressed", G_CALLBACK(default_cb), GINT_TO_POINTER(i));
+      g_signal_connect (var2_default_b, "button-press-event", G_CALLBACK(default_cb), GINT_TO_POINTER(i));
       gtk_grid_attach(GTK_GRID(grid),var2_default_b,col,row,1,1);
 
       break;

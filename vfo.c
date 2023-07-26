@@ -548,8 +548,19 @@ void vfo_filter_changed(int f) {
   mode_settings[vfo[id].mode].filter = f;
 
   vfo[id].filter=f;
-  if (id < receivers) {
-    receiver_filter_changed(receiver[id]);
+  //
+  // If f is either Var1 or Var2, then the changed filter edges
+  // should also apply to the other receiver, if it is running.
+  // Otherwise the filter and rx settings do not coincide.
+  //
+  if (f == filterVar1 || f == filterVar2 ) {
+    for (int i=0; i<receivers; i++) {
+      receiver_filter_changed(receiver[i]);
+    }
+  } else {
+    if (id < receivers) {
+      receiver_filter_changed(receiver[id]);
+    }
   }
 
   g_idle_add(ext_vfo_update,NULL);
@@ -1283,7 +1294,7 @@ void vfo_update() {
           cairo_set_source_rgba(cr, COLOUR_SHADE);
         }
         cairo_set_font_size(cr, vfl->size1);
-        sprintf(temp_text,"Zoom x%d",active_receiver->zoom);
+        sprintf(temp_text,"Zoom:%d",active_receiver->zoom);
         cairo_show_text(cr, temp_text);
 
         if ((protocol == ORIGINAL_PROTOCOL || protocol == NEW_PROTOCOL) && can_transmit) {
@@ -1520,12 +1531,12 @@ vfo_press_event_cb (GtkWidget *widget,
                GdkEventButton *event,
                gpointer        data)
 {
-  int vfo;
+  int v;
   switch (event->button) {
     case GDK_BUTTON_PRIMARY:
-      vfo=VFO_A;
-      if (event->x >= vfo_layout->vfo_b_x) vfo=VFO_B;
-      g_idle_add(ext_start_vfo,GINT_TO_POINTER(vfo));
+      v=VFO_A;
+      if (event->x >= vfo_layout->vfo_b_x) v=VFO_B;
+      g_idle_add(ext_start_vfo,GINT_TO_POINTER(v));
       break;
     case GDK_BUTTON_SECONDARY:
       // do not discriminate between A and B

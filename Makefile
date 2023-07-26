@@ -50,6 +50,12 @@ ANDROMEDA_OPTIONS=-D ANDROMEDA
 
 CFLAGS?= -O3 -Wno-deprecated-declarations -Wall
 LINK?=   $(CC)
+#
+# The "official" way to compile+link with pthreads is now to use the -pthread option
+# *both* for the compile and the link step.
+#
+CFLAGS+=-pthread
+LINK+=-pthread
 
 PKG_CONFIG = pkg-config
 
@@ -261,7 +267,7 @@ endif
 #
 # All the command-line options to compile the *.c files
 #
-OPTIONS=$(SMALL_SCREEN_OPTIONS) $(MIDI_OPTIONS) $(USBOZY_OPTIONS) \
+OPTIONS=$(MIDI_OPTIONS) $(USBOZY_OPTIONS) \
 	$(GPIO_OPTIONS) $(SOAPYSDR_OPTIONS) \
 	$(ANDROMEDA_OPTIONS) \
 	$(SATURN_OPTIONS) \
@@ -277,10 +283,10 @@ COMPILE=$(CC) $(CFLAGS) $(OPTIONS) $(INCLUDES)
 	$(COMPILE) -c -o $@ $<
 
 #
-# All the libraries we need to link with, including WDSP, libpthread, and libm
+# All the libraries we need to link with (including WDSP, libm, $(SYSLIBS))
 #
 LIBS=	$(LDFLAGS) $(AUDIO_LIBS) $(USBOZY_LIBS) $(GTKLIBS) $(GPIO_LIBS) $(SOAPYSDRLIBS) $(STEMLAB_LIBS) \
-	$(MIDI_LIBS) -lwdsp -lpthread -lm $(SYSLIBS)
+	$(MIDI_LIBS) -lwdsp -lm $(SYSLIBS)
 
 #
 # The main target, the pihpsdr program
@@ -551,10 +557,8 @@ prebuild:
 #
 # "make check" invokes the cppcheck program to do a source-code checking.
 #
-# On some platforms, INCLUDES contains "-pthread"  (from a pkg-config output)
-# which is not a valid cppcheck option
-# Therefore, correct this here. Furthermore, we can add additional options to cppcheck
-# in the variable CPPOPTIONS
+# The "-pthread" compiler option is not valid for cppcheck and must be filtered out.
+# Furthermore, we can add additional options to cppcheck in the variable CPPOPTIONS
 #
 # Normally cppcheck complains about variables that could be declared "const".
 # Suppress this warning for callback functions because adding "const" would need
@@ -629,13 +633,13 @@ controller2v2: clean $(PROGRAM)
 #############################################################################
 
 hpsdrsim.o:     hpsdrsim.c  hpsdrsim.h
-	$(CC) -c -O hpsdrsim.c
+	$(CC) -c $(CFLAGS) hpsdrsim.c
 	
 newhpsdrsim.o:	newhpsdrsim.c hpsdrsim.h
-	$(CC) -c -O newhpsdrsim.c
+	$(CC) -c $(CFLAGS) newhpsdrsim.c
 
 hpsdrsim:       hpsdrsim.o newhpsdrsim.o
-	$(LINK) -o hpsdrsim hpsdrsim.o newhpsdrsim.o -lm -lpthread
+	$(LINK) -o hpsdrsim hpsdrsim.o newhpsdrsim.o -lm
 
 #############################################################################
 #

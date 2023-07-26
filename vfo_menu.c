@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <locale.h>
+
 #include <wdsp.h>
 
 #include "new_menu.h"
@@ -89,7 +90,7 @@ static void squelch_enable_cb(GtkWidget *widget, gpointer data) {
   setSquelch(active_receiver);
 }
 
-static gboolean num_pad_cb(GtkWidget *widget, gpointer data) {
+static gboolean num_pad_cb(GtkWidget *widget, GdkEventButton *event, gpointer data) {
   int val = GPOINTER_TO_INT(data);
   char output[64];
   num_pad(btn_actions[val],v);
@@ -125,6 +126,7 @@ static void vfo_cb(GtkComboBox *widget,gpointer data) {
 static void enable_ps_cb(GtkWidget *widget, gpointer data) {
   tx_set_ps(transmitter,gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget)));
 }
+
 static void ctun_cb(GtkWidget *widget, gpointer data) {
   int state=gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
   vfo_ctun_update(v,state);
@@ -136,6 +138,8 @@ static void split_cb(GtkWidget *widget, gpointer data) {
   radio_set_split(state);
   g_idle_add(ext_vfo_update, NULL);
 }
+
+
 
 static void set_btn_state() {
   int i;
@@ -173,7 +177,7 @@ void vfo_menu(GtkWidget *parent,int id) {
   gtk_grid_set_row_spacing (GTK_GRID(grid),4);
 
   GtkWidget *close_b=gtk_button_new_with_label("Close");
-  g_signal_connect (close_b, "pressed", G_CALLBACK(close_cb), NULL);
+  g_signal_connect (close_b, "button-press-event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid),close_b,0,0,2,1);
 
   GtkWidget *lock_b=gtk_check_button_new_with_label("Lock VFOs");
@@ -191,7 +195,7 @@ void vfo_menu(GtkWidget *parent,int id) {
     set_button_text_color(btn[i],"default");
     gtk_widget_show(btn[i]);
     gtk_grid_attach(GTK_GRID(grid),btn[i],i%3,2+(i/3),1,1);
-    g_signal_connect(btn[i],"pressed",G_CALLBACK(num_pad_cb),GINT_TO_POINTER(i));
+    g_signal_connect(btn[i],"button-press-event",G_CALLBACK(num_pad_cb),GINT_TO_POINTER(i));
   }
   set_btn_state();
 
@@ -262,6 +266,7 @@ void vfo_menu(GtkWidget *parent,int id) {
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (split_b), split);
   gtk_grid_attach(GTK_GRID(grid),split_b,3,row,2,1);
   g_signal_connect(split_b,"toggled",G_CALLBACK(split_cb),NULL);
+
   gtk_container_add(GTK_CONTAINER(content),grid);
 
   sub_menu=dialog;
@@ -280,7 +285,6 @@ void num_pad(int action, int id) {
   long long fl;
 
   struct lconv *locale=localeconv();
-
   char *buffer=vfo[id].entered_frequency;
   int len=strlen(buffer);
 

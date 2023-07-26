@@ -69,6 +69,8 @@ char *ipaddr_radio = &ipaddr_buf[0];
 
 int discover_only_stemlab=0;
 
+int delayed_discovery(gpointer data);
+
 #ifdef CLIENT_SERVER
 GtkWidget *host_addr_entry;
 static char host_addr_buffer[128]="g0orx.ddns.net";
@@ -104,7 +106,7 @@ static gboolean start_cb (GtkWidget *widget, GdkEventButton *event, gpointer dat
     discover_only_stemlab=1;
     gtk_widget_destroy(discovery_dialog);
     status_text("Wait for STEMlab app\n");
-    g_timeout_add(2000,ext_discovery, NULL);
+    g_timeout_add(2000,delayed_discovery, NULL);
     return TRUE;
   }
 #endif
@@ -138,7 +140,7 @@ static void gpio_changed_cb(GtkWidget *widget, gpointer data) {
 
 static gboolean discover_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   gtk_widget_destroy(discovery_dialog);
-  g_idle_add(ext_discovery,NULL);
+  g_timeout_add(100,delayed_discovery,NULL);
   return TRUE;
 }
 
@@ -346,11 +348,9 @@ t_print("%p Protocol=%d name=%s\n",d,d->protocol,d->name);
           case NEW_PROTOCOL:
             if(d->device==DEVICE_OZY) {
               snprintf(text,sizeof(text),"%s (%s) on USB /dev/ozy", d->name, d->protocol==ORIGINAL_PROTOCOL?"Protocol 1":"Protocol 2");
-#ifdef SATURN
             } else if(d->device==NEW_DEVICE_SATURN && strcmp(d->info.network.interface_name,"XDMA")==0) {
               snprintf(text,sizeof(text),"%s (%s v%d) fpga:%x (%s) on /dev/xdma*", d->name,
                 d->protocol==ORIGINAL_PROTOCOL?"Protocol 1":"Protocol 2", d->software_version, d->fpga_version, macStr);
-#endif
             } else {
               snprintf(text,sizeof(text),"%s (%s %s) %s (%s) on %s: ",
                             d->name,
@@ -565,3 +565,10 @@ t_print("showing device dialog\n");
 }
 
 
+//
+// Execute discovery() through g_timeout_add()
+//
+int delayed_discovery(gpointer data) {
+  discovery();
+  return G_SOURCE_REMOVE;
+}

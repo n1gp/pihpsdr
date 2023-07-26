@@ -189,7 +189,10 @@ static int init(void *data) {
       status_text(text);
   }
 
-  g_idle_add(ext_discovery,NULL);
+  //
+  // When widsom plans are complete, start discovery process
+  //
+  g_timeout_add(100,delayed_discovery,NULL);
   return 0;
 }
 
@@ -218,10 +221,10 @@ static void activate_pihpsdr(GtkApplication *app, gpointer data) {
 
   screen_width=gdk_screen_get_width(screen);
   screen_height=gdk_screen_get_height(screen);
-  t_print("Screen: width=%d height=%d\n", display_width, display_height);
+  t_print("Screen: width=%d height=%d\n", screen_width, screen_height);
+
   display_width=gdk_screen_get_width(screen);
   display_height=gdk_screen_get_height(screen);
-
 
   // Go to "window" mode if there is enough space on the screen.
   // Do not forget extra space needed for window top bars, screen bars etc.
@@ -244,8 +247,7 @@ static void activate_pihpsdr(GtkApplication *app, gpointer data) {
     }
     full_screen=1;
   }
-
-t_print("display_width=%d display_height=%d\n", display_width, display_height);
+  t_print("display_width=%d display_height=%d\n", display_width, display_height);
 
   t_print("create top level window\n");
   top_window = gtk_application_window_new (app);
