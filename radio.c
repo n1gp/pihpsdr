@@ -888,6 +888,9 @@ void start_radio() {
   protocol=radio->protocol;
   device=radio->device;
 
+  if (device == NEW_DEVICE_SATURN && (strcmp(radio->info.network.interface_name,"XDMA")==0))
+    have_saturn_xdma=1;
+
   if (device == DEVICE_METIS || device == DEVICE_OZY || device == NEW_DEVICE_ATLAS) {
     //
     // by default, assume there is a penelope board (no PennyLane)

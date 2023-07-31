@@ -592,11 +592,12 @@ void SetRXDDCEnabled(bool IsEnabled);
 
 
 //
-// EnableCW (bool Enabled)
-// enables or disables CW mode. If enabled, the key input engages TX automatically
+// EnableCW (bool Enabled, bool Breakin)
+// enables or disables CW mode; selects CW as modulation source.
+// If Breakin enabled, the key input engages TX automatically
 // and generates sidetone.
 //
-void EnableCW (bool Enabled);
+void EnableCW (bool Enabled, bool Breakin);
 
 
 //
@@ -799,6 +800,12 @@ bool GetKeyerDashInput(void);
 //
 bool GetKeyerDotInput(void);
 
+//
+// GetCWKeyDown(void)
+// return true if keyer has initiated TX.
+// depends on the status register having been read before this is called!
+//
+bool GetCWKeyDown(void);
 
 
 //

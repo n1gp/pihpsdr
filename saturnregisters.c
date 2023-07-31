@@ -125,6 +125,8 @@ bool GCWXDot;                                       // True if computer generate
 bool GCWXDash;                                      // True if computer generated CW Dash.
 bool GDashPressed;                                  // P2. True if dash input pressed.
 bool GDotPressed;                                   // P2. true if dot input pressed.
+bool GCWEnabled;                                    // true if CW mode
+bool GBreakinEnabled;                               // true if break-in is enabled
 unsigned int GUserOutputBits;                       // P2. Not yet implermented.
 unsigned int GTXAmplScaleFactor;                    // values multipled into TX output after DUC
 bool GTXAlwaysEnabled;                              // true if TX samples always enabled (for test)
@@ -234,13 +236,14 @@ uint32_t DDCRegisters[VNUMDDC] =
 #define VPTTIN2BIT 1                    // not currently used
 #define VKEYINA 2                       // dot key
 #define VKEYINB 3                       // dash key
-#define VPLLLOCKED 4
 #define VUSERIO4 4
 #define VUSERIO5 5
 #define VUSERIO6 8
 #define VUSERIO8 7
 #define V13_8VDETECTBIT 8
 #define VATUTUNECOMPLETEBIT 9
+#define VPLLLOCKED 10
+#define VCWKEYDOWN 11                   // keyer output
 #define VEXTTXENABLEBIT 31
 
 
@@ -316,9 +319,6 @@ void InitialiseDACAttenROMs(void)
 }
 
 
-
-
-
 //
 // SetByteSwapping(bool)
 // set whether byte swapping is enabled. True if yes, to get data in network byte order.
@@ -340,11 +340,32 @@ void SetByteSwapping(bool IsSwapped)
     sem_post(&RFGPIOMutex);                         // clear protection
 }
 
+//
+// internal function to set the keyer on or off
+// needed because keyer setting can change by message, of by TX operation
+//
+void ActivateCWKeyer(bool Keyer)
+{
+    uint32_t Register;
+    Register = GCWKeyerSetup;                           // get current settings
+    if(Keyer)
+        Register |= (1<<VCWKEYERENABLE);
+    else
+        Register &= ~(1<<VCWKEYERENABLE);
+    if(Register != GCWKeyerSetup)                       // write back if different
+    {
+        GCWKeyerSetup = Register;                       // store it back
+        RegisterWrite(VADDRKEYERCONFIGREG, Register);   // and write to it
+    }
+
+}
+
 
 //
 // SetMOX(bool Mox)
 // sets or clears TX state
 // set or clear the relevant bit in GPIO
+// and enable keyer if CW
 //
 void SetMOX(bool Mox)
 {
@@ -359,6 +380,14 @@ void SetMOX(bool Mox)
         Register &= ~(1 << VMOXBIT);
     GPIORegValue = Register;                        // store it back
     RegisterWrite(VADDRRFGPIOREG, Register);        // and write to it
+    //
+    // now set CW keyer if required
+    //
+    if (Mox)
+        ActivateCWKeyer(GCWEnabled);
+    else            // disable keyer unless CW & breakin
+        ActivateCWKeyer(GCWEnabled && GBreakinEnabled);
+
     sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
@@ -1439,31 +1468,25 @@ void InitialiseCWKeyerRamp(bool Protocol2, uint32_t Length_us)
 
 
 //
-// EnableCW (bool Enabled)
-// enables or disables CW mode. If enabled, the key input engages TX automatically
+// EnableCW (bool Enabled, bool Breakin)
+// enables or disables CW mode; selects CW as modulation source.
+// If Breakin enabled, the key input engages TX automatically
 // and generates sidetone.
 //
-void EnableCW (bool Enabled)
+void EnableCW (bool Enabled, bool Breakin)
 {
-    uint32_t Register;
+    //
+    // set I/Q modulation source if CW selected 
+    //
+    GCWEnabled = Enabled;
+    if(Enabled)
+        SetTXModulationSource(eCWKeyer);                // CW source
+    else
+        SetTXModulationSource(eIQData);                 // else IQ source
 
-    Register = GCWKeyerSetup;                    // get current settings
-    if(Enabled)
-        Register |= (1<<VCWKEYERENABLE);
-    else
-        Register &= ~(1<<VCWKEYERENABLE);
-    if(Register != GCWKeyerSetup)                    // write back if different
-    {
-        GCWKeyerSetup = Register;                    // store it back
-        RegisterWrite(VADDRKEYERCONFIGREG, Register);  // and write to it
-    }
-    //
-    // now set I/Q modulation source
-    //
-    if(Enabled)
-        SetTXModulationSource(eCWKeyer);                                  // CW source
-    else
-        SetTXModulationSource(eIQData);                                   // else IQ source
+    // now set keyer enable if CW and break-in
+    GBreakinEnabled = Breakin;
+    ActivateCWKeyer(GBreakinEnabled && GCWEnabled);
 }
 
 
@@ -1858,14 +1881,28 @@ bool GetKeyerDotInput(void)
     return Result;
 }
 
+//
+// GetCWKeyDown(void)
+// return true if keyer has initiated TX.
+// depends on the status register having been read before this is called!
+//
+bool GetCWKeyDown(void)
+{
+    bool Result = false;
+    Result = (bool)((GStatusRegister >> VCWKEYDOWN) & 1);                       // get PTT bit
+
+    return Result;
+}
+
 
 //
 // GetP2PTTKeyInputs(void)
 // return several bits from Saturn status register:
-// bit 0 - true if PTT active
+// bit 0 - true if PTT active or CW keyer active
 // bit 1 - true if CW dot input active
-// bit 2 - true if CW dash input active
+// bit 2 - true if CW dash input active or IO8 active
 // bit 4 - true if 10MHz to 122MHz PLL is locked
+// note that PTT declared if PTT pressed, or CW key is pressed.
 //
 unsigned int GetP2PTTKeyInputs(void)
 {
@@ -1874,12 +1911,18 @@ unsigned int GetP2PTTKeyInputs(void)
     // ReadStatusRegister();
     if (GStatusRegister & 1)
         Result |= 1;                                                        // set PTT output bit
+    if ((GStatusRegister >> VCWKEYDOWN) & 1)
+        Result |= 1;                                                        // set PTT output bit if keyer PTT active
     if ((GStatusRegister >> VKEYINA) & 1)
         Result |= 2;                                                        // set dot output bit
     if ((GStatusRegister >> VKEYINB) & 1)
         Result |= 4;                                                        // set dash output bit
+    if ((GStatusRegister >> VUSERIO8) & 1)
+        Result |= 4;                                                        // set dash output bit if IO8 active
     if ((GStatusRegister >> VPLLLOCKED) & 1)
-        Result |= 16;                                                        // set PLL output bit
+         Result |= 16;                                                      // set PLL output bit
+    if ((GStatusRegister >> VCWKEYDOWN) & 1)
+        Result |= 1;                                                        // set PTT if keyer asserted TX
     return Result;
 }
 

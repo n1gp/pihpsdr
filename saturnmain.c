@@ -240,7 +240,6 @@ void saturn_register_init()
     SetByteSwapping(true);                                            // h/w to generate NOT network byte order
     SetSpkrMute(false);
     SetTXAmplitudeScaling(VCONSTTXAMPLSCALEFACTOR);
-    SetTXEnable(true);
     EnableAlexManualFilterSelect(true);
     SetBalancedMicInput(false);
 //RRK disable DDCs here?
@@ -488,6 +487,8 @@ void saturn_exit()
     t_print("%s: Exiting\n", __FUNCTION__);
     Exiting = true;
     SDRActive = false;
+    SetTXEnable(false);
+    EnableCW(false, false);
     ServerActive = false;
     sem_destroy(&DDCInSelMutex);
     sem_destroy(&DDCResetFIFOMutex);
@@ -555,10 +556,12 @@ static gpointer saturn_high_priority_thread(gpointer arg)
         //
         while(SDRActive)                               // main loop
         {
+            uint8_t SleepCount;                                       // counter for sending next message
+            uint8_t PTTBits;                                          // PTT bits - and change means a new message needed
             mybuffer *mybuf = get_my_buffer(HPMYBUF);
             ReadStatusRegister();
-            Byte = (uint8_t)GetP2PTTKeyInputs();
-            *(uint8_t *)(UDPBuffer+4) = *(uint8_t *)(mybuf->buffer+4) = Byte;
+            PTTBits = (uint8_t)GetP2PTTKeyInputs();
+            *(uint8_t *)(UDPBuffer+4) = *(uint8_t *)(mybuf->buffer+4) = PTTBits;
             Byte = (uint8_t)GetADCOverflow();
             *(uint8_t *)(UDPBuffer+5) = *(uint8_t *)(mybuf->buffer+5) = Byte;
             Byte = (uint8_t)GetUserIOBits();                                              // user I/O bits
@@ -603,11 +606,19 @@ static gpointer saturn_high_priority_thread(gpointer arg)
             }
             else
               SequenceCounter2 = 0;
-
-            if(MOXAsserted)
-                usleep(1000);
-            else
-                usleep(200000);                                    // 200ms gap between messages to match Orion
+            //
+            // now we need to sleep for 1ms (in TX) or 200ms (nit in TX)
+            // BUT if any of the PTT or key inputs change, send a message immediately
+            // so break up the 200ms period with smaller sleeps
+            //
+            SleepCount = (MOXAsserted)? 2: 400;
+            while (SleepCount-- > 0)
+            {
+              ReadStatusRegister();
+              if ((uint8_t)GetP2PTTKeyInputs() != PTTBits)
+                break;
+              usleep(500);
+            }
         }
     }
     t_print("ending: %s\n", __FUNCTION__);
@@ -1135,7 +1146,17 @@ void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer)
     }
     else
     {
-      SDRActive = (RunBit) ? true : false;
+      if (RunBit)
+      {
+        SDRActive = true;
+        SetTXEnable(true);
+      }
+      else
+      {
+        SDRActive = false;
+        SetTXEnable(false);
+        EnableCW(false, false);
+      }
 
       if(TXActive == 2) return;
 
@@ -1174,8 +1195,8 @@ void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer)
     //
     Byte2 = (uint8_t)(UDPInBuffer[1442]);     // RX2 atten
     Byte = (uint8_t)(UDPInBuffer[1443]);      // RX1 atten
-    SetADCAttenuator(eADC1, Byte, true, true);
-    SetADCAttenuator(eADC2, Byte2, true, true);
+    SetADCAttenuator(eADC1, Byte, true, false);
+    SetADCAttenuator(eADC2, Byte2, true, false);
     //
     // CWX bits
     //
@@ -1381,7 +1402,7 @@ void saturn_handle_duc_specific(bool FromNetwork, unsigned char *UDPInBuffer)
                      (bool)((Byte >> 6)&1), (bool)((Byte >> 3)&1), (bool)((Byte >> 7)&1));
 // general CW settings
     SetCWSidetoneEnabled((bool)((Byte >> 4)&1));
-    EnableCW((bool)((Byte >> 1)&1));                        // CW enabled bit
+    EnableCW((bool)((Byte >> 1)&1), (bool)((Byte >> 7)&1)); // CW enabled bit, breakin bit
     SidetoneVolume = *(uint8_t*)(UDPInBuffer+6);            // keyer speed
     SidetoneFreq = *(uint16_t*)(UDPInBuffer+7);             // get frequency
     SidetoneFreq = ntohs(SidetoneFreq);                     // convert from big endian
@@ -1400,5 +1421,9 @@ void saturn_handle_duc_specific(bool FromNetwork, unsigned char *UDPInBuffer)
     SetBalancedMicInput((bool)((Byte >> 5)&1));
     Byte = *(uint8_t*)(UDPInBuffer+51);                     // line in gain
     SetCodecLineInGain(Byte);
+    Byte = *(uint8_t*)(UDPInBuffer+58);                     // ADC1 att on TX
+    SetADCAttenuator(eADC2, Byte, false, true);
+    Byte = *(uint8_t*)(UDPInBuffer+59);                     // ADC1 att on TX
+    SetADCAttenuator(eADC1, Byte, false, true);
     return;
 }
