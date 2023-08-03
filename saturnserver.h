@@ -55,8 +55,7 @@
 //
 // a type to hold data for each incoming or outgoing data thread
 //
-struct ThreadSocketData
-{
+struct ThreadSocketData {
   uint32_t DDCid;                               // only relevant to DDC threads
   int Socketid;                                 // socket to access internet
   uint16_t Portid;                              // port to access
@@ -110,7 +109,7 @@ int MakeSocket(struct ThreadSocketData* Ptr, int DDCid);
 //
 // protocol 2 handler for General Packet to SDR
 // parameter is a pointer to the UDP message buffer.
-// copy port numbers to port table, 
+// copy port numbers to port table,
 // then create listener threads for incoming packets & senders foroutgoing
 //
 int HandleGeneralPacket(uint8_t *PacketBuffer);
@@ -164,7 +163,7 @@ void *IncomingDUCIQ(void *arg);                 // listener thread
 // enables amplitude restoration mode. Generates envelope output alongside I/Q samples.
 // NOTE hardware does not properly support this yet!
 // TX FIFO must be empty. Stop multiplexer; set bit; restart
-// 
+//
 void HandlerSetEERMode(bool EEREnabled);
 // END InDUCIQ.h
 

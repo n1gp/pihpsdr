@@ -48,7 +48,7 @@
 
 
 // Network buffers
-#define NET_BUFFER_SIZE 4096
+#define NET_BUFFER_SIZE 2048 // max length of a buffer from the radio
 
 /////////////////////////////////////////////////////////////////////////////
 //

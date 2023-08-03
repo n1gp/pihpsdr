@@ -73,7 +73,7 @@ int delayed_discovery(gpointer data);
 
 #ifdef CLIENT_SERVER
 GtkWidget *host_addr_entry;
-static char host_addr_buffer[128]="g0orx.ddns.net";
+  static char host_addr_buffer[128] = "";
 char *host_addr = &host_addr_buffer[0];
 GtkWidget *host_port_spinner;
 gint host_port=50000;  // default listening port
@@ -134,7 +134,7 @@ static gboolean gpio_cb (GtkWidget *widget, GdkEventButton *event, gpointer data
 static void gpio_changed_cb(GtkWidget *widget, gpointer data) {
   controller=gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
   gpio_set_defaults(controller);
-  gpio_save_state();
+  gpioSaveState();
 }
 #endif
 
@@ -171,8 +171,6 @@ static gboolean radio_ip_cb (GtkWidget *widget, GdkEventButton *event, gpointer 
     strncpy(ipaddr_radio, cp, IPADDR_LEN);
     ipaddr_radio[IPADDR_LEN-1]=0;
 
-    // The new value is written upon each key stroke, so what?
-    // t_print("New TCP addr = %s.\n", ipaddr_radio);
     FILE *fp = fopen("ip.addr", "w");
     if (fp) {
 	fprintf(fp,"%s\n",ipaddr_radio);
@@ -184,19 +182,20 @@ static gboolean radio_ip_cb (GtkWidget *widget, GdkEventButton *event, gpointer 
 #ifdef CLIENT_SERVER
 static gboolean connect_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   // connect to remote host running piHPSDR
+  char value[128];  // props file
   strncpy(host_addr, gtk_entry_get_text(GTK_ENTRY(host_addr_entry)), 30);
   host_port=gtk_spin_button_get_value(GTK_SPIN_BUTTON(host_port_spinner));
 t_print("connect_cb: %s:%d\n",host_addr,host_port);
-  setProperty("host",host_addr);
-  char temp[16];
-  snprintf(temp,sizeof(temp),"%d",host_port);
-  setProperty("port",temp);
+  clearProperties();
+  SetPropS0("host",   host_addr);
+  SetPropI0("port",   host_port);
   saveProperties("remote.props");
   if(radio_connect_remote(host_addr,host_port)==0) {
     gtk_widget_destroy(discovery_dialog);
   } else {
     // dialog box to display connection error
-    GtkWidget *dialog=gtk_dialog_new_with_buttons("Remote Connect",GTK_WINDOW(discovery_dialog),GTK_DIALOG_DESTROY_WITH_PARENT,"OK",GTK_RESPONSE_NONE,NULL);
+    GtkWidget *dialog = gtk_dialog_new_with_buttons("Remote Connect", GTK_WINDOW(discovery_dialog),
+                        GTK_DIALOG_DESTROY_WITH_PARENT, "OK", GTK_RESPONSE_NONE, NULL);
     GtkWidget *content_area=gtk_dialog_get_content_area(GTK_DIALOG(dialog));
     char message[128];
     snprintf(message,sizeof(message),"Connection failed to %s:%d",host_addr,host_port);
@@ -216,7 +215,7 @@ void discovery() {
   //
   optimize_for_touchscreen=1;
 
-  protocols_restore_state();
+  protocolsRestoreState();
 
   selected_device=0;
   devices=0;
@@ -230,7 +229,7 @@ void discovery() {
     // remove possible trailing newline char in ipaddr_radio
     int len=strnlen(ipaddr_radio,IPADDR_LEN);
     while (--len >= 0) {
-      if (ipaddr_radio[len] != '\n') break;
+      if (ipaddr_radio[len] != '\n') { break; }
       ipaddr_radio[len]=0;
     }
   }
@@ -240,8 +239,7 @@ void discovery() {
 //
   t_print("looking for USB based OZY devices\n");
 
-  if (ozy_discover() != 0)
-  {
+  if (ozy_discover() != 0) {
     discovered[devices].protocol = ORIGINAL_PROTOCOL;
     discovered[devices].device = DEVICE_OZY;
     discovered[devices].software_version = 10;              // we can't know yet so this isn't a real response
@@ -278,7 +276,7 @@ void discovery() {
   }
 #endif
 
-  if(enable_protocol_1) {
+  if (enable_protocol_1 || discover_only_stemlab) {
     if (discover_only_stemlab) {
       status_text("Stemlab ... Looking for SDR apps");
     } else {
@@ -368,7 +366,8 @@ t_print("%p Protocol=%d name=%s\n",d,d->protocol,d->name);
             break;
 
           case STEMLAB_PROTOCOL:
-            snprintf(text,sizeof(text),"Choose RedPitaya App from %s and re-discover: ",inet_ntoa(d->info.network.address.sin_addr));
+        snprintf(text, sizeof(text), "Choose RedPitaya App from %s and re-discover: ",
+                 inet_ntoa(d->info.network.address.sin_addr));
         }
 
         GtkWidget *label=gtk_label_new(text);
@@ -388,8 +387,7 @@ t_print("%p Protocol=%d name=%s\n",d,d->protocol,d->name);
           gtk_widget_set_sensitive(start_button, FALSE);
         }
 
-        if(d->device!=SOAPYSDR_USB_DEVICE)
-	{
+      if (d->device != SOAPYSDR_USB_DEVICE) {
 	  int can_connect = 0;
           //
 	  // We can connect if
@@ -397,11 +395,13 @@ t_print("%p Protocol=%d name=%s\n",d,d->protocol,d->name);
 	  //  b) we have a "routed" (TCP or UDP) connection to the radio
 	  //  c) radio and network address are in the same subnet
           //
-          if (!strncmp(inet_ntoa(d->info.network.address.sin_addr),"169.254.",8)) can_connect=1;
-          if (!strncmp(inet_ntoa(d->info.network.interface_address.sin_addr),"169.254.",8)) can_connect=1;
-	  if (d->use_routing) can_connect=1;
+        if (!strncmp(inet_ntoa(d->info.network.address.sin_addr), "169.254.", 8)) { can_connect = 1; }
+
+        if (!strncmp(inet_ntoa(d->info.network.interface_address.sin_addr), "169.254.", 8)) { can_connect = 1; }
+
+        if (d->use_routing) { can_connect = 1; }
           if((d->info.network.interface_address.sin_addr.s_addr&d->info.network.interface_netmask.sin_addr.s_addr) ==
-             (d->info.network.address.sin_addr.s_addr&d->info.network.interface_netmask.sin_addr.s_addr)) can_connect=1;
+            (d->info.network.address.sin_addr.s_addr & d->info.network.interface_netmask.sin_addr.s_addr)) { can_connect = 1; }
 
 	  if (!can_connect) {
               gtk_button_set_label(GTK_BUTTON(start_button),"Subnet!");
@@ -457,10 +457,8 @@ t_print("%p Protocol=%d name=%s\n",d,d->protocol,d->name);
 
     loadProperties("remote.props");
     char *value;
-    value=getProperty("host");
-    if(value!=NULL) strcpy(host_addr_buffer,value);
-    value=getProperty("port");
-    if(value!=NULL) host_port=atoi(value);
+  GetPropS0("host",   host_addr_buffer);
+  GetPropI0("port",   host_port);
 
     GtkWidget *connect_b=gtk_button_new_with_label("Connect to Server");
     g_signal_connect (connect_b, "button-press-event", G_CALLBACK(connect_cb), NULL);
@@ -486,7 +484,7 @@ t_print("%p Protocol=%d name=%s\n",d,d->protocol,d->name);
 
 #ifdef GPIO
     controller=NO_CONTROLLER;
-    gpio_restore_state();
+  gpioRestoreState();
     gpio_set_defaults(controller);
 
     GtkWidget *gpio=gtk_combo_box_text_new();
@@ -559,7 +557,7 @@ t_print("showing device dialog\n");
     if(devices==1 && autostart) {
         d=&discovered[0];
 	if(d->status==STATE_AVAILABLE) {
-          if(start_cb(NULL,NULL,(gpointer)d)) return;
+      if (start_cb(NULL, NULL, (gpointer)d)) { return; }
 	}
     }
 }

@@ -198,7 +198,7 @@ sem_t *apple_sem(int initial_value) {
     // This can happen if a semaphore of that name is already in use,
     // for example by another SDR program running on the same machine
     //
-    if (sem == SEM_FAILED && errno == EEXIST) continue;
+    if (sem == SEM_FAILED && errno == EEXIST) { continue; }
     break;
   }
   if (sem == SEM_FAILED) {
@@ -353,11 +353,15 @@ void update_action_table() {
   int newdev=(device==NEW_DEVICE_ANGELIA || device==NEW_DEVICE_ORION ||
               device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN);
 
-  if (duplex && xmit)			flag +=10000;
-  if (newdev)				flag +=1000;
-  if (xmit)				flag +=100;
-  if (transmitter->puresignal && xmit)	flag +=10;
-  if (diversity_enabled && !xmit)	flag +=1;
+  if (duplex && xmit) { flag += 10000; }
+
+  if (newdev) { flag += 1000; }
+
+  if (xmit) { flag += 100; }
+
+  if (transmitter->puresignal && xmit) { flag += 10; }
+
+  if (diversity_enabled && !xmit) { flag += 1; }
 
   // Note that the PureSignal and DUPLEX flags are only set in the TX cases, since they
   // make no difference upon RXing
@@ -436,8 +440,8 @@ void new_protocol_init(int pixels) {
       t_print("%s: MAX_DDC=%d exceeds allowed range\n", __FUNCTION__,MAX_DDC);
       exit(-1);
     }
-    t_print("new_protocol_init: MIC_SAMPLES=%d\n",MIC_SAMPLES);
 
+  t_print("new_protocol_init: MIC_SAMPLES=%d\n", MIC_SAMPLES);
     memset(rxcase      , 0, sizeof(rxcase));
     memset(rxid        , 0, sizeof(rxid));
     memset(ddc_sequence, 0, sizeof(ddc_sequence));
@@ -548,13 +552,13 @@ void new_protocol_init(int pixels) {
       if (getsockopt(data_socket, SOL_SOCKET, SO_RCVBUF, &optval, &optlen)<0) {
         t_perror("data_socket: get SO_RCVBUF");
       } else {
-        if (optlen==sizeof(optval)) t_print("UDP Socket RCV buf size=%d\n", optval);
+    if (optlen == sizeof(optval)) { t_print("UDP Socket RCV buf size=%d\n", optval); }
       }
       optlen=sizeof(optval);
       if (getsockopt(data_socket, SOL_SOCKET, SO_SNDBUF, &optval, &optlen)<0) {
         t_perror("data_socket: get SO_SNDBUF");
       } else {
-        if (optlen==sizeof(optval)) t_print("UDP Socket SND buf size=%d\n", optval);
+    if (optlen == sizeof(optval)) { t_print("UDP Socket SND buf size=%d\n", optval); }
       }
 #ifdef __APPLE__
       //optval = 0x10;  // IPTOS_LOWDELAY
@@ -565,12 +569,14 @@ void new_protocol_init(int pixels) {
 #endif
 
       // bind to the interface
-      if(bind(data_socket,(struct sockaddr*)&radio->info.network.interface_address,radio->info.network.interface_length)<0) {
+  if (bind(data_socket, (struct sockaddr*)&radio->info.network.interface_address,
+           radio->info.network.interface_length) < 0) {
         t_perror("bind socket failed for data_socket:");
           exit(-1);
       }
 
-t_print("new_protocol_init: data_socket %d bound to interface %s:%d\n",data_socket,inet_ntoa(radio->info.network.interface_address.sin_addr),ntohs(radio->info.network.interface_address.sin_port));
+  t_print("new_protocol_init: data_socket %d bound to interface %s:%d\n", data_socket,
+          inet_ntoa(radio->info.network.interface_address.sin_addr), ntohs(radio->info.network.interface_address.sin_port));
 
       memcpy(&base_addr,&radio->info.network.address,radio->info.network.address_length);
       base_addr_length=radio->info.network.address_length;
@@ -672,9 +678,10 @@ static void new_protocol_general() {
     saturn_handle_general_packet(false, general_buffer);
 #endif
   } else {
-    if((rc=sendto(data_socket,general_buffer,sizeof(general_buffer),0,(struct sockaddr*)&base_addr,base_addr_length))<0) {
-        t_perror("sendto socket failed for general:");
-        exit(1);
+    if ((rc = sendto(data_socket, general_buffer, sizeof(general_buffer), 0, (struct sockaddr*)&base_addr,
+                   base_addr_length)) < 0) {
+      t_perror("sendto socket failed for general:");
+      exit(1);
     }
 
     if(rc!=sizeof(general_buffer)) {
@@ -786,7 +793,7 @@ static void new_protocol_high_priority() {
         // (that is, ANGELIA, ORION, ORION2, SATURN) receiver[i] is associated with DDC(i+2)
         int ddc=0;
         if (device==NEW_DEVICE_ANGELIA || device==NEW_DEVICE_ORION ||
-            device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN) ddc=2;
+        device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN) { ddc = 2; }
 
         phase=(unsigned long)(((double)rx1Frequency)*34.952533333333333333333333333333);
 	high_priority_buffer_to_radio[ 9+(ddc*4)]=phase>>24;
@@ -808,7 +815,7 @@ static void new_protocol_high_priority() {
 //
 
     txFrequency=vfo[txvfo].frequency-vfo[txvfo].lo;
-    if (vfo[txvfo].ctun) txFrequency += vfo[txvfo].offset;
+  if (vfo[txvfo].ctun) { txFrequency += vfo[txvfo].offset; }
     if(transmitter->xit_enabled) {
       txFrequency+=transmitter->xit;
     }
@@ -1003,9 +1010,9 @@ static void new_protocol_high_priority() {
           }
         }
 	i=0;  // flag used here for "filter bypass"
-	if (HPFfreq<1800000L) i=1;
+    if (HPFfreq < 1800000L) { i = 1; }
 	// Bypass HPFs if using EXT1 for PureSignal feedback!
-	if (xmit && transmitter->puresignal && receiver[PS_RX_FEEDBACK]->alex_antenna == 6) i=1;
+    if (xmit && transmitter->puresignal && receiver[PS_RX_FEEDBACK]->alex_antenna == 6) { i = 1; }
         if (i) {
           alex0|=ALEX_BYPASS_HPF;
         } else if(HPFfreq<6500000LL) {
@@ -1140,7 +1147,7 @@ static void new_protocol_high_priority() {
       //
       // Not using ANT1,2,3: can leave relais in TX state unless using new PA board
       //
-      if (i > 2 && !new_pa_board) i=transmitter->alex_antenna;
+    if (i > 2 && !new_pa_board) { i = transmitter->alex_antenna; }
     }
     switch(i) {
       case 0:  // ANT 1
@@ -1197,7 +1204,8 @@ static void new_protocol_high_priority() {
 #endif
     } else {
       int rc;
-      if((rc=sendto(data_socket,high_priority_buffer_to_radio,sizeof(high_priority_buffer_to_radio),0,(struct sockaddr*)&high_priority_addr,high_priority_addr_length))<0) {
+      if ((rc = sendto(data_socket, high_priority_buffer_to_radio, sizeof(high_priority_buffer_to_radio), 0,
+                   (struct sockaddr*)&high_priority_addr, high_priority_addr_length)) < 0) {
         t_perror("sendto socket failed for high priority:");
         exit(-1);
       }
@@ -1295,7 +1303,8 @@ static void new_protocol_transmit_specific() {
       saturn_handle_duc_specific(false, transmit_specific_buffer);
 #endif
     } else {
-      if((rc=sendto(data_socket,transmit_specific_buffer,sizeof(transmit_specific_buffer),0,(struct sockaddr*)&transmitter_addr,transmitter_addr_length))<0) {
+      if ((rc = sendto(data_socket, transmit_specific_buffer, sizeof(transmit_specific_buffer), 0,
+                   (struct sockaddr*)&transmitter_addr, transmitter_addr_length)) < 0) {
           t_perror("sendto socket failed for tx specific:");
           exit(1);
       }
@@ -1332,7 +1341,7 @@ static void new_protocol_receive_specific() {
         // (that is, ANGELIA, ORION, ORION2, G2) receiver[i] is associated with DDC(i+2)
         int ddc=i;
         if (device==NEW_DEVICE_ANGELIA || device==NEW_DEVICE_ORION ||
-            device == NEW_DEVICE_ORION2|| device == NEW_DEVICE_SATURN) ddc=2+i;
+        device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN) { ddc = 2 + i; }
         //
         // If there is at least one RX which has the dither or random bit set,
         // this bit is set for the corresponding ADC
@@ -1357,12 +1366,12 @@ static void new_protocol_receive_specific() {
 //
 //    Some things are fixed.
 //    the sample rate is always 192.
-//    the DDC for PS_RX_FEEDBACK is always DDC0, and the ADC is ADC0
+    //    the DDC for PS_RX_FEEDBACK is always DDC0, and ADC is taken from PS_RX_FEEDBACK
 //    the DDC for PS_TX_FEEDBACK is always DDC1, and the ADC is nadc (ADC1 for HERMES, ADC2 beyond)
 //    dither and random are always off
 //    there are 24 bits per sample
 //
-      receive_specific_buffer[17]=0;		// ADC0 associated with DDC0
+      receive_specific_buffer[17] = receiver[PS_RX_FEEDBACK]->adc; // ADC0 associated with DDC0
       receive_specific_buffer[18]=0;		// sample rate MSB
       receive_specific_buffer[19]=192;		// sample rate LSB
       receive_specific_buffer[22]=24;		// bits per sample
@@ -1408,7 +1417,8 @@ static void new_protocol_receive_specific() {
       saturn_handle_ddc_specific(false, receive_specific_buffer);
 #endif
     } else {
-      if((rc=sendto(data_socket,receive_specific_buffer,sizeof(receive_specific_buffer),0,(struct sockaddr*)&receiver_addr,receiver_addr_length))<0) {
+      if ((rc = sendto(data_socket, receive_specific_buffer, sizeof(receive_specific_buffer), 0,
+                   (struct sockaddr*)&receiver_addr, receiver_addr_length)) < 0) {
         t_perror("sendto socket failed for receive_specific:");
         exit(1);
       }
@@ -1749,7 +1759,7 @@ static gpointer iq_thread(gpointer data) {
     sem_post(&iq_sem_ready[ddc]);
     sem_wait(&iq_sem_buffer[ddc]);
 #endif
-    if (iq_buffer[ddc] == NULL) continue;
+    if (iq_buffer[ddc] == NULL) { continue; }
     buffer=iq_buffer[ddc]->buffer;
 //
 //  Perform sequence check HERE for all cases
@@ -1978,8 +1988,8 @@ static void process_high_priority() {
 	highprio_rcvd_sequence=sequence;
         sequence_errors++;
     }
-    highprio_rcvd_sequence++;
 
+  highprio_rcvd_sequence++;
     previous_ptt=local_ptt;
     previous_dot=dot;
     previous_dash=dash;
@@ -2010,8 +2020,9 @@ static void process_high_priority() {
       cw_key_hit=1;
     }
     if (!cw_keyer_internal) {
-      if (dash != previous_dash) keyer_event(0, dash);
-      if (dot  != previous_dot ) keyer_event(1, dot );
+    if (dash != previous_dash) { keyer_event(0, dash); }
+
+    if (dot  != previous_dot ) { keyer_event(1, dot ); }
     }
 
     if(previous_ptt!=local_ptt) {
@@ -2043,7 +2054,7 @@ static void process_mic_data(int bytes) {
     //
     if (local_ptt) {
       fsample = (float) sample * 0.00003051;
-      if (transmitter->local_microphone) fsample +=  audio_get_next_mic_sample();
+      if (transmitter->local_microphone) { fsample +=  audio_get_next_mic_sample(); }
     } else {
       fsample = transmitter->local_microphone ? audio_get_next_mic_sample() : (float) sample * 0.00003051;
     }
@@ -2099,7 +2110,7 @@ void new_protocol_audio_samples(RECEIVER *rx,short left_audio_sample,short right
   //
   // Only process samples if NOT transmitting in CW
   //
-  if (isTransmitting() && (txmode==modeCWU || txmode==modeCWL)) return;
+  if (isTransmitting() && (txmode == modeCWU || txmode == modeCWL)) { return; }
 
   pthread_mutex_lock(&audiob_mutex);
   // insert the samples

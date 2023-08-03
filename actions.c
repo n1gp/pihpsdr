@@ -159,8 +159,8 @@ ACTION_TABLE ActionTable[] = {
   {RIT,                 "RIT",                  "RIT",          MIDI_WHEEL | CONTROLLER_ENCODER},
   {RIT_CLEAR,           "RIT\nCLEAR",           "RITCL",        MIDI_KEY | CONTROLLER_SWITCH},
   {RIT_ENABLE,          "RIT\nON/OFF",          "RITT",         MIDI_KEY | CONTROLLER_SWITCH},
-  {RIT_MINUS,           "RIT +",                "RIT-",         MIDI_KEY | CONTROLLER_SWITCH},
-  {RIT_PLUS,            "RIT -",                "RIT+",         MIDI_KEY | CONTROLLER_SWITCH},
+  {RIT_MINUS,           "RIT -",                "RIT-",         MIDI_KEY   | CONTROLLER_SWITCH},
+  {RIT_PLUS,            "RIT +",                "RIT+",         MIDI_KEY   | CONTROLLER_SWITCH},
   {RIT_RX1,             "RIT\nRX1",             "RIT1",         MIDI_WHEEL | CONTROLLER_ENCODER},
   {RIT_RX2,             "RIT\nRX2",             "RIT2",         MIDI_WHEEL | CONTROLLER_ENCODER},
   {RIT_STEP,            "RIT\nSTEP",            "RITST",        MIDI_KEY | CONTROLLER_SWITCH},
@@ -235,8 +235,9 @@ static inline double KnobOrWheel(const PROCESS_ACTION *a, double oldval, double 
   // Round and check range
   //
   oldval=inc*round(oldval/inc);
-  if (oldval > maxval) oldval=maxval;
-  if (oldval < minval) oldval=minval;
+  if (oldval > maxval) { oldval = maxval; }
+
+  if (oldval < minval) { oldval = minval; }
   return oldval;
 }
 
@@ -486,7 +487,7 @@ int process_action(void *data) {
         const BAND *band=band_get_band(vfo[active_receiver->id].band);
         const BANDSTACK *bandstack=band->bandstack;
         int b=vfo[active_receiver->id].bandstack-1;
-        if(b<0) b=bandstack->entries-1;;
+      if (b < 0) { b = bandstack->entries - 1; };
         vfo_bandstack_changed(b);
       }
       break;
@@ -495,7 +496,7 @@ int process_action(void *data) {
         const BAND *band=band_get_band(vfo[active_receiver->id].band);
         const BANDSTACK *bandstack=band->bandstack;
         int b=vfo[active_receiver->id].bandstack+1;
-        if(b>=bandstack->entries) b=0;
+      if (b >= bandstack->entries) { b = 0; }
         vfo_bandstack_changed(b);
       }
       break;
@@ -576,24 +577,22 @@ int process_action(void *data) {
     case FILTER_MINUS:
       if(a->mode==PRESSED) {
         int f=vfo[active_receiver->id].filter+1;
-        if(f>=FILTERS) f=0;
+      if (f >= FILTERS) { f = 0; }
         vfo_filter_changed(f);
       }
       break;
     case FILTER_PLUS:
       if(a->mode==PRESSED) {
         int f=vfo[active_receiver->id].filter-1;
-        if(f<0) f=FILTERS-1;
+      if (f < 0) { f = FILTERS - 1; }
         vfo_filter_changed(f);
       }
       break;
-    case FILTER_CUT_HIGH:
-      {
+  case FILTER_CUT_HIGH: {
         filter_cut_changed(active_receiver->id, FILTER_CUT_HIGH, a->val);
       }
       break;
-    case FILTER_CUT_LOW:
-      {
+  case FILTER_CUT_LOW: {
         filter_cut_changed(active_receiver->id, FILTER_CUT_LOW, a->val);
       }
       break;
@@ -706,7 +705,7 @@ int process_action(void *data) {
       if(a->mode==PRESSED) {
         int mode=vfo[active_receiver->id].mode;
         mode--;
-        if(mode<0) mode=MODES-1;
+      if (mode < 0) { mode = MODES - 1; }
         vfo_mode_changed(mode);
       }
       break;
@@ -714,7 +713,7 @@ int process_action(void *data) {
       if(a->mode==PRESSED) {
         int mode=vfo[active_receiver->id].mode;
         mode++;
-        if(mode>=MODES) mode=0;
+      if (mode >= MODES) { mode = 0; }
         vfo_mode_changed(mode);
       }
       break;
@@ -732,7 +731,7 @@ int process_action(void *data) {
     case NB:
       if(a->mode==PRESSED) {
         active_receiver->nb++;
-        if (active_receiver->nb > 2) active_receiver->nb=0;
+      if (active_receiver->nb > 2) { active_receiver->nb = 0; }
         mode_settings[vfo[active_receiver->id].mode].nb=active_receiver->nb;
         update_noise();
       }
@@ -741,9 +740,9 @@ int process_action(void *data) {
       if(a->mode==PRESSED) {
         active_receiver->nr++;
 #ifdef EXTNR
-        if (active_receiver->nr > 4) active_receiver->nr=0;
+      if (active_receiver->nr > 4) { active_receiver->nr = 0; }
 #else
-        if (active_receiver->nr > 2) active_receiver->nr=0;
+      if (active_receiver->nr > 2) { active_receiver->nr = 0; }
 #endif
         mode_settings[vfo[active_receiver->id].mode].nr=active_receiver->nr;
         update_noise();
@@ -874,7 +873,8 @@ int process_action(void *data) {
       break;
     case RF_GAIN:
       if (have_rx_gain) {
-        value=KnobOrWheel(a, adc[active_receiver->adc].gain, adc[active_receiver->adc].min_gain, adc[active_receiver->adc].max_gain, 1.0);
+      value = KnobOrWheel(a, adc[active_receiver->adc].gain, adc[active_receiver->adc].min_gain,
+                          adc[active_receiver->adc].max_gain, 1.0);
         set_rf_gain(active_receiver->id,value);
       }
       break;
@@ -944,8 +944,9 @@ int process_action(void *data) {
           } else {
             rit_increment=rit_increment/10;
           }
-          if(rit_increment<1) rit_increment=100;
-          if(rit_increment>100) rit_increment=1;
+      if (rit_increment < 1) { rit_increment = 100; }
+
+      if (rit_increment > 100) { rit_increment = 1; }
           break;
         default:
           // ignore other types
@@ -1206,8 +1207,9 @@ int process_action(void *data) {
         // however the range 0-127 is internally converted to 0-100 upstream
         //
         cw_keyer_speed=(127*a->val + 50)/100;
-        if (cw_keyer_speed <  1) cw_keyer_speed=1;
-        if (cw_keyer_speed > 99) cw_keyer_speed=99;
+      if (cw_keyer_speed <  1) { cw_keyer_speed = 1; }
+
+      if (cw_keyer_speed > 99) { cw_keyer_speed = 99; }
         keyer_update();
         g_idle_add(ext_vfo_update,NULL);
       }
@@ -1291,7 +1293,7 @@ void Action2String(int id, char *str) {
 int String2Action(const char *str) {
    int i;
    for (i=0; i<ACTIONS; i++) {
-     if (!strcmp(str,ActionTable[i].button_str))  return i;
+    if (!strcmp(str, ActionTable[i].button_str)) { return i; }
    }
    return NO_ACTION;
 }

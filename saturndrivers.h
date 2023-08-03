@@ -2,7 +2,7 @@
 //
 // Saturn project: Artix7 FPGA + Raspberry Pi4 Compute Module
 // PCI Express interface from linux on Raspberry pi
-// this application uses C code to emulate HPSDR protocol 1 
+// this application uses C code to emulate HPSDR protocol 1
 //
 // copyright Laurence Barker November 2021
 //
@@ -26,12 +26,11 @@
 //
 // enum type for FIFO monitor and DMA channel selection
 //
-typedef enum
-{
-    eRXDDCDMA,							// selects RX
-    eTXDUCDMA,							// selects TX
-    eMicCodecDMA,						// selects mic samples
-    eSpkCodecDMA						// selects speaker samples
+typedef enum {
+  eRXDDCDMA,              // selects RX
+  eTXDUCDMA,              // selects TX
+  eMicCodecDMA,           // selects mic samples
+  eSpkCodecDMA            // selects speaker samples
 } EDMAStreamSelect;
 
 
@@ -39,8 +38,8 @@ typedef enum
 // void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt);
 //
 // Setup a single FIFO monitor channel.
-//   Channel:			IP channel number (enum)
-//   EnableInterrupt:	true if interrupt generation enabled for overflows
+//   Channel:     IP channel number (enum)
+//   EnableInterrupt: true if interrupt generation enabled for overflows
 //
 void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt);
 
@@ -52,8 +51,8 @@ void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt);
 // Read number of locations in a FIFO
 // for a read FIFO: returns the number of occupied locations available to read
 // for a write FIFO: returns the number of free locations available to write
-//   Channel:			IP core channel number (enum)
-//   Overflowed:		true if an overflow has occurred. Reading clears the overflow bit.
+//   Channel:     IP core channel number (enum)
+//   Overflowed:    true if an overflow has occurred. Reading clears the overflow bit.
 //
 uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed);
 
@@ -69,7 +68,7 @@ void ResetDMAStreamFIFO(EDMAStreamSelect DDCNum);
 // SetTXAmplitudeEER (bool EEREnabled)
 // enables amplitude restoratino mode. Generates envelope output alongside I/Q samples.
 // NOTE hardware does not properly support this yet!
-// 
+//
 void SetTXAmplitudeEER(bool EEREnabled);
 
 

@@ -126,10 +126,6 @@ extern gboolean iqswap;
 
 #define MAX_BUFFER_SIZE 2048
 
-extern int buffer_size;
-extern int fft_size;
-extern int fft_type;
-extern const int dsp_size;
 
 extern int atlas_penelope;
 extern int atlas_clock_source_10mhz;
@@ -142,10 +138,6 @@ extern int classE;
 
 extern int tx_out_of_band;
 
-extern int tx_cfir;
-extern int tx_leveler;
-
-extern double tone_level;
 
 extern int filter_board;
 extern int pa_enabled;
@@ -171,7 +163,6 @@ extern int display_sliders;
 extern int display_toolbar;
 
 extern double mic_gain;
-extern int binaural;
 
 extern int mic_linein;
 extern int linein_gain;
@@ -245,9 +236,6 @@ extern unsigned int AIN6;
 extern int supply_volts;
 
 
-extern long long frequencyB;
-extern int modeB;
-extern int filterB;
 
 extern int split;
 

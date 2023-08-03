@@ -76,7 +76,7 @@ int OpenXDMADriver(void);
 // fd: file device (an open file)
 // SrcData: pointer to memory block to transfer
 // Length: number of bytes to copy
-// AXIAddr: offset address in the FPGA window 
+// AXIAddr: offset address in the FPGA window
 //
 int DMAWriteToFPGA(int fd, unsigned char*SrcData, uint32_t Length, uint32_t AXIAddr);
 
@@ -88,7 +88,7 @@ int DMAWriteToFPGA(int fd, unsigned char*SrcData, uint32_t Length, uint32_t AXIA
 // fd: file device (an open file)
 // DestData: pointer to memory block to transfer
 // Length: number of bytes to copy
-// AXIAddr: offset address in the FPGA window 
+// AXIAddr: offset address in the FPGA window
 //
 int DMAReadFromFPGA(int fd, unsigned char*DestData, uint32_t Length, uint32_t AXIAddr);
 
@@ -109,39 +109,36 @@ void RegisterWrite(uint32_t Address, uint32_t Data);
 //
 // enum type for sample rate. only 48-384KHz allowed for protocol 1
 //
-typedef enum
-{
-    eDisabled,
-    e48KHz,
-    e96KHz,
-    e192KHz,
-    e384KHz,
-    e768KHz,
-    e1536KHz,
-    eInterleaveWithNext
+typedef enum {
+  eDisabled,
+  e48KHz,
+  e96KHz,
+  e192KHz,
+  e384KHz,
+  e768KHz,
+  e1536KHz,
+  eInterleaveWithNext
 } ESampleRate;
 
 //
 // enum type for ADC selection
 //
-typedef enum
-{
-    eADC1,                        // selects ADC1
-    eADC2,                        // selects ADC2
-    eTestSource,                  // selects internal test source (not for operational use)
-    eTXSamples                    // (for Puresignal)
+typedef enum {
+  eADC1,                        // selects ADC1
+  eADC2,                        // selects ADC2
+  eTestSource,                  // selects internal test source (not for operational use)
+  eTXSamples                    // (for Puresignal)
 } EADCSelect;
 
 
 //
 // enum for TX modulation source
 //
-typedef enum
-{
-    eIQData,
-    eFixed0Hz,
-    eTXDDS,
-    eCWKeyer
+typedef enum {
+  eIQData,
+  eFixed0Hz,
+  eTXDDS,
+  eCWKeyer
 } ETXModulationSource;
 
 
@@ -196,16 +193,16 @@ typedef enum
 #define VADDRXADCREG 0x18000                    // on-chip XADC (temp, VCC...)
 #define VADDRCWKEYERRAM 0x1C000                 // keyer RAM mapped here
 
-#define VNUMDMAFIFO 4							// DMA streams available
-#define VADDRDDCSTREAMREAD 0x0L					// stream reader/writer on AXI-4 bus
-#define VADDRDUCSTREAMWRITE 0x0L				// stream reader/writer on AXI-4 bus
-#define VADDRMICSTREAMREAD 0x40000L				// stream reader/writer on AXI-4 bus
-#define VADDRSPKRSTREAMWRITE 0x40000L			// stream reader/writer on AXI-4 bus
+#define VNUMDMAFIFO 4             // DMA streams available
+#define VADDRDDCSTREAMREAD 0x0L         // stream reader/writer on AXI-4 bus
+#define VADDRDUCSTREAMWRITE 0x0L        // stream reader/writer on AXI-4 bus
+#define VADDRMICSTREAMREAD 0x40000L       // stream reader/writer on AXI-4 bus
+#define VADDRSPKRSTREAMWRITE 0x40000L     // stream reader/writer on AXI-4 bus
 
-#define VBITDDCFIFORESET 2						// reset bit in register
-#define VBITDUCFIFORESET 3						// reset bit in register
-#define VBITCODECMICFIFORESET 0					// reset bit in register
-#define VBITCODECSPKFIFORESET 1					// reset bit in register
+#define VBITDDCFIFORESET 2            // reset bit in register
+#define VBITDUCFIFORESET 3            // reset bit in register
+#define VBITCODECMICFIFORESET 0         // reset bit in register
+#define VBITCODECSPKFIFORESET 1         // reset bit in register
 
 #define VADDRSWVERSIONREG 0XC000                // user defined s/w version register
 #define VADDRUSERVERSIONREG 0x4004
@@ -369,7 +366,7 @@ void SetTestDDSFrequency(uint32_t Value, bool IsDeltaPhase);
 // Value: 32 bit phase word or frequency word (1Hz resolution)
 // IsDeltaPhase: true if a delta phase value, false if a frequency value (P1)
 //
-void SetDUCFrequency(unsigned int Value, bool IsDeltaPhase);		// only accepts DUC=0
+void SetDUCFrequency(unsigned int Value, bool IsDeltaPhase);    // only accepts DUC=0
 
 
 //

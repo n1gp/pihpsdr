@@ -165,5 +165,5 @@ struct _VFO_BAR_LAYOUT {
 typedef struct _VFO_BAR_LAYOUT VFO_BAR_LAYOUT;
 
 extern const VFO_BAR_LAYOUT vfo_layout_list[];
-extern const VFO_BAR_LAYOUT *vfo_layout;
+extern int vfo_layout;
 

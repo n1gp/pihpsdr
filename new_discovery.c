@@ -93,8 +93,8 @@ void new_discovery() {
         }
         ifa = ifa->ifa_next;
     }
-    freeifaddrs(addrs);
 
+  freeifaddrs(addrs);
     //
     // If an IP address has already been "discovered" via a
     // METIS broadcast package, it makes no sense to re-discover
@@ -107,8 +107,8 @@ void new_discovery() {
         is_local=1;
       }
     }
-    if (!is_local) new_discover(NULL,2);
 
+  if (!is_local) { new_discover(NULL, 2); }
 
     t_print( "new_discovery found %d devices\n",devices);
 
@@ -189,8 +189,8 @@ static void new_discover(struct ifaddrs* iface, int discflag) {
         if (inet_aton(ipaddr_radio, &to_addr.sin_addr) == 0) {
           return;
         }
-        t_print("discover: looking for HPSDR device with IP %s\n", ipaddr_radio);
 
+    t_print("discover: looking for HPSDR device with IP %s\n", ipaddr_radio);
         discovery_socket=socket(PF_INET,SOCK_DGRAM,IPPROTO_UDP);
         if(discovery_socket<0) {
             t_perror("discover: create socket failed for discovery_socket:");
@@ -347,7 +347,8 @@ gpointer new_discover_receive_thread(gpointer data) {
                     memcpy((void*)&discovered[devices].info.network.address,(void*)&addr,sizeof(addr));
                     discovered[devices].info.network.address_length=sizeof(addr);
                     memcpy((void*)&discovered[devices].info.network.interface_address,(void*)&interface_addr,sizeof(interface_addr));
-                    memcpy((void*)&discovered[devices].info.network.interface_netmask,(void*)&interface_netmask,sizeof(interface_netmask));
+            memcpy((void*)&discovered[devices].info.network.interface_netmask, (void*)&interface_netmask,
+                   sizeof(interface_netmask));
                     discovered[devices].info.network.interface_length=sizeof(interface_addr);
                     strcpy(discovered[devices].info.network.interface_name,interface_name);
                     discovered[devices].supported_receivers=2;

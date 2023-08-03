@@ -393,8 +393,7 @@ static gboolean midi_cb (GtkWidget *widget, GdkEventButton *event, gpointer data
 }
 #endif
 
-void new_menu()
-{
+void new_menu() {
   int i;
 
   if(main_menu==NULL) {
@@ -525,16 +524,14 @@ void new_menu()
     i++;
 
     switch(controller) {
-      case NO_CONTROLLER:
-        {
+    case NO_CONTROLLER: {
         GtkWidget *toolbar_b=gtk_button_new_with_label("Toolbar");
         g_signal_connect (toolbar_b, "button-press-event", G_CALLBACK(toolbar_cb), NULL);
         gtk_grid_attach(GTK_GRID(grid),toolbar_b,(i%5),i/5,1,1);
         i++;
         }
         break;
-      case CONTROLLER1:
-        {
+    case CONTROLLER1: {
 #ifdef GPIO
         GtkWidget *encoders_b=gtk_button_new_with_label("Encoders");
         g_signal_connect (encoders_b, "button-press-event", G_CALLBACK(encoder_cb), NULL);
@@ -548,10 +545,9 @@ void new_menu()
 #endif
         }
         break;
-      case CONTROLLER2_V1:
-      case CONTROLLER2_V2:
-      case G2_FRONTPANEL:
-        {
+    case CONTROLLER2_V1:
+    case CONTROLLER2_V2:
+    case G2_FRONTPANEL: {
 #ifdef GPIO
         GtkWidget *encoders_b=gtk_button_new_with_label("Encoders");
         g_signal_connect (encoders_b, "button-press-event", G_CALLBACK(encoder_cb), NULL);

@@ -92,7 +92,7 @@ static void sample_rate_cb(GtkToggleButton *widget, gpointer data) {
   // There are so many different possibilities for sample rates, so
   // we just "scanf" from the combobox text entry
   //
-  if (sscanf(p, "%d", &samplerate) != 1) return;
+  if (sscanf(p, "%d", &samplerate) != 1) { return; }
   receiver_change_sample_rate(active_receiver,samplerate);
 }
 
@@ -212,8 +212,7 @@ void rx_menu(GtkWidget *parent) {
     //
     int row=1;
     switch(protocol) {
-      case NEW_PROTOCOL:  // Sample rate in RX menu only for P2
-        {
+    case NEW_PROTOCOL: { // Sample rate in RX menu only for P2
         GtkWidget *sample_rate_label=gtk_label_new(NULL);
         gtk_label_set_markup(GTK_LABEL(sample_rate_label), "<b>Sample Rate</b>");
         gtk_grid_attach(GTK_GRID(grid),sample_rate_label,0,row,1,1);
@@ -346,7 +345,7 @@ void rx_menu(GtkWidget *parent) {
     gtk_grid_attach(GTK_GRID(grid),local_audio_b,col,1,1,1);
     g_signal_connect(local_audio_b,"toggled",G_CALLBACK(local_audio_cb),NULL);
 
-    if(active_receiver->audio_device==-1) active_receiver->audio_device=0;
+    if (active_receiver->audio_device == -1) { active_receiver->audio_device = 0; }
 
     output=gtk_combo_box_text_new();
     for(i=0;i<n_output_devices;i++) {
