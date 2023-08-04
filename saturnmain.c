@@ -10,7 +10,7 @@
 //
 // licenced under GNU GPL3
 //
-// saturnmain.c: based off p2app client app software version = 11
+// saturnmain.c: based off p2app client app software
 //
 // Saturn interface to PiHPSDR
 //
@@ -464,6 +464,7 @@ void saturn_exit() {
   t_print("%s: Exiting\n", __FUNCTION__);
   Exiting = true;
   SDRActive = false;
+  SetMOX(false);
   SetTXEnable(false);
   EnableCW(false, false);
   ServerActive = false;
@@ -471,8 +472,6 @@ void saturn_exit() {
   sem_destroy(&DDCResetFIFOMutex);
   sem_destroy(&RFGPIOMutex);
   sem_destroy(&CodecRegMutex);
-  SetMOX(false);
-  SetTXEnable(false);
 }
 
 #define VHIGHPRIOTIYFROMSDRSIZE 60
@@ -503,7 +502,7 @@ static gpointer saturn_high_priority_thread(gpointer arg) {
 
   while (!Exiting) {
     while (!SDRActive) {
-      usleep(1000);
+      usleep(10000);
     }
 
     SequenceCounter = 0;
@@ -672,7 +671,7 @@ static gpointer saturn_micaudio_thread(gpointer arg) {
   //
   while (!Exiting) {
     while (!SDRActive) {
-      usleep(1000);
+      usleep(10000);
     }
 
     SequenceCounter = 0;
@@ -839,7 +838,7 @@ static gpointer saturn_rx_thread(gpointer arg) {
 
   while (!Exiting) {
     while (!SDRActive) {
-      usleep(1000);
+      usleep(10000);
     }
 
     for (DDC = 0; DDC < VNUMDDC; DDC++) {
