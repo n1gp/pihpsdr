@@ -1861,7 +1861,7 @@ unsigned int GetP2PTTKeyInputs(void) {
     Result |= 4;  // set dash output bit
   }
 
-  if ((GStatusRegister >> VUSERIO8) & 1) {
+  if (!((GStatusRegister >> VUSERIO8) & 1)) {
     Result |= 4;  // set dash output bit if IO8 active
   }
 
