@@ -55,10 +55,9 @@ static int height;
 
 static GtkWidget *sliders;
 
-guint scale_timer;
-int scale_status = NO_ACTION;
-int scale_rx = 0;
-GtkWidget *scale_dialog;
+static guint scale_timer;
+static int scale_status = NO_ACTION;
+static GtkWidget *scale_dialog;
 
 static GtkWidget *af_gain_label;
 static GtkWidget *af_gain_scale;
@@ -70,6 +69,7 @@ static GtkWidget *attenuation_label = NULL;
 static GtkWidget *attenuation_scale = NULL;
 static GtkWidget *c25_container = NULL;
 static GtkWidget *c25_att_combobox = NULL;
+static GtkWidget *c25_att_label = NULL;
 static GtkWidget *mic_gain_label;
 static GtkWidget *mic_gain_scale;
 static GtkWidget *drive_label;
@@ -78,12 +78,65 @@ static GtkWidget *squelch_label;
 static GtkWidget *squelch_scale;
 static gulong     squelch_signal_id;
 static GtkWidget *squelch_enable;
-static GtkWidget *filter_cut_low_scale;
-static GtkWidget *filter_cut_high_scale;
-static GtkWidget *filter_width_scale;
-static GtkWidget *filter_shift_scale;
-static GtkWidget *diversity_gain_scale;
-static GtkWidget *diversity_phase_scale;
+
+//
+// general tool for displaying a pop-up slider. This can also be used for a value for which there
+// is no GTK slider. Make the slider "insensitive" so one cannot operate on it.
+// Putting this into a separate function avoids much code repetition.
+//
+
+int scale_timeout_cb(gpointer data) {
+  gtk_widget_destroy(scale_dialog);
+  scale_status = NO_ACTION;
+  return FALSE;
+}
+
+void show_popup_slider(enum ACTION action, int rx, double min, double max, double delta, double value, const char *title) {
+  //
+  // general function for displaying a pop-up slider. This can also be used for a value for which there
+  // is no GTK slider. Make the slider "insensitive" so one cannot operate on it.
+  // Putting this into a separate function avoids much code repetition.
+  //
+  static GtkWidget *popup_scale = NULL;
+  static int scale_rx;
+
+  //
+  // a) if there is still a pop-up slider on the screen for a different action, destroy it
+  //
+  if (scale_status != action || scale_rx != rx) {
+    if (scale_status != NO_ACTION) {
+      g_source_remove(scale_timer);
+      gtk_widget_destroy(scale_dialog);
+      scale_status = NO_ACTION;
+    }
+  }
+
+  if (scale_status == NO_ACTION) {
+    //
+    // b) if a pop-up slider for THIS action is not on display, create one
+    //
+    scale_status = action;
+    scale_rx = rx;
+    scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
+    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
+    popup_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, min, max, delta);
+    gtk_widget_set_name(popup_scale, "popup_scale");
+    gtk_widget_set_size_request (popup_scale, 400, 30);
+    gtk_range_set_value (GTK_RANGE(popup_scale), value),
+    gtk_widget_show(popup_scale);
+    gtk_widget_set_sensitive(popup_scale, FALSE);
+    gtk_container_add(GTK_CONTAINER(content), popup_scale);
+    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
+    gtk_dialog_run(GTK_DIALOG(scale_dialog));
+  } else {
+    //
+    // c) if a pop-up slider for THIS action is still on display, adjust value and reset timeout
+    //
+    g_source_remove(scale_timer);
+    gtk_range_set_value (GTK_RANGE(popup_scale), value),
+    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
+  }
+}
 
 void sliders_update() {
   if (display_sliders) {
@@ -132,10 +185,20 @@ int sliders_active_receiver_changed(void *data) {
   return FALSE;
 }
 
-int scale_timeout_cb(gpointer data) {
-  gtk_widget_destroy(scale_dialog);
-  scale_status = NO_ACTION;
-  return FALSE;
+void set_attenuation_value(double value) {
+  //t_print("%s value=%f\n",__FUNCTION__,value);
+  if (!have_rx_att) { return; }
+
+  adc[active_receiver->adc].attenuation = (int)value;
+  set_attenuation(adc[active_receiver->adc].attenuation);
+
+  if (display_sliders) {
+    gtk_range_set_value (GTK_RANGE(attenuation_scale), (double)adc[active_receiver->adc].attenuation);
+  } else {
+    char title[64];
+    sprintf(title, "Attenuation - ADC-%d (dB)", active_receiver->adc);
+    show_popup_slider(ATTENUATION, active_receiver->adc, 0.0, 31.0, 1.0, (double)adc[active_receiver->adc].attenuation, title);
+  }
 }
 
 static void attenuation_value_changed_cb(GtkWidget *widget, gpointer data) {
@@ -155,45 +218,6 @@ static void attenuation_value_changed_cb(GtkWidget *widget, gpointer data) {
 #endif
 }
 
-void set_attenuation_value(double value) {
-  //t_print("%s value=%f\n",__FUNCTION__,value);
-  if (!have_rx_att) { return; }
-
-  adc[active_receiver->adc].attenuation = (int)value;
-  set_attenuation(adc[active_receiver->adc].attenuation);
-
-  if (display_sliders) {
-    gtk_range_set_value (GTK_RANGE(attenuation_scale), (double)adc[active_receiver->adc].attenuation);
-  } else {
-    if (scale_status != ATTENUATION) {
-      if (scale_status != NO_ACTION) {
-        g_source_remove(scale_timer);
-        gtk_widget_destroy(scale_dialog);
-        scale_status = NO_ACTION;
-      }
-    }
-
-    if (scale_status == NO_ACTION) {
-      char title[64];
-      sprintf(title, "Attenuation - ADC-%d (dB)", active_receiver->adc);
-      scale_status = ATTENUATION;
-      scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-      GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-      attenuation_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 31.0, 1.00);
-      gtk_widget_set_size_request (attenuation_scale, 400, 30);
-      gtk_range_set_value (GTK_RANGE(attenuation_scale), (double)adc[active_receiver->adc].attenuation);
-      gtk_widget_show(attenuation_scale);
-      gtk_container_add(GTK_CONTAINER(content), attenuation_scale);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-      gtk_dialog_run(GTK_DIALOG(scale_dialog));
-    } else {
-      g_source_remove(scale_timer);
-      gtk_range_set_value (GTK_RANGE(attenuation_scale), (double)adc[active_receiver->adc].attenuation);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    }
-  }
-}
-
 void att_type_changed() {
   //
   // This function manages a transition from/to a CHARLY25 filter board
@@ -210,6 +234,8 @@ void att_type_changed() {
 
     if (c25_container != NULL) { gtk_widget_show(c25_container); }
 
+    if (c25_att_label != NULL) { gtk_widget_show(c25_att_label); }
+
     //
     // There is no step attenuator visible any more. Set to zero
     //
@@ -223,6 +249,8 @@ void att_type_changed() {
     if (attenuation_scale != NULL) { gtk_widget_show(attenuation_scale); }
 
     if (c25_container != NULL) { gtk_widget_hide(c25_container); }
+
+    if (c25_att_label != NULL) { gtk_widget_hide(c25_att_label); }
   }
 
   sliders_active_receiver_changed(NULL);
@@ -341,33 +369,9 @@ void set_agc_gain(int rx, double value) {
   if (display_sliders) {
     gtk_range_set_value (GTK_RANGE(agc_scale), receiver[rx]->agc_gain);
   } else {
-    if (scale_status != AGC_GAIN || scale_rx != rx) {
-      if (scale_status != NO_ACTION) {
-        g_source_remove(scale_timer);
-        gtk_widget_destroy(scale_dialog);
-        scale_status = NO_ACTION;
-      }
-    }
-
-    if (scale_status == NO_ACTION) {
-      scale_status = AGC_GAIN;
-      scale_rx = rx;
-      char title[64];
-      sprintf(title, "AGC Gain RX %d", rx);
-      scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-      GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-      agc_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, -20.0, 120.0, 1.00);
-      gtk_widget_set_size_request (agc_scale, 400, 30);
-      gtk_range_set_value (GTK_RANGE(agc_scale), receiver[rx]->agc_gain);
-      gtk_widget_show(agc_scale);
-      gtk_container_add(GTK_CONTAINER(content), agc_scale);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-      gtk_dialog_run(GTK_DIALOG(scale_dialog));
-    } else {
-      g_source_remove(scale_timer);
-      gtk_range_set_value (GTK_RANGE(agc_scale), receiver[rx]->agc_gain);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    }
+    char title[64];
+    sprintf(title, "AGC Gain RX %d", rx);
+    show_popup_slider(AGC_GAIN, rx, -20.0, 120.0, 1.0, receiver[rx]->agc_gain, title);
   }
 }
 
@@ -407,6 +411,10 @@ void set_af_gain(int rx, double value) {
 
   if (value < -39.5) {
     amplitude = 0.0;
+    value = -40.0;
+  } else if (value > 0.0 ) {
+    amplitude = 1.0;
+    value = 0.0;
   } else {
     amplitude = pow(10.0, 0.05 * value);
   }
@@ -416,33 +424,9 @@ void set_af_gain(int rx, double value) {
   if (display_sliders) {
     gtk_range_set_value (GTK_RANGE(af_gain_scale), value);
   } else {
-    if (scale_status != AF_GAIN || scale_rx != rx) {
-      if (scale_status != NO_ACTION) {
-        g_source_remove(scale_timer);
-        gtk_widget_destroy(scale_dialog);
-        scale_status = NO_ACTION;
-      }
-    }
-
-    if (scale_status == NO_ACTION) {
-      scale_status = AF_GAIN;
-      scale_rx = rx;
-      char title[64];
-      sprintf(title, "AF Gain RX %d", rx);
-      scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-      GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-      af_gain_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, -40.0, 0.0, 1.00);
-      gtk_widget_set_size_request (af_gain_scale, 400, 30);
-      gtk_range_set_value (GTK_RANGE(af_gain_scale), value);
-      gtk_widget_show(af_gain_scale);
-      gtk_container_add(GTK_CONTAINER(content), af_gain_scale);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-      gtk_dialog_run(GTK_DIALOG(scale_dialog));
-    } else {
-      g_source_remove(scale_timer);
-      gtk_range_set_value (GTK_RANGE(af_gain_scale), value);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    }
+    char title[64];
+    sprintf(title, "AF Gain RX %d", rx);
+    show_popup_slider(AF_GAIN, rx, -40.0, 0.0, 1.0, value, title);
   }
 }
 
@@ -489,111 +473,32 @@ void set_rf_gain(int rx, double value) {
   if (display_sliders) {
     gtk_range_set_value (GTK_RANGE(rf_gain_scale), adc[rxadc].gain);
   } else {
-    if (scale_status != RF_GAIN || scale_rx != rx) {
-      if (scale_status != NO_ACTION) {
-        g_source_remove(scale_timer);
-        gtk_widget_destroy(scale_dialog);
-        scale_status = NO_ACTION;
-      }
-    }
-
-    if (scale_status == NO_ACTION) {
-      scale_status = RF_GAIN;
-      scale_rx = rx;
-      char title[64];
-      sprintf(title, "RF Gain ADC %d", rxadc);
-      scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-      GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-      rf_gain_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, adc[rxadc].min_gain, adc[rxadc].max_gain, 1.0);
-      gtk_widget_set_size_request (rf_gain_scale, 400, 30);
-      gtk_range_set_value (GTK_RANGE(rf_gain_scale), adc[rxadc].gain);
-      gtk_widget_show(rf_gain_scale);
-      gtk_container_add(GTK_CONTAINER(content), rf_gain_scale);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-      gtk_dialog_run(GTK_DIALOG(scale_dialog));
-    } else {
-      g_source_remove(scale_timer);
-      gtk_range_set_value (GTK_RANGE(rf_gain_scale), adc[rxadc].gain);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    }
+    char title[64];
+    sprintf(title, "RF Gain ADC %d", rxadc);
+    show_popup_slider(RF_GAIN, rxadc, adc[rxadc].min_gain, adc[rxadc].max_gain, 1.0, adc[rxadc].gain, title);
   }
 }
 
 void set_filter_width(int rx, int width) {
   //t_print("%s width=%d\n",__FUNCTION__, width);
-  if (scale_status != IF_WIDTH || scale_rx != rx) {
-    if (scale_status != NO_ACTION) {
-      g_source_remove(scale_timer);
-      gtk_widget_destroy(scale_dialog);
-      scale_status = NO_ACTION;
-    }
-  }
-
-  if (scale_status == NO_ACTION) {
-    scale_status = IF_WIDTH;
-    scale_rx = rx;
-    char title[64];
-    sprintf(title, "Filter Width RX %d (Hz)", rx);
-    scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-
-    //
-    // When drawing a new scale on the screen, adjust the scale to the current filter width
-    // +/ 1000 Hz
-    //
-    if (width < 1000) {
-      filter_width_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 2000.0, 1.00);
-    } else {
-      filter_width_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, (double)(width - 1000),
-                           (double)(width + 1000), 1.00);
-    }
-
-    gtk_widget_set_size_request (filter_width_scale, 400, 30);
-    gtk_range_set_value (GTK_RANGE(filter_width_scale), (double)width);
-    gtk_widget_show(filter_width_scale);
-    gtk_container_add(GTK_CONTAINER(content), filter_width_scale);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    gtk_dialog_run(GTK_DIALOG(scale_dialog));
+  double min, max;
+  char title[64];
+  sprintf(title, "Filter Width RX %d (Hz)", rx);
+  if (width < 1000) {
+    min=0.0;
+    max=2000;
   } else {
-    g_source_remove(scale_timer);
-    gtk_range_set_value (GTK_RANGE(filter_width_scale), (double)width);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
+    min = (double) (width - 1000);
+    max = (double) (width + 1000);
   }
+  show_popup_slider(IF_WIDTH, rx, min, max, 1.0, (double) width, title);
 }
 
 void set_filter_shift(int rx, int shift) {
   //t_print("%s shift=%d\n",__FUNCTION__, shift);
-  if (scale_status != IF_SHIFT || scale_rx != rx) {
-    if (scale_status != NO_ACTION) {
-      g_source_remove(scale_timer);
-      gtk_widget_destroy(scale_dialog);
-      scale_status = NO_ACTION;
-    }
-  }
-
-  if (scale_status == NO_ACTION) {
-    scale_status = IF_SHIFT;
-    scale_rx = rx;
-    char title[64];
-    sprintf(title, "Filter SHIFT RX %d (Hz)", rx);
-    scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-    //
-    // When drawing the slider for the first time, use current value +/- 1000
-    //
-    filter_shift_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, (double)(shift - 1000),
-                         (double)(shift + 1000), 1.00);
-    gtk_widget_set_size_request (filter_shift_scale, 400, 30);
-    gtk_range_set_value (GTK_RANGE(filter_shift_scale), (double)shift);
-    gtk_widget_show(filter_shift_scale);
-    gtk_container_add(GTK_CONTAINER(content), filter_shift_scale);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    gtk_dialog_run(GTK_DIALOG(scale_dialog));
-  } else {
-    g_source_remove(scale_timer);
-    gtk_range_set_value (GTK_RANGE(filter_shift_scale), (double)shift);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-  }
+  char title[64];
+  sprintf(title, "Filter SHIFT RX %d (Hz)", rx);
+  show_popup_slider(IF_SHIFT, rx,  (double)(shift - 1000), (double) (shift + 1000), 1.0, (double) shift, title);
 }
 
 static void micgain_value_changed_cb(GtkWidget *widget, gpointer data) {
@@ -605,40 +510,27 @@ static void micgain_value_changed_cb(GtkWidget *widget, gpointer data) {
   }
 }
 
+void set_linein_gain(double value) {
+  //t_print("%s value=%f\n",__FUNCTION__, value);
+  linein_gain = value;
+  if (display_sliders && mic_linein) {
+    gtk_range_set_value (GTK_RANGE(mic_gain_scale), linein_gain);
+  } else {
+    show_popup_slider(LINEIN_GAIN, 0, 0.0, 31.0, 1.0, linein_gain, "LineIn Gain");
+  }
+}
+  
+
 void set_mic_gain(double value) {
   //t_print("%s value=%f\n",__FUNCTION__, value);
   if (can_transmit) {
     mic_gain = value;
     SetTXAPanelGain1(transmitter->id, pow(10.0, mic_gain / 20.0));
 
-    if (display_sliders) {
+    if (display_sliders && !mic_linein) {
       gtk_range_set_value (GTK_RANGE(mic_gain_scale), mic_gain);
     } else {
-      if (scale_status != MIC_GAIN) {
-        if (scale_status != NO_ACTION) {
-          g_source_remove(scale_timer);
-          gtk_widget_destroy(scale_dialog);
-          scale_status = NO_ACTION;
-        }
-      }
-
-      if (scale_status == NO_ACTION) {
-        scale_status = MIC_GAIN;
-        scale_dialog = gtk_dialog_new_with_buttons("Mic Gain", GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL,
-                       NULL);
-        GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-        mic_gain_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, -12.0, 50.0, 1.00);
-        gtk_widget_set_size_request (mic_gain_scale, 400, 30);
-        gtk_range_set_value (GTK_RANGE(mic_gain_scale), mic_gain);
-        gtk_widget_show(mic_gain_scale);
-        gtk_container_add(GTK_CONTAINER(content), mic_gain_scale);
-        scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-        gtk_dialog_run(GTK_DIALOG(scale_dialog));
-      } else {
-        g_source_remove(scale_timer);
-        gtk_range_set_value (GTK_RANGE(mic_gain_scale), mic_gain);
-        scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-      }
+      show_popup_slider(MIC_GAIN, 0, -12.0, 50.0, 1.0, mic_gain, "MIC GAIN");
     }
   }
 }
@@ -656,31 +548,7 @@ void set_drive(double value) {
   if (display_sliders) {
     gtk_range_set_value (GTK_RANGE(drive_scale), value);
   } else {
-    if (scale_status != DRIVE) {
-      if (scale_status != NO_ACTION) {
-        g_source_remove(scale_timer);
-        gtk_widget_destroy(scale_dialog);
-        scale_status = NO_ACTION;
-      }
-    }
-
-    if (scale_status == NO_ACTION) {
-      scale_status = DRIVE;
-      scale_dialog = gtk_dialog_new_with_buttons("Drive", GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-      GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-      drive_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, drive_max, 1.00);
-      gtk_widget_override_font(drive_scale, pango_font_description_from_string(SLIDERS_FONT));
-      gtk_widget_set_size_request (drive_scale, 400, 30);
-      gtk_range_set_value (GTK_RANGE(drive_scale), value);
-      gtk_widget_show(drive_scale);
-      gtk_container_add(GTK_CONTAINER(content), drive_scale);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-      gtk_dialog_run(GTK_DIALOG(scale_dialog));
-    } else {
-      g_source_remove(scale_timer);
-      gtk_range_set_value (GTK_RANGE(drive_scale), value);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    }
+    show_popup_slider(DRIVE, 0, 0.0, drive_max, 1.0, value, "TX DRIVE");
   }
 }
 
@@ -699,72 +567,16 @@ static void drive_value_changed_cb(GtkWidget *widget, gpointer data) {
 
 void set_filter_cut_high(int rx, int var) {
   //t_print("%s var=%d\n",__FUNCTION__,var);
-  if (scale_status != FILTER_CUT_HIGH || scale_rx != rx) {
-    if (scale_status != NO_ACTION) {
-      g_source_remove(scale_timer);
-      gtk_widget_destroy(scale_dialog);
-      scale_status = NO_ACTION;
-    }
-  }
-
-  if (scale_status == NO_ACTION) {
-    scale_status = FILTER_CUT_HIGH;
-    scale_rx = rx;
-    char title[64];
-    sprintf(title, "Filter Cut High RX %d (Hz)", rx);
-    scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-    //
-    // When drawing a new slider, take the current value +/- 1000
-    //
-    filter_cut_high_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, (double)(var - 1000), (double)(var + 1000),
-                            1.00);
-    gtk_widget_set_size_request (filter_cut_high_scale, 400, 30);
-    gtk_range_set_value (GTK_RANGE(filter_cut_high_scale), (double)var);
-    gtk_widget_show(filter_cut_high_scale);
-    gtk_container_add(GTK_CONTAINER(content), filter_cut_high_scale);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    gtk_dialog_run(GTK_DIALOG(scale_dialog));
-  } else {
-    g_source_remove(scale_timer);
-    gtk_range_set_value (GTK_RANGE(filter_cut_high_scale), (double)var);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-  }
+  char title[64];
+  sprintf(title, "Filter Cut High RX %d (Hz)", rx);
+  show_popup_slider(FILTER_CUT_HIGH, rx, (double)(var - 1000), (double)(var + 1000), 1.00, (double) var, title);
 }
 
 void set_filter_cut_low(int rx, int var) {
   //t_print("%s var=%d\n",__FUNCTION__,var);
-  if (scale_status != FILTER_CUT_LOW || scale_rx != rx) {
-    if (scale_status != NO_ACTION) {
-      g_source_remove(scale_timer);
-      gtk_widget_destroy(scale_dialog);
-      scale_status = NO_ACTION;
-    }
-  }
-
-  if (scale_status == NO_ACTION) {
-    scale_status = FILTER_CUT_LOW;
-    scale_rx = rx;
-    char title[64];
-    sprintf(title, "Filter Cut Low RX %d (Hz)", rx);
-    scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-    //
-    // When drawing a new slider, take the current value +/- 1000
-    //
-    filter_cut_low_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, (double)(var - 1000), (double)(var + 1000),
-                           1.00);
-    gtk_widget_set_size_request (filter_cut_low_scale, 400, 30);
-    gtk_range_set_value (GTK_RANGE(filter_cut_low_scale), (double)var);
-    gtk_widget_show(filter_cut_low_scale);
-    gtk_container_add(GTK_CONTAINER(content), filter_cut_low_scale);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    gtk_dialog_run(GTK_DIALOG(scale_dialog));
-  } else {
-    g_source_remove(scale_timer);
-    gtk_range_set_value (GTK_RANGE(filter_cut_low_scale), (double)var);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-  }
+  char title[64];
+  sprintf(title, "Filter Cut Low RX %d (Hz)", rx);
+  show_popup_slider(FILTER_CUT_LOW, rx, (double)(var - 1000), (double)(var + 1000), 1.00, (double) var, title);
 }
 
 static void squelch_value_changed_cb(GtkWidget *widget, gpointer data) {
@@ -814,92 +626,18 @@ void set_squelch(RECEIVER *rx) {
     gtk_range_set_value (GTK_RANGE(squelch_scale), rx->squelch);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(squelch_enable), rx->squelch_enable);
   } else {
-    if (scale_status != SQUELCH) {
-      if (scale_status != NO_ACTION) {
-        g_source_remove(scale_timer);
-        gtk_widget_destroy(scale_dialog);
-        scale_status = NO_ACTION;
-      }
-    }
-
-    if (scale_status == NO_ACTION) {
-      scale_status = SQUELCH;
-      char title[64];
-      sprintf(title, "Squelch RX %d (Hz)", rx->id);
-      scale_dialog = gtk_dialog_new_with_buttons(title, GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT, NULL, NULL);
-      GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-      squelch_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 100.0, 1.00);
-      gtk_widget_override_font(squelch_scale, pango_font_description_from_string(SLIDERS_FONT));
-      gtk_range_set_value (GTK_RANGE(squelch_scale), rx->squelch);
-      gtk_widget_set_size_request (squelch_scale, 400, 30);
-      gtk_widget_show(squelch_scale);
-      gtk_container_add(GTK_CONTAINER(content), squelch_scale);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-      gtk_dialog_run(GTK_DIALOG(scale_dialog));
-    } else {
-      g_source_remove(scale_timer);
-      gtk_range_set_value (GTK_RANGE(squelch_scale), rx->squelch);
-      scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    }
+    char title[64];
+    sprintf(title, "Squelch RX %d (Hz)", rx->id);
+    show_popup_slider(SQUELCH, rx->id, 0.0, 100.0, 1.0, rx->squelch, title);
   }
 }
 
 void show_diversity_gain() {
-  //t_print("%s\n",__FUNCTION__);
-  if (scale_status != DIV_GAIN) {
-    if (scale_status != NO_ACTION) {
-      g_source_remove(scale_timer);
-      gtk_widget_destroy(scale_dialog);
-      scale_status = NO_ACTION;
-    }
-  }
-
-  if (scale_status == NO_ACTION) {
-    scale_status = DIV_GAIN;
-    scale_dialog = gtk_dialog_new_with_buttons("Diversity Gain", GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT,
-                   NULL, NULL);
-    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-    diversity_gain_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, -27.0, 27.0, 0.01);
-    gtk_widget_set_size_request (diversity_gain_scale, 400, 30);
-    gtk_range_set_value (GTK_RANGE(diversity_gain_scale), div_gain);
-    gtk_widget_show(diversity_gain_scale);
-    gtk_container_add(GTK_CONTAINER(content), diversity_gain_scale);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    gtk_dialog_run(GTK_DIALOG(scale_dialog));
-  } else {
-    g_source_remove(scale_timer);
-    gtk_range_set_value (GTK_RANGE(diversity_gain_scale), div_gain);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-  }
+  show_popup_slider(DIV_GAIN, 0, -27.0, 27.0, 0.01, div_gain, "Diversity Gain");
 }
 
 void show_diversity_phase() {
-  //t_print("%s\n",__FUNCTION__);
-  if (scale_status != DIV_PHASE) {
-    if (scale_status != NO_ACTION) {
-      g_source_remove(scale_timer);
-      gtk_widget_destroy(scale_dialog);
-      scale_status = NO_ACTION;
-    }
-  }
-
-  if (scale_status == NO_ACTION) {
-    scale_status = DIV_PHASE;
-    scale_dialog = gtk_dialog_new_with_buttons("Diversity Phase", GTK_WINDOW(top_window), GTK_DIALOG_DESTROY_WITH_PARENT,
-                   NULL, NULL);
-    GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(scale_dialog));
-    diversity_phase_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, -180.0, 180.0, 0.1);
-    gtk_widget_set_size_request (diversity_phase_scale, 400, 30);
-    gtk_range_set_value (GTK_RANGE(diversity_phase_scale), div_phase);
-    gtk_widget_show(diversity_phase_scale);
-    gtk_container_add(GTK_CONTAINER(content), diversity_phase_scale);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-    gtk_dialog_run(GTK_DIALOG(scale_dialog));
-  } else {
-    g_source_remove(scale_timer);
-    gtk_range_set_value (GTK_RANGE(diversity_phase_scale), div_phase);
-    scale_timer = g_timeout_add(2000, scale_timeout_cb, NULL);
-  }
+  show_popup_slider(DIV_PHASE, 0, -180.0, 180.0, 0.1, div_phase, "Diversity Phase");
 }
 
 
@@ -911,24 +649,21 @@ GtkWidget *sliders_init(int my_width, int my_height) {
   gtk_widget_set_size_request (sliders, width, height);
   gtk_grid_set_row_homogeneous(GTK_GRID(sliders), FALSE);
   gtk_grid_set_column_homogeneous(GTK_GRID(sliders), TRUE);
-  set_backgnd(sliders);
   af_gain_label = gtk_label_new("AF:");
-  gtk_widget_override_font(af_gain_label, pango_font_description_from_string(SLIDERS_FONT));
+  gtk_widget_set_name(af_gain_label, "boldlabel");
   gtk_widget_show(af_gain_label);
   gtk_grid_attach(GTK_GRID(sliders), af_gain_label, 0, 0, 1, 1);
   af_gain_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, -40.0, 0.0, 1.00);
-  gtk_widget_override_font(af_gain_scale, pango_font_description_from_string(SLIDERS_FONT));
   gtk_range_set_increments (GTK_RANGE(af_gain_scale), 1.0, 1.0);
   gtk_range_set_value (GTK_RANGE(af_gain_scale), active_receiver->volume);
   gtk_widget_show(af_gain_scale);
   gtk_grid_attach(GTK_GRID(sliders), af_gain_scale, 1, 0, 2, 1);
   g_signal_connect(G_OBJECT(af_gain_scale), "value_changed", G_CALLBACK(afgain_value_changed_cb), NULL);
   agc_gain_label = gtk_label_new("AGC:");
-  gtk_widget_override_font(agc_gain_label, pango_font_description_from_string(SLIDERS_FONT));
+  gtk_widget_set_name(agc_gain_label, "boldlabel");
   gtk_widget_show(agc_gain_label);
   gtk_grid_attach(GTK_GRID(sliders), agc_gain_label, 3, 0, 1, 1);
   agc_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, -20.0, 120.0, 1.0);
-  gtk_widget_override_font(agc_scale, pango_font_description_from_string(SLIDERS_FONT));
   gtk_range_set_increments (GTK_RANGE(agc_scale), 1.0, 1.0);
   gtk_range_set_value (GTK_RANGE(agc_scale), active_receiver->agc_gain);
   gtk_widget_show(agc_scale);
@@ -937,12 +672,11 @@ GtkWidget *sliders_init(int my_width, int my_height) {
 
   if (have_rx_gain) {
     rf_gain_label = gtk_label_new("RX-GAIN:");
-    gtk_widget_override_font(rf_gain_label, pango_font_description_from_string(SLIDERS_FONT));
+    gtk_widget_set_name(rf_gain_label, "boldlabel");
     gtk_widget_show(rf_gain_label);
     gtk_grid_attach(GTK_GRID(sliders), rf_gain_label, 6, 0, 1, 1);
     rf_gain_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, adc[0].min_gain, adc[0].max_gain, 1.0);
     gtk_range_set_value (GTK_RANGE(rf_gain_scale), adc[0].gain);
-    gtk_widget_override_font(rf_gain_scale, pango_font_description_from_string(SLIDERS_FONT));
     gtk_range_set_increments (GTK_RANGE(rf_gain_scale), 1.0, 1.0);
     gtk_widget_show(rf_gain_scale);
     gtk_grid_attach(GTK_GRID(sliders), rf_gain_scale, 7, 0, 2, 1);
@@ -953,12 +687,11 @@ GtkWidget *sliders_init(int my_width, int my_height) {
   }
 
   if (have_rx_att) {
-    attenuation_label = gtk_label_new("ATT (dB):");
-    gtk_widget_override_font(attenuation_label, pango_font_description_from_string(SLIDERS_FONT));
+    attenuation_label = gtk_label_new("Att (dB):");
+    gtk_widget_set_name(attenuation_label, "boldlabel");
     gtk_widget_show(attenuation_label);
     gtk_grid_attach(GTK_GRID(sliders), attenuation_label, 6, 0, 1, 1);
     attenuation_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 31.0, 1.0);
-    gtk_widget_override_font(attenuation_scale, pango_font_description_from_string(SLIDERS_FONT));
     gtk_range_set_value (GTK_RANGE(attenuation_scale), adc[active_receiver->adc].attenuation);
     gtk_range_set_increments (GTK_RANGE(attenuation_scale), 1.0, 1.0);
     gtk_widget_show(attenuation_scale);
@@ -975,45 +708,43 @@ GtkWidget *sliders_init(int my_width, int my_height) {
   // Because "touch-screen friendly" comboboxes cannot be shown/hidden properly,
   // we put this into a container
   //
+  c25_att_label = gtk_label_new("Att/Pre:");
+  gtk_widget_set_name(c25_att_label, "boldlabel");
+  gtk_grid_attach(GTK_GRID(sliders), c25_att_label, 6, 0, 1, 1);
   c25_container = gtk_fixed_new();
-  gtk_grid_attach(GTK_GRID(sliders), c25_container, 6, 0, 3, 1);
+  gtk_grid_attach(GTK_GRID(sliders), c25_container, 7, 0, 2, 1);
   GtkWidget *c25_grid = gtk_grid_new();
   gtk_grid_set_column_homogeneous(GTK_GRID(c25_grid), TRUE);
-  GtkWidget *c25_att_label = gtk_label_new("C25 Att/PreAmp:");
-  gtk_widget_override_font(c25_att_label, pango_font_description_from_string(SLIDERS_FONT));
-  gtk_grid_attach(GTK_GRID(c25_grid), c25_att_label, 0, 0, 2, 1);
   //
   // One could achieve a finer granulation by combining attenuators and preamps,
   // but it seems sufficient to either engage attenuators or preamps
   //
   c25_att_combobox = gtk_combo_box_text_new();
-  gtk_widget_override_font(c25_att_combobox, pango_font_description_from_string(SLIDERS_FONT));
+  gtk_widget_set_name(c25_att_combobox, "boldlabel");
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(c25_att_combobox), "-36", "-36 dB");
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(c25_att_combobox), "-24", "-24 dB");
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(c25_att_combobox), "-12", "-12 dB");
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(c25_att_combobox), "0",   "  0 dB");
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(c25_att_combobox), "18",  "+18 dB");
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(c25_att_combobox), "36",  "+36 dB");
-  my_combo_attach(GTK_GRID(c25_grid), c25_att_combobox, 2, 0, 1, 1);
+  my_combo_attach(GTK_GRID(c25_grid), c25_att_combobox, 0, 0, 2, 1);
   g_signal_connect(G_OBJECT(c25_att_combobox), "changed", G_CALLBACK(c25_att_combobox_changed), NULL);
   gtk_container_add(GTK_CONTAINER(c25_container), c25_grid);
 
   if (can_transmit) {
     mic_gain_label = gtk_label_new(mic_linein ? "Linein:" : "Mic:");
-    gtk_widget_override_font(mic_gain_label, pango_font_description_from_string(SLIDERS_FONT));
+    gtk_widget_set_name(mic_gain_label, "boldlabel");
     gtk_grid_attach(GTK_GRID(sliders), mic_gain_label, 0, 1, 1, 1);
     mic_gain_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, mic_linein ? 0.0 : -12.0,
                      mic_linein ? 31.0 : 50.0, 1.0);
     gtk_range_set_increments (GTK_RANGE(mic_gain_scale), 1.0, 1.0);
-    gtk_widget_override_font(mic_gain_scale, pango_font_description_from_string(SLIDERS_FONT));
     gtk_range_set_value (GTK_RANGE(mic_gain_scale), mic_linein ? linein_gain : mic_gain);
     gtk_grid_attach(GTK_GRID(sliders), mic_gain_scale, 1, 1, 2, 1);
     g_signal_connect(G_OBJECT(mic_gain_scale), "value_changed", G_CALLBACK(micgain_value_changed_cb), NULL);
-    drive_label = gtk_label_new("Drive:");
-    gtk_widget_override_font(drive_label, pango_font_description_from_string(SLIDERS_FONT));
+    drive_label = gtk_label_new("TX Drv:");
+    gtk_widget_set_name(drive_label, "boldlabel");
     gtk_grid_attach(GTK_GRID(sliders), drive_label, 3, 1, 1, 1);
     drive_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, drive_max, 1.00);
-    gtk_widget_override_font(drive_scale, pango_font_description_from_string(SLIDERS_FONT));
     gtk_range_set_increments (GTK_RANGE(drive_scale), 1.0, 1.0);
     gtk_range_set_value (GTK_RANGE(drive_scale), getDrive());
     gtk_widget_show(drive_scale);
@@ -1027,11 +758,10 @@ GtkWidget *sliders_init(int my_width, int my_height) {
   }
 
   squelch_label = gtk_label_new("Squelch:");
-  gtk_widget_override_font(squelch_label, pango_font_description_from_string(SLIDERS_FONT));
+  gtk_widget_set_name(squelch_label, "boldlabel");
   gtk_widget_show(squelch_label);
   gtk_grid_attach(GTK_GRID(sliders), squelch_label, 6, 1, 1, 1);
   squelch_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 100.0, 1.0);
-  gtk_widget_override_font(squelch_scale, pango_font_description_from_string(SLIDERS_FONT));
   gtk_range_set_increments (GTK_RANGE(squelch_scale), 1.0, 1.0);
   gtk_range_set_value (GTK_RANGE(squelch_scale), active_receiver->squelch);
   gtk_widget_show(squelch_scale);

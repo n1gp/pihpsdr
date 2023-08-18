@@ -50,9 +50,6 @@ struct desc *MidiCommandsTable[129];
 void NewMidiEvent(enum MIDIevent event, int channel, int note, int val) {
   struct desc *desc;
   int new;
-  static int last_wheel_action = NO_ACTION ;
-  static struct timespec tp, last_wheel_tp = {0, 0};
-  long delta;
 #ifdef MIDIDEBUG
   t_print("%s:EVENT=%d CHAN=%d NOTE=%d VAL=%d\n", __FUNCTION__, now, event, channel, note, val);
 #endif
@@ -69,6 +66,11 @@ void NewMidiEvent(enum MIDIevent event, int channel, int note, int val) {
     if ((desc->channel == channel || desc->channel == -1) && (desc->event == event)) {
       // Found matching entry
       switch (desc->event) {
+      case EVENT_NONE:
+        // this cannot happen
+        t_print("%s: Unknown Event\n", __FUNCTION__);
+        break;
+
       case MIDI_NOTE:
         DoTheMidi(desc->action, desc->type, val);
         break;
@@ -79,15 +81,6 @@ void NewMidiEvent(enum MIDIevent event, int channel, int note, int val) {
           new = (val * 100 + 63) / 127;
           DoTheMidi(desc->action, desc->type, new);
         } else if (desc->type == MIDI_WHEEL) {
-          if (desc->delay > 0 && last_wheel_action == desc->action) {
-            clock_gettime(CLOCK_MONOTONIC, &tp);
-            delta = 1000 * (tp.tv_sec - last_wheel_tp.tv_sec);
-            delta += (tp.tv_nsec - last_wheel_tp.tv_nsec) / 1000000;
-
-            if (delta < desc->delay) { break; }
-
-            last_wheel_tp = tp;
-          }
 
           // translate value to direction/speed
           new = 0;
@@ -110,7 +103,6 @@ void NewMidiEvent(enum MIDIevent event, int channel, int note, int val) {
           //                               desc->rgt1, desc->rgt2, desc->fr1, desc->fr2, desc->vfr1, desc->vfr2);
           if (new != 0) { DoTheMidi(desc->action, desc->type, new); }
 
-          last_wheel_action = desc->action;
         }
 
         break;
@@ -124,8 +116,6 @@ void NewMidiEvent(enum MIDIevent event, int channel, int note, int val) {
 
         break;
 
-      case EVENT_NONE:
-        break;
       }
 
       break;
@@ -143,9 +133,6 @@ void NewMidiEvent(enum MIDIevent event, int channel, int note, int val) {
     if (event == MIDI_CTRL ) { t_print("%s: Unassigned Controller Ctl=%d Val=%d\n", __FUNCTION__, note, val); }
   }
 }
-
-gchar *midi_types[] = {"NONE", "KEY", "KNOB/SLIDER", "*INVALID*", "WHEEL"};
-gchar *midi_events[] = {"NONE", "NOTE", "CTRL", "PITCH"};
 
 /*
  * Release data from MidiCommandsTable
@@ -199,6 +186,7 @@ void MidiAddCommand(int note, struct desc *desc) {
   }
 }
 
+#if 0
 //
 // maintained so old midi configurations can be loaded
 // the sole purpose of this table is to map names in
@@ -341,7 +329,6 @@ int ReadLegacyMidiFile(char *filename) {
   int action;
   int chan;
   int t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12;
-  int delay;
   struct desc *desc;
   enum ACTIONtype type;
   enum MIDIevent event;
@@ -394,7 +381,6 @@ int ReadLegacyMidiFile(char *filename) {
     event = EVENT_NONE;
     type = TYPE_NONE;
     key = 0;
-    delay = 0;
     action = NO_ACTION;
 
     //
@@ -452,11 +438,6 @@ int ReadLegacyMidiFile(char *filename) {
       //t_print("%s:WHEEL\n",__FUNCTION__);
     }
 
-    if ((cp = strstr(zeile, "DELAY="))) {
-      sscanf(cp + 6, "%d", &delay);
-      //t_print("%s:DELAY:%d\n",__FUNCTION__,delay);
-    }
-
     if ((cp = strstr(zeile, "THR="))) {
       sscanf(cp + 4, "%d %d %d %d %d %d %d %d %d %d %d %d",
              &t1, &t2, &t3, &t4, &t5, &t6, &t7, &t8, &t9, &t10, &t11, &t12);
@@ -482,7 +463,6 @@ int ReadLegacyMidiFile(char *filename) {
     desc->action = action;
     desc->type = type;
     desc->event = event;
-    desc->delay = delay;
     desc->vfl1  = t1;
     desc->vfl2  = t2;
     desc->fl1   = t3;
@@ -514,3 +494,4 @@ int ReadLegacyMidiFile(char *filename) {
 
   return 0;
 }
+#endif

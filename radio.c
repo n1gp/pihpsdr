@@ -88,15 +88,16 @@
 #define min(x,y) (x<y?x:y)
 #define max(x,y) (x<y?y:x)
 
-int MENU_HEIGHT = 30;
-int MENU_WIDTH = 65;
-int VFO_HEIGHT = 60;
-int VFO_WIDTH = 530;
-int METER_HEIGHT = 60;
-int METER_WIDTH = 200;
-int ZOOMPAN_HEIGHT = 50;
-int SLIDERS_HEIGHT = 100;
-int TOOLBAR_HEIGHT = 30;
+int MENU_HEIGHT = 30;        // always set to VFO_HEIGHT/2
+int MENU_WIDTH = 65;         // nowhere changed
+int VFO_HEIGHT = 60;         // taken from the current VFO bar layout
+int VFO_WIDTH = 530;         // taken from the current VFO bar layout
+int METER_HEIGHT = 60;       // always set to  VFO_HEIGHT
+int METER_WIDTH = 200;       // nowhere changed
+int ZOOMPAN_HEIGHT = 50;     // nowhere changed
+int SLIDERS_HEIGHT = 100;    // nowhere changed
+int TOOLBAR_HEIGHT = 30;     // nowhere changed
+
 int rx_stack_horizontal = 0;
 
 gint controller = NO_CONTROLLER;
@@ -332,17 +333,6 @@ gint sequence_errors = 0;
 
 gint rx_height;
 
-//
-// This is used to over-ride the background of a widget.
-// TRANSFORMED TO A NO-OP, since a fixed background color
-// implicitly makes an illegal assumption about the GTK
-// theme in use.
-//
-void set_backgnd(GtkWidget *widget) {
-  //static GdkRGBA BackGroundColour = {COLOUR_MENU_BACKGND};
-  //gtk_widget_override_background_color(widget,GTK_STATE_FLAG_NORMAL,&BackGroundColor);
-}
-
 void radio_stop() {
   if (can_transmit) {
     t_print("radio_stop: TX: stop display update\n");
@@ -437,9 +427,9 @@ void reconfigure_screen() {
   VFO_HEIGHT = vfo_layout_list[vfo_layout].height;
   MENU_HEIGHT = VFO_HEIGHT / 2;
   METER_HEIGHT = VFO_HEIGHT;
-  t_print("%s: display = %dx%d, vfo height = %dx%d, meter width = %d\n",
-          __FUNCTION__,
-          display_width, display_height, VFO_WIDTH, VFO_HEIGHT, METER_WIDTH);
+  //t_print("%s: display = %dx%d, vfo height = %dx%d, meter width = %d\n",
+  //        __FUNCTION__,
+  //        display_width, display_height, VFO_WIDTH, VFO_HEIGHT, METER_WIDTH);
   //
   // Change sizes of main window, Hide and Menu buttons, meter, and vfo
   //
@@ -585,7 +575,8 @@ static gboolean save_cb(gpointer data) {
 #endif
 
 //
-// These variables are defined outside hideall_cb.
+// These variables are set in hideall_cb and read
+// in radioSaveState.
 // If the props file is written while "Hide"-ing,
 // these values are written instead of the current
 // hide/show status of the Zoom/Sliders/Toolbar area.
@@ -648,13 +639,13 @@ static void create_visual() {
   meter = meter_init(METER_WIDTH, METER_HEIGHT);
   gtk_fixed_put(GTK_FIXED(fixed), meter, VFO_WIDTH, y);
   hide_b = gtk_button_new_with_label("Hide");
-  gtk_widget_override_font(hide_b, pango_font_description_from_string(SLIDERS_FONT));
+  gtk_widget_set_name(hide_b, "boldlabel");
   gtk_widget_set_size_request (hide_b, MENU_WIDTH, MENU_HEIGHT);
   g_signal_connect(hide_b, "button-press-event", G_CALLBACK(hideall_cb), NULL);
   gtk_fixed_put(GTK_FIXED(fixed), hide_b, VFO_WIDTH + METER_WIDTH, y);
   y += MENU_HEIGHT;
   menu_b = gtk_button_new_with_label("Menu");
-  gtk_widget_override_font(menu_b, pango_font_description_from_string(SLIDERS_FONT));
+  gtk_widget_set_name(menu_b, "boldlabel");
   gtk_widget_set_size_request (menu_b, MENU_WIDTH, MENU_HEIGHT);
   g_signal_connect (menu_b, "button-press-event", G_CALLBACK(menu_cb), NULL) ;
   gtk_fixed_put(GTK_FIXED(fixed), menu_b, VFO_WIDTH + METER_WIDTH, y);
@@ -706,13 +697,6 @@ static void create_visual() {
     gtk_fixed_put(GTK_FIXED(fixed), receiver[i]->panel, 0, y);
     g_object_ref((gpointer)receiver[i]->panel);
     y += rx_height / RECEIVERS;
-  }
-
-  //
-  // Sanity check: in old protocol, all receivers must have the same sample rate
-  //
-  if ((protocol == ORIGINAL_PROTOCOL) && (RECEIVERS == 2) && (receiver[0]->sample_rate != receiver[1]->sample_rate)) {
-    receiver[1]->sample_rate = receiver[0]->sample_rate;
   }
 
   active_receiver = receiver[0];
@@ -889,6 +873,22 @@ static void create_visual() {
 
 void start_radio() {
   int i;
+
+  //
+  // Debug code. Placed here at the start of the program. piHPSDR  implicitly assumes
+  //             that the entires in the action table (actions.c) are sorted by their
+  //             action enum values (actions.h).
+  //             This will produce no output if the ActionTable is sorted correctly.
+  //             If the warning appears, correct the order of actions in actions.h
+  //             and re-compile.
+  //
+  for (i=0; i<ACTIONS; i++) {
+    if (i != ActionTable[i].action) {
+      t_print("WARNING: action table messed up\n");
+      t_print("WARNING: Position %d Action=%d str=%s\n", i, ActionTable[i].action, ActionTable[i].button_str);
+    }
+  }
+
   //t_print("start_radio: selected radio=%p device=%d\n",radio,radio->device);
   gdk_window_set_cursor(gtk_widget_get_window(top_window), gdk_cursor_new(GDK_WATCH));
   //
@@ -1436,13 +1436,6 @@ void start_radio() {
 
   receivers = RECEIVERS;
   radioRestoreState();
-
-  //
-  // Sanity Check: enable diversity only if there are two RX and two ADCs
-  //
-  if (RECEIVERS < 2 || n_adc < 2) {
-    diversity_enabled = 0;
-  }
 
   radio_change_region(region);
   create_visual();
@@ -2360,7 +2353,6 @@ void radioRestoreState() {
   GetPropI0("display_toolbar",                               display_toolbar);
   GetPropI0("display_width",                                 display_width);
   GetPropI0("display_height",                                display_height);
-  GetPropI0("METER_WIDTH",                                   METER_WIDTH);
   GetPropI0("rx_stack_horizontal",                           rx_stack_horizontal);
   GetPropI0("vfo_layout",                                    vfo_layout);
   GetPropI0("optimize_touchscreen",                          optimize_for_touchscreen);
@@ -2368,6 +2360,10 @@ void radioRestoreState() {
   //
   // TODO: I think some further options related to the GUI
   // have to be moved up here for Client-Server operation
+  //
+  // We want to do some internal consistency checking, most of which is done at
+  // the very end of this function. However, if the radio is remote we will return
+  // from this function in due course so have to check some things here.
   //
   // Sanity check part 1:
   //
@@ -2526,6 +2522,22 @@ void radioRestoreState() {
 #ifdef MIDI
   midiRestoreState();
 #endif
+
+  //
+  // Sanity check part 2:
+  //
+  // 1.) If the radio does not have 2 ADCs, there is no DIVERSITY
+  //
+  if (RECEIVERS < 2 || n_adc < 2) {
+    diversity_enabled = 0;
+  }
+  //
+  // 2.) Selecting the N2ADR filter board overrides most OC settings
+  //
+  if (filter_board == N2ADR) {
+    n2adr_oc_settings(); // Apply default OC settings for N2ADR board
+  }
+
   g_mutex_unlock(&property_mutex);
 }
 
@@ -2569,7 +2581,6 @@ void radioSaveState() {
   SetPropI0("display_toolbar",                               hide_status ? old_tool : display_toolbar);
   SetPropI0("display_width",                                 display_width);
   SetPropI0("display_height",                                display_height);
-  SetPropI0("METER_WIDTH",                                   METER_WIDTH);
   SetPropI0("rx_stack_horizontal",                           rx_stack_horizontal);
   SetPropI0("vfo_layout",                                    vfo_layout);
   SetPropI0("optimize_touchscreen",                          optimize_for_touchscreen);

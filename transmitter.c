@@ -104,8 +104,8 @@ static int p1local = 0, p2local = 0; // sine tone to local audio
 
 static void init_analyzer(TRANSMITTER *tx);
 
-static gboolean delete_event(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
-  // ignore delete event
+static gboolean close_cb() {
+  // there is nothing to clean up
   return TRUE;
 }
 
@@ -154,7 +154,17 @@ void reconfigure_transmitter(TRANSMITTER *tx, int width, int height) {
     t_print("reconfigure_transmitter: width=%d height=%d\n", width, height);
     tx->width = width;
     tx->height = height;
+    gtk_widget_set_size_request(tx->panel, width, height);
     int ratio = tx->iq_output_rate / tx->mic_sample_rate;
+    //
+    // Upon calling, width either equals display_width (non-duplex) and
+    // the *shown* TX spectrum is 24 kHz wide, or width equals 1/4 display_width (duplex)
+    // and the *shown* TX spectrum is 6 kHz wide. In both cases, display_width pixels
+    // correspond to 24 kHz, while the width of the whole spectrum is TXIQ. 
+    // The mic sample rate is fixed to 48k , so ratio is TXIQ/24k.
+    // The value of tx->pixels corresponds to the *full* TX spectrum in the
+    // target resolution.
+    //
     tx->pixels = display_width * ratio * 2;
     g_free(tx->pixel_samples);
     tx->pixel_samples = g_new(float, tx->pixels);
@@ -650,7 +660,8 @@ void create_dialog(TRANSMITTER *tx) {
   tx->dialog = gtk_dialog_new();
   gtk_window_set_transient_for(GTK_WINDOW(tx->dialog), GTK_WINDOW(top_window));
   gtk_window_set_title(GTK_WINDOW(tx->dialog), "TX");
-  g_signal_connect (tx->dialog, "delete_event", G_CALLBACK (delete_event), NULL);
+  g_signal_connect (tx->dialog, "delete_event", G_CALLBACK (close_cb), NULL);
+  g_signal_connect (tx->dialog, "destroy", G_CALLBACK (close_cb), NULL);
   GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(tx->dialog));
   //t_print("create_dialog: add tx->panel\n");
   gtk_widget_set_size_request (tx->panel, display_width / 4, display_height / 2);

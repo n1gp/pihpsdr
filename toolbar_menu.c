@@ -17,93 +17,86 @@
 */
 
 #include <gtk/gtk.h>
-#include <glib/gprintf.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "main.h"
-#include "new_menu.h"
-#include "agc_menu.h"
-#include "agc.h"
-#include "band.h"
-#include "channel.h"
 #include "radio.h"
-#include "receiver.h"
-#include "vfo.h"
-#include "button_text.h"
-#include "toolbar.h"
+#include "new_menu.h"
 #include "actions.h"
 #include "action_dialog.h"
 #include "gpio.h"
-#include "i2c.h"
+#include "toolbar.h"
 
 static GtkWidget *dialog = NULL;
 
-static SWITCH *temp_switches;
+static void cleanup() {
+  if (dialog != NULL) {
+    GtkWidget *tmp=dialog;
+    dialog = NULL;
+    gtk_widget_destroy(tmp);
+    sub_menu = NULL;
+    active_menu  = NO_MENU;
+  }
+}
 
-
-static void switch_page_cb(GtkNotebook *notebook, GtkWidget *page, guint page_num, gpointer user_data) {
-  temp_switches = switches_controller1[page_num];
+static gboolean close_cb () {
+  cleanup();
+  return TRUE;
 }
 
 static gboolean switch_cb(GtkWidget *widget, GdkEvent *event, gpointer data) {
-  int sw = GPOINTER_TO_INT(data);
-  int action = action_dialog(dialog, CONTROLLER_SWITCH, temp_switches[sw].switch_function);
-  gtk_button_set_label(GTK_BUTTON(widget), ActionTable[action].str);
-  temp_switches[sw].switch_function = action;
+  SWITCH *sw = (SWITCH *) data;
+  int action = action_dialog(dialog, CONTROLLER_SWITCH, sw->switch_function);
+  gtk_button_set_label(GTK_BUTTON(widget), ActionTable[action].button_str);
+  sw->switch_function = action;
   update_toolbar_labels();
   return TRUE;
 }
 
-static void response_event(GtkWidget *mydialog, gint id, gpointer user_data) {
-  // mydialog is a copy of dialog
-  gtk_widget_destroy(mydialog);
-  dialog = NULL;
-  active_menu = NO_MENU;
-  sub_menu = NULL;
-}
-
 void toolbar_menu(GtkWidget *parent) {
-  gchar label[64];
-  GtkWidget *notebook;
-  GtkWidget *widget;
-  gint lfunction = 0;
-  dialog = gtk_dialog_new_with_buttons("piHPSDR - Toolbar Actions", GTK_WINDOW(parent), GTK_DIALOG_DESTROY_WITH_PARENT,
-                                       "_OK", GTK_RESPONSE_ACCEPT, NULL);
-  g_signal_connect (dialog, "response", G_CALLBACK (response_event), NULL);
-  set_backgnd(dialog);
+  dialog = gtk_dialog_new();
+  gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent));
+  gtk_window_set_title(GTK_WINDOW(dialog), "piHPSDR - Toolbar configuration");
+  g_signal_connect (dialog, "delete_event", G_CALLBACK (close_cb), NULL);
+  g_signal_connect (dialog, "destroy", G_CALLBACK (close_cb), NULL);
   GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
+  GtkWidget *grid = gtk_grid_new();
+  gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
+  gtk_grid_set_row_homogeneous(GTK_GRID(grid), FALSE);
+  gtk_grid_set_column_spacing (GTK_GRID(grid), 5);
+  gtk_grid_set_row_spacing (GTK_GRID(grid), 5);
+  GtkWidget *close_b = gtk_button_new_with_label("Close");
+  gtk_widget_set_name(close_b,"close_button");
+  g_signal_connect (close_b, "button-press-event", G_CALLBACK(close_cb), NULL);
+  gtk_grid_attach(GTK_GRID(grid), close_b, 0, 0, 2, 1);
+
+  gint lfunction = 0;
   const int max_switches = 8;
-  notebook = gtk_notebook_new();
-  set_backgnd(notebook);
 
   for (lfunction = 0; lfunction < MAX_FUNCTIONS; lfunction++) {
-    GtkWidget *grid = gtk_grid_new();
-    gtk_grid_set_column_homogeneous(GTK_GRID(grid), TRUE);
-    gtk_grid_set_row_homogeneous(GTK_GRID(grid), FALSE);
-    gtk_grid_set_column_spacing (GTK_GRID(grid), 0);
-    gtk_grid_set_row_spacing (GTK_GRID(grid), 0);
-    temp_switches = switches_controller1[lfunction];
+    gchar text[64];
+    sprintf(text,"F%d", lfunction);
+    GtkWidget *widget=gtk_label_new(text);
+    gtk_widget_set_name(widget, "boldlabel");
+
+    gtk_grid_attach(GTK_GRID(grid), widget, 0, lfunction+1, 1, 1);
+    SWITCH *sw = switches_controller1[lfunction];
 
     for (int i = 0; i < max_switches; i++) {
       if (i == max_switches - 1) {
         // Rightmost switch is hardwired to FUNCTION
-        temp_switches[i].switch_function = FUNCTION;
-        widget = gtk_button_new_with_label(ActionTable[temp_switches[i].switch_function].str);
-        gtk_grid_attach(GTK_GRID(grid), widget, i, 1, 1, 1);
+        sw[i].switch_function = FUNCTION;
+        widget = gtk_button_new_with_label(ActionTable[sw[i].switch_function].button_str);
+        gtk_grid_attach(GTK_GRID(grid), widget, i+1, lfunction+1, 1, 1);
       } else {
-        widget = gtk_button_new_with_label(ActionTable[temp_switches[i].switch_function].str);
-        gtk_grid_attach(GTK_GRID(grid), widget, i, 1, 1, 1);
-        g_signal_connect(widget, "button-press-event", G_CALLBACK(switch_cb), GINT_TO_POINTER(i));
+        widget = gtk_button_new_with_label(ActionTable[sw[i].switch_function].button_str);
+        gtk_grid_attach(GTK_GRID(grid), widget, i+1, lfunction+1, 1, 1);
+        g_signal_connect(widget, "button-press-event", G_CALLBACK(switch_cb), (gpointer) &sw[i]);
       }
     }
-
-    g_sprintf(label, "Function %d", lfunction);
-    gtk_notebook_append_page(GTK_NOTEBOOK(notebook), grid, gtk_label_new(label));
   }
 
-  gtk_container_add(GTK_CONTAINER(content), notebook);
-  g_signal_connect (notebook, "switch-page", G_CALLBACK(switch_page_cb), NULL);
+  gtk_container_add(GTK_CONTAINER(content), grid);
   sub_menu = dialog;
   gtk_widget_show_all(dialog);
 }
