@@ -63,17 +63,18 @@ static gboolean close_cb () {
 }
 
 static void cw_keyer_internal_cb(GtkWidget *widget, gpointer data) {
-  cw_keyer_internal = cw_keyer_internal == 1 ? 0 : 1;
+  cw_keyer_internal = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
   cw_changed();
 }
 
 static void cw_peak_cb(GtkWidget *widget, gpointer data) {
-  cw_audio_peak_filter = cw_audio_peak_filter == 1 ? 0 : 1;
+  active_receiver->cwAudioPeakFilter = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
   receiver_filter_changed(active_receiver);
+  g_idle_add(ext_vfo_update, NULL);
 }
 
 static void cw_keyer_spacing_cb(GtkWidget *widget, gpointer data) {
-  cw_keyer_spacing = cw_keyer_spacing == 1 ? 0 : 1;
+  cw_keyer_spacing = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
   cw_changed();
 }
 
@@ -83,12 +84,12 @@ static void cw_keyer_speed_value_changed_cb(GtkWidget *widget, gpointer data) {
 }
 
 static void cw_audio_peak_width_changed_cb(GtkWidget *widget, gpointer data) {
-  cw_audio_peak_width = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+  active_receiver->cwAudioPeakWidth = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
   receiver_filter_changed(active_receiver);
 }
 
 static void cw_breakin_cb(GtkWidget *widget, gpointer data) {
-  cw_breakin = cw_breakin == 1 ? 0 : 1;
+  cw_breakin = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
   cw_changed();
 }
 
@@ -103,7 +104,7 @@ static void cw_keyer_weight_value_changed_cb(GtkWidget *widget, gpointer data) {
 }
 
 static void cw_keys_reversed_cb(GtkWidget *widget, gpointer data) {
-  cw_keys_reversed = cw_keys_reversed == 1 ? 0 : 1;
+  cw_keys_reversed = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
   cw_changed();
 }
 
@@ -215,12 +216,12 @@ void cw_menu(GtkWidget *parent) {
   GtkWidget *cw_peak_b = gtk_check_button_new_with_label("Audio peak filter, Width:");
   gtk_widget_set_name(cw_peak_b, "boldlabel");
   gtk_widget_set_halign(cw_peak_b, GTK_ALIGN_END);
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (cw_peak_b), cw_audio_peak_filter);
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (cw_peak_b), active_receiver->cwAudioPeakFilter);
   gtk_widget_show(cw_peak_b);
   gtk_grid_attach(GTK_GRID(grid), cw_peak_b, 0, 6, 1, 1);
   g_signal_connect(cw_peak_b, "toggled", G_CALLBACK(cw_peak_cb), NULL);
   GtkWidget *cw_width_b = gtk_spin_button_new_with_range(25.0, 150.0, 1.0);
-  gtk_spin_button_set_value(GTK_SPIN_BUTTON(cw_width_b), (double)cw_audio_peak_width);
+  gtk_spin_button_set_value(GTK_SPIN_BUTTON(cw_width_b), (double) active_receiver->cwAudioPeakWidth);
   gtk_widget_show(cw_width_b);
   gtk_grid_attach(GTK_GRID(grid), cw_width_b, 1, 6, 1, 1);
   g_signal_connect(cw_width_b, "value_changed", G_CALLBACK(cw_audio_peak_width_changed_cb), NULL);

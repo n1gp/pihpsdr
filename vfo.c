@@ -117,9 +117,35 @@ static void modesettingsRestoreState() {
 
   for (int i = 0; i < MODES; i++) {
     //
-    // set defaults
+    // set defaults: everything off, and the default
+    //               filter and VFO step size depends on the mode
     //
-    mode_settings[i].filter = filterF6;
+    switch (i) {
+      case modeLSB:
+      case modeUSB:
+      case modeDSB:
+        mode_settings[i].filter = filterF5; //  2700 Hz
+        mode_settings[i].step   = 100;
+        break;
+      case modeDIGL:
+      case modeDIGU:
+        mode_settings[i].filter = filterF6; //  1000 Hz
+        mode_settings[i].step   = 50;
+        break;
+      case modeCWL:
+      case modeCWU:
+        mode_settings[i].filter = filterF4; //   500 Hz
+        mode_settings[i].step   = 25;
+        break;
+      case modeAM:
+      case modeSAM:
+      case modeSPEC:
+      case modeDRM:
+      case modeFMN:  // nowhere used for FM
+        mode_settings[i].filter = filterF3; //  8000 Hz
+        mode_settings[i].step   = 100;
+        break;
+    }
     mode_settings[i].nr = 0;
     mode_settings[i].nb = 0;
     mode_settings[i].anf = 0;
@@ -134,7 +160,6 @@ static void modesettingsRestoreState() {
     mode_settings[i].rxeq[1] = 0;
     mode_settings[i].rxeq[2] = 0;
     mode_settings[i].rxeq[3] = 0;
-    mode_settings[i].step = 100;
     mode_settings[i].compressor = 0;
     mode_settings[i].compressor_level = 0.0;
     GetPropI1("modeset.%d.filter", i,                mode_settings[i].filter);
@@ -195,7 +220,7 @@ void vfoRestoreState() {
     }
 
     vfo[i].mode = modeCWU;
-    vfo[i].filter = filterF6;
+    vfo[i].filter = filterF4;
     vfo[i].lo = 0;
     vfo[i].offset = 0;
     vfo[i].rit_enabled = 0;
@@ -1167,8 +1192,17 @@ void vfo_update() {
 
     case modeCWL:
     case modeCWU:
-      sprintf(temp_text, "%s %s %d wpm %d Hz", mode_string[vfo[id].mode], band_filter->title,
-              cw_keyer_speed, cw_keyer_sidetone_frequency);
+      if (active_receiver->cwAudioPeakFilter) {
+        sprintf(temp_text, "%s %sP %dwpm %dHz", mode_string[vfo[id].mode],
+                band_filter->title,
+                cw_keyer_speed,
+                cw_keyer_sidetone_frequency);
+      } else {
+        sprintf(temp_text, "%s %s %d wpm %d Hz", mode_string[vfo[id].mode],
+                band_filter->title,
+                cw_keyer_speed,
+                cw_keyer_sidetone_frequency);
+      }
       break;
 
     case modeLSB:
