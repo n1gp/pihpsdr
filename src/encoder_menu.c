@@ -35,6 +35,8 @@
 #include "gpio.h"
 #include "i2c.h"
 
+void encoder_menu(GtkWidget *parent);
+
 static GtkWidget *dialog = NULL;
 
 static void cleanup() {
@@ -49,6 +51,13 @@ static void cleanup() {
 
 static gboolean close_cb () {
   cleanup();
+  return TRUE;
+}
+
+static gboolean default_cb(GtkWidget *widget, GdkEvent *event, gpointer data) {
+  memcpy(encoders, &encoders_default, sizeof(ENCODER)*MAX_ENCODERS);
+  cleanup();
+  encoder_menu(top_window);
   return TRUE;
 }
 
@@ -118,6 +127,11 @@ void encoder_menu(GtkWidget *parent) {
   gtk_widget_set_name(close_b, "close_button");
   g_signal_connect (close_b, "button-press-event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid), close_b, col, row, 1, 1);
+  col = 2;
+  GtkWidget *default_b = gtk_button_new_with_label("Defaults");
+  gtk_widget_set_name(default_b, "close_button"); // same looks as Close button
+  g_signal_connect (default_b, "button-press-event", G_CALLBACK(default_cb), NULL);
+  gtk_grid_attach(GTK_GRID(grid), default_b, col, row, 1, 1);
   row++;
   col = 0;
 
@@ -464,15 +478,15 @@ void encoder_menu(GtkWidget *parent) {
       for (int j = 2 * i; j < 2 * i + 2; j++) {
         widget = gtk_button_new_with_label(ActionTable[encoders[j].switch_function].str);
         gtk_widget_set_name(widget, "small_button");
-        g_signal_connect(widget, "button-press-event", G_CALLBACK(encoder_switch_cb), GINT_TO_POINTER(i));
+        g_signal_connect(widget, "button-press-event", G_CALLBACK(encoder_switch_cb), GINT_TO_POINTER(j));
         gtk_grid_attach(GTK_GRID(grid), widget, 4 * i, row++, 1, 1);
         widget = gtk_button_new_with_label(ActionTable[encoders[j].top_encoder_function].str);
         gtk_widget_set_name(widget, "small_button");
-        g_signal_connect(widget, "button-press-event", G_CALLBACK(encoder_top_cb), GINT_TO_POINTER(i));
+        g_signal_connect(widget, "button-press-event", G_CALLBACK(encoder_top_cb), GINT_TO_POINTER(j));
         gtk_grid_attach(GTK_GRID(grid), widget, 4 * i, row++, 1, 1);
         widget = gtk_button_new_with_label(ActionTable[encoders[j].bottom_encoder_function].str);
         gtk_widget_set_name(widget, "small_button");
-        g_signal_connect(widget, "button-press-event", G_CALLBACK(encoder_bottom_cb), GINT_TO_POINTER(i));
+        g_signal_connect(widget, "button-press-event", G_CALLBACK(encoder_bottom_cb), GINT_TO_POINTER(j));
         gtk_grid_attach(GTK_GRID(grid), widget, 4 * i, row++, 1, 1);
 
         if  (j == 2 * i) {

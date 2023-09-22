@@ -36,6 +36,8 @@
 #include "gpio.h"
 #include "i2c.h"
 
+void switch_menu(GtkWidget *parent);
+
 static GtkWidget *dialog = NULL;
 
 static SWITCH *temp_switches;
@@ -64,6 +66,13 @@ static gboolean switch_cb(GtkWidget *widget, GdkEvent *event, gpointer data) {
   return TRUE;
 }
 
+static gboolean default_cb(GtkWidget *widget, GdkEvent *event, gpointer data) {
+  memcpy(switches, &switches_default, sizeof(SWITCH)*((controller == CONTROLLER1)?1:MAX_SWITCHES));
+  cleanup();
+  switch_menu(top_window);
+  return TRUE;
+}
+
 void switch_menu(GtkWidget *parent) {
   gint row;
   gint col;
@@ -84,6 +93,10 @@ void switch_menu(GtkWidget *parent) {
   gtk_widget_set_name(close_b, "close_button");
   g_signal_connect (close_b, "button-press-event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid), close_b, 0, 0, 2, 1);
+  GtkWidget *default_b = gtk_button_new_with_label("Defaults");
+  gtk_widget_set_name(default_b, "close_button"); // same looks as Close button
+  g_signal_connect (default_b, "button-press-event", G_CALLBACK(default_cb), NULL);
+  gtk_grid_attach(GTK_GRID(grid), default_b, 3, 0, 2, 1);
   row = 1;
   col = 0;
 
