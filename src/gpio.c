@@ -184,8 +184,6 @@ ENCODER encoders_g2_frontpanel[MAX_ENCODERS] = {
   {TRUE, TRUE, 18, 1, 17, 1, 0, VFO, R_START, FALSE, TRUE, 0, 0, 0, 0, 0, 0, R_START, FALSE, TRUE, 0, 0, 0L},  //VFO
 };
 
-ENCODER encoders_default[MAX_ENCODERS] = { 0 };
-
 ENCODER *encoders = encoders_no_controller;
 
 SWITCH switches_controller1[MAX_FUNCTIONS][MAX_SWITCHES] = {
@@ -352,7 +350,6 @@ SWITCH switches_g2_frontpanel[MAX_SWITCHES] = {
 };
 
 SWITCH *switches = switches_controller1[0];
-SWITCH switches_default[MAX_SWITCHES] = { 0 };
 
 #ifdef GPIO
 
@@ -746,12 +743,6 @@ void gpio_set_defaults(int ctrlr) {
     encoders = encoders_g2_frontpanel;
     switches = switches_g2_frontpanel;
     break;
-  }
-  // using bottom_encoder_pullup as a flag to copy over defaults
-  // since all controllers intialize it to TRUE, just once.
-  if (encoders_default[0].bottom_encoder_pullup != TRUE && ctrlr != NO_CONTROLLER) {
-    memcpy(&encoders_default, encoders, sizeof(ENCODER)*MAX_ENCODERS);
-    memcpy(&switches_default, switches, sizeof(SWITCH)*((ctrlr == CONTROLLER1)?1:MAX_SWITCHES));
   }
 }
 

@@ -50,7 +50,6 @@ typedef struct _encoder {
 } ENCODER;
 
 extern ENCODER *encoders;
-extern ENCODER encoders_default[MAX_ENCODERS];
 
 typedef struct _switch {
   gboolean switch_enabled;
@@ -66,7 +65,6 @@ extern SWITCH switches_controller2_v2[MAX_SWITCHES];
 extern SWITCH switches_g2_frontpanel[MAX_SWITCHES];
 
 extern SWITCH *switches;
-extern SWITCH switches_default[MAX_SWITCHES];
 
 extern int *sw_action;
 
