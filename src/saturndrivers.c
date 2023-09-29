@@ -36,6 +36,7 @@
 #include <math.h>
 #include "saturndrivers.h"
 //#include "saturnregisters.h"
+#include <semaphore.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -92,7 +93,7 @@ int OpenXDMADriver(void) {
 // AXIAddr: offset address in the FPGA window
 //
 int DMAWriteToFPGA(int fd, unsigned char*SrcData, uint32_t Length, uint32_t AXIAddr) {
-  ssize_t rc = 0;                 // response code
+  ssize_t rc;                 // response code
   off_t OffsetAddr;
   OffsetAddr = AXIAddr;
   rc = lseek(fd, OffsetAddr, SEEK_SET);
@@ -174,7 +175,7 @@ void RegisterWrite(uint32_t Address, uint32_t Data) {
 // END hwaccess.c
 
 
-pthread_mutex_t DDCResetFIFOMutex;
+sem_t DDCResetFIFOMutex;
 
 //
 // DMA FIFO depths
@@ -273,13 +274,13 @@ void ResetDMAStreamFIFO(EDMAStreamSelect DDCNum) {
     break;
   }
 
-  pthread_mutex_lock(&DDCResetFIFOMutex);                       // get protected access
+  sem_wait(&DDCResetFIFOMutex);                       // get protected access
   Data = RegisterRead(VADDRFIFORESET);        // read current content
   Data = Data & ~DataBit;
   RegisterWrite(VADDRFIFORESET, Data);        // set reset bit to zero
   Data = Data | DataBit;
   RegisterWrite(VADDRFIFORESET, Data);        // set reset bit to 1
-  pthread_mutex_unlock(&DDCResetFIFOMutex);                       // release protected access
+  sem_post(&DDCResetFIFOMutex);                       // release protected access
 }
 
 

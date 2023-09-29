@@ -48,6 +48,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <net/if.h>
+#include <semaphore.h>
 #include <sys/stat.h>
 
 #include "saturnregisters.h"              // register I/O for Saturn
@@ -60,12 +61,10 @@
 #include "message.h"
 
 
-extern pthread_mutex_t DDCInSelMutex;                 // protect access to shared DDC input select register
-extern pthread_mutex_t DDCResetFIFOMutex;             // protect access to FIFO reset register
-extern pthread_mutex_t RFGPIOMutex;                   // protect access to RF GPIO register
-extern pthread_mutex_t CodecRegMutex;                 // protect writes to codec
-pthread_mutex_t CBLock;                               // used in circular buffer
-
+extern sem_t DDCInSelMutex;                 // protect access to shared DDC input select register
+extern sem_t DDCResetFIFOMutex;             // protect access to FIFO reset register
+extern sem_t RFGPIOMutex;                   // protect access to RF GPIO register
+extern sem_t CodecRegMutex;                 // protect writes to codec
 
 bool IsTXMode;                              // true if in TX
 bool SDRActive;                             // true if this SDR is running at the moment
@@ -106,8 +105,6 @@ static gpointer saturn_micaudio_thread(gpointer arg);
 static GThread *saturn_micaudio_thread_id;
 static gpointer saturn_high_priority_thread(gpointer arg);
 static GThread *saturn_high_priority_thread_id;
-static gpointer saturn_speaker_thread(gpointer arg);
-static GThread *saturn_speaker_thread_id;
 //
 // code to allocate and free dynamic allocated memory
 // first the memory buffers:
@@ -235,14 +232,12 @@ void FreeDynamicMemory(void) {
 
 void saturn_register_init() {
   //
-  // initialise register access mutexes
+  // initialise register access semaphores
   //
-  pthread_mutex_init(&DDCInSelMutex, NULL);                                   // for DDC input select register
-  pthread_mutex_init(&DDCResetFIFOMutex, NULL);                               // for FIFO reset register
-  pthread_mutex_init(&RFGPIOMutex, NULL);                                     // for RF GPIO register
-  pthread_mutex_init(&CodecRegMutex, NULL);                                   // for codec writes
-  pthread_mutex_init(&CBLock, NULL);
-
+  sem_init(&DDCInSelMutex, 0, 1);                                   // for DDC input select register
+  sem_init(&DDCResetFIFOMutex, 0, 1);                               // for FIFO reset register
+  sem_init(&RFGPIOMutex, 0, 1);                                     // for RF GPIO register
+  sem_init(&CodecRegMutex, 0, 1);                                   // for codec writes
   //
   // setup Saturn hardware
   //
@@ -413,153 +408,67 @@ void saturn_handle_duc_iq(bool FromNetwork, uint8_t *UDPInBuffer) {
   return;
 }
 
-typedef struct circular_buffer
-{
-    void *buffer;     // data buffer
-    void *buffer_end; // end of data buffer
-    size_t capacity;  // maximum number of items in the buffer
-    size_t count;     // number of items in the buffer
-    size_t sz;        // size of each item in the buffer
-    void *head;       // pointer to head
-    void *tail;       // pointer to tail
-} circular_buffer;
+static int DMASpkWritefile_fd = -1;
+static unsigned char* SpkBasePtr;
+static unsigned char* SpkReadPtr;               // pointer for reading out a spkr sample
+static unsigned char* SpkHeadPtr;               // ptr to 1st free location in spk memory
 
-circular_buffer cb;
+void saturn_init_speaker_audio() {
+  //
+  // variables for DMA buffer
+  //
+  uint8_t* SpkWriteBuffer = NULL;             // data for DMA to write to spkr
+  uint32_t SpkBufferSize = VDMASPKBUFFERSIZE;
+  t_print("%s\n", __FUNCTION__);
+  //
+  // setup DMA buffer
+  //
+  posix_memalign((void**)&SpkWriteBuffer, VALIGNMENT, SpkBufferSize);
 
-void cb_init(circular_buffer *cb, size_t capacity, size_t sz)
-{
-    cb->buffer = malloc(capacity * sz);
-    if(cb->buffer == NULL) {
-      t_print("%s: circular_buffer allocation failed\n", __FUNCTION__);
-      exit( -1 );
-    }
-
-    cb->buffer_end = (char *)cb->buffer + capacity * sz;
-    cb->capacity = capacity;
-    cb->count = 0;
-    cb->sz = sz;
-    cb->head = cb->buffer;
-    cb->tail = cb->buffer;
-}
-
-void cb_free(circular_buffer *cb)
-{
-    free(cb->buffer);
-    // clear out other fields too, just to be safe
-}
-
-void cb_push_back(circular_buffer *cb, const void *item)
-{
-    if(cb->count == cb->capacity){
-        //t_print("circular_buffer FULL count:%ld capacity:%ld\n", cb->count, cb->capacity);
-        return;
-    }
-    memcpy(cb->head, item, cb->sz);
-    cb->head = (char*)cb->head + cb->sz;
-    if(cb->head == cb->buffer_end)
-        cb->head = cb->buffer;
-    pthread_mutex_lock(&CBLock);
-    cb->count++;
-    pthread_mutex_unlock(&CBLock);
-}
-
-void cb_pop_front(circular_buffer *cb, void *item)
-{
-    if(cb->count == 0){
-        //t_print("circular_buffer EMPTY\n");
-        return;
-    }
-    memcpy(item, cb->tail, cb->sz);
-    cb->tail = (char*)cb->tail + cb->sz;
-    if(cb->tail == cb->buffer_end)
-        cb->tail = cb->buffer;
-    pthread_mutex_lock(&CBLock);
-    cb->count--;
-    pthread_mutex_unlock(&CBLock);
-}
-
-
-void start_saturn_speaker_thread() {
-  t_print("%s: \n", __FUNCTION__);
-  saturn_speaker_thread_id = g_thread_new( "SATURN SPKR", saturn_speaker_thread, NULL);
-
-  if ( ! saturn_speaker_thread_id ) {
-    t_print("%s: g_thread_new failed\n", __FUNCTION__);
+  if (!SpkWriteBuffer) {
+    t_print("%s: spkr write buffer allocation failed\n", __FUNCTION__);
     exit( -1 );
   }
-}
 
-uint8_t SpkBuffer[VSPEAKERAUDIOSIZE];
+  SpkReadPtr = SpkWriteBuffer + VBASE;              // offset 4096 bytes into buffer
+  SpkHeadPtr = SpkWriteBuffer + VBASE;
+  SpkBasePtr = SpkWriteBuffer + VBASE;
+  memset(SpkWriteBuffer, 0, SpkBufferSize);
+  //
+  // open DMA device driver
+  //
+  DMASpkWritefile_fd = open(VSPKDMADEVICE, O_RDWR);
 
-static gpointer saturn_speaker_thread(gpointer arg)
-{
-//
-// variables for DMA buffer
-//
-    uint8_t* SpkWriteBuffer = NULL;                                                     // data for DMA to write to spkr
-    uint32_t SpkBufferSize = VDMASPKBUFFERSIZE;
-    unsigned char* SpkBasePtr;                                                          // ptr to DMA location in spk memory
-    uint32_t Depth = 0;
-    int DMAWritefile_fd = -1;                                                           // DMA read file device
-    bool FIFOOverflow;
-    circular_buffer *my_cb = &cb;
+  if (DMASpkWritefile_fd < 0) {
+    t_print("%s: XDMA write device open failed for spk data\n", __FUNCTION__);
+    exit( -1 );
+  }
 
-    //
-    // setup DMA buffer
-    //
-    posix_memalign((void**)&SpkWriteBuffer, VALIGNMENT, SpkBufferSize);
-    if (!SpkWriteBuffer)
-    {
-        t_print("spkr write buffer allocation failed\n");
-        exit( -1 );
-    }
-    SpkBasePtr = SpkWriteBuffer + VBASE;
-    memset(SpkWriteBuffer, 0, SpkBufferSize);
-
-    //
-    // open DMA device driver
-    //
-    DMAWritefile_fd = open(VSPKDMADEVICE, O_WRONLY);
-    if (DMAWritefile_fd < 0)
-    {
-        t_print("XDMA write device open failed for spk data\n");
-        exit( -1 );
-    }
-    ResetDMAStreamFIFO(eSpkCodecDMA);
-
-    cb_init(&cb, 30, VSPEAKERAUDIOSIZE);
-
-    //
-    // main processing loop
-    //
-    while(!Exiting)
-    {
-      if(my_cb->count > 0){
-        cb_pop_front(&cb, SpkBuffer);
-      } else {
-        usleep(100);
-        continue;
-      }
-      NewMessageReceived = true;
-      Depth = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOOverflow);        // read the FIFO free locations
-//      t_print("speaker packet received; depth = %d\n", Depth);
-      while (Depth < VMEMWORDSPERFRAME)       // loop till space available
-      {
-          usleep(1000);                                                                               // 1ms wait
-          Depth = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOOverflow);    // read the FIFO free locations
-      }
-      // copy sata from UDP Buffer & DMA write it
-      memcpy(SpkBasePtr, SpkBuffer + 4, VDMASPKTRANSFERSIZE);              // copy out spk samples
-//      if(RegVal == 100)
-//          DumpMemoryBuffer(SpkBasePtr, VDMATRANSFERSIZE);
-      DMAWriteToFPGA(DMAWritefile_fd, SpkBasePtr, VDMASPKTRANSFERSIZE, VADDRSPKRSTREAMWRITE);
-    }
-    return (NULL);
+  ResetDMAStreamFIFO(eSpkCodecDMA);
+  return;
 }
 
 void saturn_handle_speaker_audio(uint8_t *UDPInBuffer) {
-  cb_push_back(&cb, UDPInBuffer);
+  //uint32_t RegVal = 0;    //debug
+  bool FIFOSpkOverflow;
+  uint32_t DepthSpk = 0;
+  //RegVal += 1;            //debug
+  DepthSpk = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOSpkOverflow);        // read the FIFO free locations
+
+  //t_print("speaker data received; depth = %d\n", DepthSpk);
+  while (DepthSpk < VMEMWORDSPERFRAME) {     // loop till space available
+    usleep(1000);                                   // 1ms wait
+    DepthSpk = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOSpkOverflow);    // read the FIFO free locations
+  }
+
+  // copy data from UDP Buffer & DMA write it
+  memcpy(SpkBasePtr, UDPInBuffer + 4, VDMASPKTRANSFERSIZE);              // copy out spk samples
+  //    if(RegVal == 100)
+  //        DumpMemoryBuffer(SpkBasePtr, VDMASPKTRANSFERSIZE);
+  DMAWriteToFPGA(DMASpkWritefile_fd, SpkBasePtr, VDMASPKTRANSFERSIZE, VADDRSPKRSTREAMWRITE);
+  return;
 }
+
 
 void saturn_exit() {
   //
@@ -572,11 +481,10 @@ void saturn_exit() {
   SetTXEnable(false);
   EnableCW(false, false);
   ServerActive = false;
-  pthread_mutex_destroy(&DDCInSelMutex);
-  pthread_mutex_destroy(&DDCResetFIFOMutex);
-  pthread_mutex_destroy(&RFGPIOMutex);
-  pthread_mutex_destroy(&CodecRegMutex);
-  pthread_mutex_destroy(&CBLock);
+  sem_destroy(&DDCInSelMutex);
+  sem_destroy(&DDCResetFIFOMutex);
+  sem_destroy(&RFGPIOMutex);
+  sem_destroy(&CodecRegMutex);
 }
 
 #define VHIGHPRIOTIYFROMSDRSIZE 60
@@ -964,8 +872,8 @@ static gpointer saturn_rx_thread(gpointer arg) {
       // then put any residues at the heads of the buffer, ready for new data to come in
       //
       for (DDC = 0; DDC < VNUMDDC; DDC++) {
-        while ((IQHeadPtr[DDC] - IQReadPtr[DDC]) >= VIQBYTESPERFRAME) {
-          //t_print("enough data for packet: DDC=%d size=%d\n", DDC, IQHeadPtr[DDC] - IQReadPtr[DDC]);
+        while ((IQHeadPtr[DDC] - IQReadPtr[DDC]) > VIQBYTESPERFRAME) {
+          //                    t_print("enough data for packet: DDC= %d\n", DDC);
           mybuffer *mybuf = get_my_buffer(DDCMYBUF);
           *(uint32_t*)mybuf->buffer = htonl(SequenceCounter[DDC]++);     // add sequence count
           memset(mybuf->buffer + 4, 0, 8);                               // clear the timestamp data
@@ -1143,11 +1051,11 @@ static gpointer saturn_rx_thread(gpointer arg) {
 }
 
 void saturn_init() {
+  saturn_init_speaker_audio();
   saturn_init_duc_iq();
   start_saturn_receive_thread();
   start_saturn_micaudio_thread();
   start_saturn_high_priority_thread();
-  start_saturn_speaker_thread();
 }
 
 void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer) {
@@ -1445,7 +1353,6 @@ void saturn_handle_ddc_specific(bool FromNetwork, unsigned char *UDPInBuffer) {
 }
 
 void saturn_handle_duc_specific(bool FromNetwork, unsigned char *UDPInBuffer) {
-  return;
   uint8_t Byte;
   uint16_t SidetoneFreq;                                // freq for audio sidetone
   uint8_t IambicSpeed;                                  // WPM

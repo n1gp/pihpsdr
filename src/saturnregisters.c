@@ -36,15 +36,16 @@
 #include <stdlib.h>                     // for function min()
 #include <math.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 //
-// mutexes to protect registers that are accessed from several threads
+// semaphores to protect registers that are accessed from several threads
 //
-pthread_mutex_t DDCInSelMutex;
-pthread_mutex_t RFGPIOMutex;
+sem_t DDCInSelMutex;
+sem_t RFGPIOMutex;
 
 //START codecwrite.c
-pthread_mutex_t CodecRegMutex;
+sem_t CodecRegMutex;
 
 //
 // 8 bit Codec register write over the AXILite bus via SPI
@@ -54,10 +55,10 @@ pthread_mutex_t CodecRegMutex;
 void CodecRegisterWrite(uint32_t Address, uint32_t Data) {
   uint32_t WriteData;
   WriteData = (Address << 9) | (Data & 0x01FFUL);
-  pthread_mutex_lock(&CodecRegMutex);                       // get protected access
+  sem_wait(&CodecRegMutex);                       // get protected access
   RegisterWrite(VADDRCODECSPIREG, WriteData);   // and write to it
   //t_print("Codec write: send %03x to Codec register address %02x, written=%04x\n", Data, Address, WriteData);
-  pthread_mutex_unlock(&CodecRegMutex);                       // clear protected access
+  sem_post(&CodecRegMutex);                       // clear protected access
 }
 //END codecwrite.c
 
@@ -334,7 +335,7 @@ void InitialiseDACAttenROMs(void) {
 //
 void SetByteSwapping(bool IsSwapped) {
   uint32_t Register;
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
   GByteSwapEnabled = IsSwapped;
 
@@ -346,7 +347,7 @@ void SetByteSwapping(bool IsSwapped) {
 
   GPIORegValue = Register;                        // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);        // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protection
+  sem_post(&RFGPIOMutex);                         // clear protection
 }
 
 //
@@ -377,7 +378,7 @@ void ActivateCWKeyer(bool Keyer) {
 //
 void SetMOX(bool Mox) {
   uint32_t Register;
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
   MOXAsserted = Mox;                              // set variable
 
@@ -399,7 +400,7 @@ void SetMOX(bool Mox) {
     ActivateCWKeyer(GCWEnabled && GBreakinEnabled);
   }
 
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -410,7 +411,7 @@ void SetMOX(bool Mox) {
 //
 void SetTXEnable(bool Enabled) {
   uint32_t Register;
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
 
   if (Enabled) {
@@ -421,7 +422,7 @@ void SetTXEnable(bool Enabled) {
 
   GPIORegValue = Register;                        // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);        // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -432,7 +433,7 @@ void SetTXEnable(bool Enabled) {
 //
 void SetATUTune(bool TuneEnabled) {
   uint32_t Register;
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
 
   if (TuneEnabled) {
@@ -443,7 +444,7 @@ void SetATUTune(bool TuneEnabled) {
 
   GPIORegValue = Register;                        // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);        // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -580,14 +581,14 @@ void SetClassEPA(bool IsClassE) {
 void SetOpenCollectorOutputs(unsigned int bits) {
   uint32_t Register;                              // FPGA register content
   uint32_t BitMask;                               // bitmask for 7 OC bits
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
   BitMask = (0b1111111) << VOPENCOLLECTORBITS;
   Register = Register & ~BitMask;                 // strip old bits, add new
   Register |= (bits << VOPENCOLLECTORBITS);
   GPIORegValue = Register;                    // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);  // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -617,7 +618,7 @@ void SetADCOptions(EADCSelect ADC, bool PGA, bool Dither, bool Random) {
     DitherBit += 3;
   }
 
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
   Register &= ~(1 << RandBit);                    // strip old bits
   Register &= ~(1 << PGABit);
@@ -637,7 +638,7 @@ void SetADCOptions(EADCSelect ADC, bool PGA, bool Dither, bool Random) {
 
   GPIORegValue = Register;                    // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);  // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 #define VTWOEXP32 4294967296.0              // 2^32
@@ -1110,7 +1111,7 @@ void SetMicLineInput(bool IsLineIn) {
 //
 void SetOrionMicOptions(bool MicRing, bool EnableBias, bool EnablePTT) {
   uint32_t Register;                              // FPGA register content
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
   Register &= ~(1 << VMICBIASENABLEBIT);          // strip old bits
   Register &= ~(1 << VMICPTTSELECTBIT);           // strip old bits
@@ -1134,7 +1135,7 @@ void SetOrionMicOptions(bool MicRing, bool EnableBias, bool EnablePTT) {
   GPTTEnabled = !EnablePTT;                       // used when PTT read back - just store opposite state
   GPIORegValue = Register;                        // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);      // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -1145,7 +1146,7 @@ void SetOrionMicOptions(bool MicRing, bool EnableBias, bool EnablePTT) {
 //
 void SetBalancedMicInput(bool Balanced) {
   uint32_t Register;                              // FPGA register content
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
   Register &= ~(1 << VBALANCEDMICSELECT);         // strip old bit
 
@@ -1155,7 +1156,7 @@ void SetBalancedMicInput(bool Balanced) {
 
   GPIORegValue = Register;                        // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);      // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -1332,13 +1333,13 @@ void SetDDCADC(int DDC, EADCSelect ADC) {
 
   ADCSetting = ((uint32_t)ADC & 0x3) << (DDC * 2); // 2 bits with ADC setting
   Mask = 0x3 << (DDC * 2);                       // 0,2,4,6,8,10,12,14,16,18 bit positions
-  pthread_mutex_lock(&DDCInSelMutex);                       // get protected access
+  sem_wait(&DDCInSelMutex);                       // get protected access
   RegisterValue = DDCInSelReg;                    // get current register setting
   RegisterValue &= ~Mask;                         // strip ADC bits
   RegisterValue |= ADCSetting;
   DDCInSelReg = RegisterValue;                    // write back
   RegisterWrite(VADDRDDCINSEL, RegisterValue);    // and write to it
-  pthread_mutex_unlock(&DDCInSelMutex);
+  sem_post(&DDCInSelMutex);
 }
 
 
@@ -1351,7 +1352,7 @@ void SetRXDDCEnabled(bool IsEnabled) {
   uint32_t Address;                 // register address
   uint32_t Data;                    // register content
   Address = VADDRDDCINSEL;              // DDC config register address
-  pthread_mutex_lock(&DDCInSelMutex);                           // get protected access
+  sem_wait(&DDCInSelMutex);                           // get protected access
   Data = DDCInSelReg;                                 // get current register setting
 
   if (IsEnabled) {
@@ -1362,7 +1363,7 @@ void SetRXDDCEnabled(bool IsEnabled) {
 
   DDCInSelReg = Data;          // write back
   RegisterWrite(Address, Data);         // write back
-  pthread_mutex_unlock(&DDCInSelMutex);
+  sem_post(&DDCInSelMutex);
 }
 
 //
@@ -1579,7 +1580,7 @@ void SetMaxPWMWidth(unsigned int Width) {
 //
 void SetXvtrEnable(bool Enabled) {
   uint32_t Register;
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
 
   if (Enabled) {
@@ -1589,7 +1590,7 @@ void SetXvtrEnable(bool Enabled) {
   }
 
   GPIORegValue = Register;                    // store it back
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -1681,7 +1682,7 @@ void SetAlexEnabled(unsigned int Alex) {
 void SetPAEnabled(bool Enabled) {
   uint32_t Register;
   GPAEnabled = Enabled;                           // just save for now
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
 
   if (!Enabled) {
@@ -1692,7 +1693,7 @@ void SetPAEnabled(bool Enabled) {
 
   GPIORegValue = Register;                    // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);  // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -1743,7 +1744,7 @@ void SetDUCPhaseShift(unsigned int Value) {
 void SetSpkrMute(bool IsMuted) {
   uint32_t Register;
   GSpeakerMuted = IsMuted;                        // just save for now.
-  pthread_mutex_lock(&RFGPIOMutex);                         // get protected access
+  sem_wait(&RFGPIOMutex);                         // get protected access
   Register = GPIORegValue;                        // get current settings
 
   if (IsMuted) {
@@ -1754,7 +1755,7 @@ void SetSpkrMute(bool IsMuted) {
 
   GPIORegValue = Register;                        // store it back
   RegisterWrite(VADDRRFGPIOREG, Register);        // and write to it
-  pthread_mutex_unlock(&RFGPIOMutex);                         // clear protected access
+  sem_post(&RFGPIOMutex);                         // clear protected access
 }
 
 
@@ -1948,7 +1949,6 @@ void CodecInitialise(void) {
   CodecRegisterWrite(VCODECDIGITALPATHREG, 0x0);    // no soft mute; no deemphasis; ADC high pss filter enabled
   usleep(100);
   CodecRegisterWrite(VCODECLLINEVOLREG, GCodecLineGain);        // line in gain=0
-  CodecRegisterWrite(VCODECRLINEVOLREG, GCodecLineGain);
   usleep(100);
 }
 
@@ -2148,8 +2148,8 @@ void SetDDCSampleSize(unsigned int DDC, unsigned int Size) {
 // override ADC1 and ADC2 selection; use test source instead.
 //
 void UseTestDDSSource(void) {
-  pthread_mutex_lock(&DDCInSelMutex);                           // get protected access
+  sem_wait(&DDCInSelMutex);                           // get protected access
   GADCOverride = true;
   DDCInSelReg = (DDCInSelReg & 0x40000000) | 0x000AAAAA;      // set all to test
-  pthread_mutex_unlock(&DDCInSelMutex);
+  sem_post(&DDCInSelMutex);
 }
