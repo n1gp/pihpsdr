@@ -863,6 +863,13 @@ static void create_visual() {
   }
 
 #endif
+#ifdef GPIO
+
+  if (gpio_init() < 0) {
+    t_print("GPIO failed to initialize\n");
+  }
+
+#endif
 
   // init local keyer if enabled
   if (cw_keyer_internal == 0) {
@@ -950,14 +957,6 @@ void start_radio() {
       t_print("WARNING: Position %d Action=%d str=%s\n", i, ActionTable[i].action, ActionTable[i].button_str);
     }
   }
-
-#ifdef GPIO
-
-  if (gpio_init() < 0) {
-    t_print("GPIO failed to initialize\n");
-  }
-
-#endif
 
   //t_print("start_radio: selected radio=%p device=%d\n",radio,radio->device);
   gdk_window_set_cursor(gtk_widget_get_window(top_window), gdk_cursor_new(GDK_WATCH));
