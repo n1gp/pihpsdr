@@ -1012,20 +1012,16 @@ static gpointer saturn_rx_thread(gpointer arg) {
       // the latter approach seems easier!
       //
       Depth = ReadFIFOMonitorChannel(eRXDDCDMA, &FIFOOverflow, &FIFOOverThreshold, &FIFOUnderflow);  // read the FIFO Depth register
-      if(FIFOOverThreshold)
-        t_print("RX DDC FIFO Overthreshold, depth now = %d\n", Depth);
-      // note this could often generate a message at low sample rate because we deliberately read it down to zero.
-      // this isn't a problem as we can send the data on without the code becoming blocked. so not a useful trap.
-      // if(FIFOUnderflow)
-      //   t_print("RX DDC FIFO Underflowed, depth now = %d\n", Depth);
 
       //    t_print("read: depth = %d\n", Depth);
       while (Depth < (DMATransferSize / 8U)) { // 8 bytes per location
-        usleep(1000);               // 1ms wait
+        usleep(500);               // 1ms wait
         Depth = ReadFIFOMonitorChannel(eRXDDCDMA, &FIFOOverflow, &FIFOOverThreshold, &FIFOUnderflow);  // read the FIFO Depth register
 #ifdef DISPLAY_OVER_UNDER_FLOWS
          if(FIFOOverThreshold)
            t_print("RX DDC FIFO Overthreshold, depth now = %d\n", Depth);
+         // note this could often generate a message at low sample rate because we deliberately read it down to zero.
+         // this isn't a problem as we can send the data on without the code becoming blocked. so not a useful trap.
          //if(FIFOUnderflow)
          //  t_print("RX DDC FIFO Underflowed, depth now = %d\n", Depth);
          //  t_print("read: depth = %d\n", Depth);
