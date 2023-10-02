@@ -298,7 +298,7 @@ void InitialiseFIFOSizes(void)
     Version = GetFirmwareVersion(&ID);
     if(Version >= 10)
     {
-        printf("loading new FIFO sizes for updated firmware\n");
+        t_print("loading new FIFO sizes for updated firmware version:%d\n", Version);
         DMAFIFODepths[0] = 16384;       //  eRXDDCDMA,		selects RX
         DMAFIFODepths[1] = 2048;        //  eTXDUCDMA,		selects TX
         DMAFIFODepths[2] = 256;         //  eMicCodecDMA,	selects mic samples

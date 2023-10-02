@@ -292,6 +292,7 @@ bool is_valid_config(void)
         uint32_t SoftwareInformation;                   // swid & version
         uint32_t ProductInformation;                    // product id & version
 
+        uint32_t Version;                               // s/w version
         uint32_t SWID;                                  // s/w id
         uint32_t ProdID;                                // product version and id
         uint32_t ClockInfo;                             // clock status
@@ -305,9 +306,15 @@ bool is_valid_config(void)
         ProductInformation = RegisterRead(VADDRPRODVERSIONREG);
 
         ClockInfo = (SoftwareInformation & 0xF);                        // 4 clock bits
+	Version = (SoftwareInformation >> 4) & 0xFFFF;                  // 16 bit sw version
         SWID = SoftwareInformation >> 20;                               // 12 bit software ID
 
         ProdID = ProductInformation >> 16;                              // 16 bit product ID
+
+        if (Version < 10) {
+          discovered[devices].status = STATE_INCOMPATIBLE;
+          //Result = false;
+        }
 
         if (ProdID != SATURNPRODUCTID)
           Result = false;
@@ -339,14 +346,6 @@ void saturn_discovery() {
       strcpy(discovered[devices].name, "saturn");
       discovered[devices].frequency_min = 0.0;
       discovered[devices].frequency_max = 61440000.0;
-
-      //
-      // THIS version requires at least software_version = 10
-      // If the software is older, set the status to STATE_INCOMPATIBLE
-      if (discovered[devices].software_version < 10) {
-        discovered[devices].status = STATE_INCOMPATIBLE;
-      }
-      
       memset(buf, 0, 256);
       FILE *fp = fopen("/sys/class/net/eth0/address", "rt");
 
