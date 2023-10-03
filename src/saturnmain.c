@@ -335,9 +335,11 @@ void saturn_discovery() {
     struct stat sb;
     uint8_t *mac = discovered[devices].info.network.mac_address;
 
+    discovered[devices].status = 0;
     if (stat("/dev/xdma0_user", &sb) == 0 && S_ISCHR(sb.st_mode) && is_valid_config()) {
       char buf[256];
-      discovered[devices].status = (is_already_running()) ? STATE_SENDING : STATE_AVAILABLE;
+      if (discovered[devices].status == 0)
+        discovered[devices].status = (is_already_running()) ? STATE_SENDING : STATE_AVAILABLE;
       saturn_register_init();
       discovered[devices].protocol = NEW_PROTOCOL;
       discovered[devices].device = NEW_DEVICE_SATURN;
