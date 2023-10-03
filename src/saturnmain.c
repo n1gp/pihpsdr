@@ -277,6 +277,7 @@ int is_already_running() {
   return (strstr(path, "pihpsdr") == NULL) ? 0 : 1;
 }
 
+#define SATURNMINFPGAVERSION 10                         // Minimum version of gateware this pihpsdr works with
 #define SATURNPRODUCTID 1                               // Saturn, any version
 #define SATURNGOLDENCONFIGID 3                          // "golden" configuration id
 #define SATURNPRIMARYCONFIGID 4                         // "primary" configuration id
@@ -311,9 +312,10 @@ bool is_valid_config(void)
 
         ProdID = ProductInformation >> 16;                              // 16 bit product ID
 
-        if (Version < 10) {
+        if (Version < SATURNMINFPGAVERSION) {
           discovered[devices].status = STATE_INCOMPATIBLE;
-          //Result = false;
+          t_print("Incompatible Saturn FPGA gateware version %d, "
+            "need %d or greater\n", Version, SATURNMINFPGAVERSION);
         }
 
         if (ProdID != SATURNPRODUCTID)
