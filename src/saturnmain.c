@@ -763,7 +763,7 @@ static gpointer saturn_micaudio_thread(gpointer arg) {
                                           sockaddr_in));           // local copy of PC destination address (reply_addr is global)
     memset(&iovecinst, 0, sizeof(struct iovec));
     memset(&datagram, 0, sizeof(struct msghdr));
-    iovecinst.iov_len = VDDCPACKETSIZE;
+    iovecinst.iov_len = VMICPACKETSIZE;
     datagram.msg_iov = &iovecinst;
     datagram.msg_iovlen = 1;
     datagram.msg_name = &DestAddr;                   // MAC addr & port to send to
@@ -775,12 +775,6 @@ static gpointer saturn_micaudio_thread(gpointer arg) {
       // now wait until there is data, then DMA it
       //
       Depth = ReadFIFOMonitorChannel(eMicCodecDMA, &FIFOOverflow, &FIFOOverThreshold, &FIFOUnderflow);	// read the FIFO Depth register. 4 mic words per 64 bit word.
-      if(FIFOOverThreshold)
-        t_print("Codec Mic FIFO Overthreshold, depth now = %d\n", Depth);
-      // note this would often generate a message because we deliberately read it down to zero.
-      // this isn't a problem as we can send the data on without the code becoming blocked.
-      // if(FIFOUnderflow)
-      //   t_print("Codec Mic FIFO Underflowed, depth now = %d\n", Depth);
 
       while (Depth < (VMICSAMPLESPERFRAME / 4)) {         // 16 locations = 64 samples
         usleep(1000);                       // 1ms wait
@@ -788,6 +782,8 @@ static gpointer saturn_micaudio_thread(gpointer arg) {
 #ifdef DISPLAY_OVER_UNDER_FLOWS
         if(FIFOOverThreshold)
           t_print("Codec Mic FIFO Overthreshold, depth now = %d\n", Depth);
+        // note this would often generate a message because we deliberately read it down to zero.
+        // this isn't a problem as we can send the data on without the code becoming blocked.
         //if(FIFOUnderflow)
         //  t_print("Codec Mic FIFO Underflowed, depth now = %d\n", Depth);
 #endif
