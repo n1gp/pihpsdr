@@ -293,8 +293,9 @@ uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed, bool
 //
 void InitialiseFIFOSizes(void)
 {
-	ESoftwareID ID;
-	unsigned int Version = 0;
+    ESoftwareID ID;
+    unsigned int Version = 0;
+
     Version = GetFirmwareVersion(&ID);
     if(Version >= 10)
     {
