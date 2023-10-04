@@ -684,6 +684,7 @@ void *IncomingSpkrAudio(void *arg) {                    // listener thread
   unsigned char* SpkBasePtr;                // ptr to DMA location in spk memory
   int DMAWritefile_fd = -1;               // DMA read file device
   bool FIFOOverflow, FIFOUnderflow, FIFOOverThreshold;
+  unsigned int Current;
   //uint32_t RegVal = 0;                    // debug
   ThreadData = (struct ThreadSocketData *)arg;
   ThreadData->Active = true;
@@ -735,16 +736,16 @@ void *IncomingSpkrAudio(void *arg) {                    // listener thread
     if (size == VSPEAKERAUDIOSIZE) {                        // we have received a packet!
       NewMessageReceived = true;
       //RegVal += 1;            //debug
-      int Depth = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOOverflow, &FIFOOverThreshold, &FIFOUnderflow); // read the FIFO free locations
+      int Depth = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOOverflow, &FIFOOverThreshold, &FIFOUnderflow, &Current); // read the FIFO free locations
       //t_print("speaker packet received; depth = %d\n", Depth);
 
       while (Depth < VMEMWORDSPERFRAME) {     // loop till space available
         usleep(1000);                                   // 1ms wait
-        Depth = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOOverflow, &FIFOOverThreshold, &FIFOUnderflow); // read the FIFO free locations
+        Depth = ReadFIFOMonitorChannel(eSpkCodecDMA, &FIFOOverflow, &FIFOOverThreshold, &FIFOUnderflow, &Current); // read the FIFO free locations
         //if(FIFOOverThreshold)
-        //  t_print("Codec speaker FIFO Overthreshold, depth now = %d\n", Depth);
+        //  t_print("Codec speaker FIFO Overthreshold, depth now = %d\n", Current);
         //if(FIFOUnderflow)
-        //  t_print("Codec Speaker FIFO Underflowed, depth now = %d\n", Depth);
+        //  t_print("Codec Speaker FIFO Underflowed, depth now = %d\n", Current);
       }
 
       // copy data from UDP Buffer & DMA write it

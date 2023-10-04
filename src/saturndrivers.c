@@ -63,8 +63,6 @@
 int register_fd;                             // device identifier
 
 
-
-
 //
 // open connection to the XDMA device driver for register and DMA access
 //
@@ -85,7 +83,9 @@ int OpenXDMADriver(void) {
 // close connection to the XDMA device driver for register and DMA access
 //
 int CloseXDMADriver(void) {
-  return close(register_fd);
+  int ret = close(register_fd);
+  register_fd = 0;
+  return ret;
 }
 
 
@@ -173,9 +173,12 @@ int DMAReadFromFPGA(int fd, unsigned char*DestData, uint32_t Length, uint32_t AX
 //
 uint32_t RegisterRead(uint32_t Address) {
   uint32_t result = 0;
-  ssize_t nread = pread(register_fd, &result, sizeof(result), (off_t) Address);
+  ssize_t nread;
 
-  if (nread != sizeof(result)) {
+  if (register_fd == 0)
+    return result;
+
+  if ((nread = pread(register_fd, &result, sizeof(result), (off_t) Address)) != sizeof(result)) {
     t_print("ERROR: register read: addr=0x%08X   error=%s\n", Address, strerror(errno));
   }
 
@@ -186,9 +189,12 @@ uint32_t RegisterRead(uint32_t Address) {
 // 32 bit register write over the AXILite bus
 //
 void RegisterWrite(uint32_t Address, uint32_t Data) {
-  ssize_t nsent = pwrite(register_fd, &Data, sizeof(Data), (off_t) Address);
+  ssize_t nsent;
 
-  if (nsent != sizeof(Data)) {
+  if (register_fd == 0)
+    return;
+
+  if ((nsent = pwrite(register_fd, &Data, sizeof(Data), (off_t) Address)) != sizeof(Data)) {
     t_print("ERROR: Write: addr=0x%08X   error=%s\n", Address, strerror(errno));
   }
 }
@@ -251,8 +257,9 @@ void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt) {
 //   Overflowed:    true if an overflow has occurred. Reading clears the overflow bit.
 //   OverThreshold:		true if overflow occurred  measures by threshold. Cleared by read.
 //   Underflowed:       true if underflow has occurred. Cleared by read.
+//   Current:           number of locations occupied (in either FIFO type)
 //
-uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed, bool* OverThreshold, bool* Underflowed) {
+uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed, bool* OverThreshold, bool* Underflowed, unsigned int* Current) {
   uint32_t Address;             // register address
   uint32_t Data = 0;              // register content
   bool Overflow = false;
@@ -273,6 +280,7 @@ uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed, bool
   }
 
   Data = Data & 0xFFFF;                   // strip to 16 bits
+  *Current = Data;
   *Overflowed = Overflow;                   // send out overflow result
   *OverThreshold = OverThresh;								// send out over threshold result
   *Underflowed = Underflow;									// send out underflow result
