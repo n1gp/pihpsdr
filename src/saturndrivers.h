@@ -47,30 +47,6 @@ typedef enum {
   eSpkCodecDMA            // selects speaker samples
 } EDMAStreamSelect;
 
-//
-// define types for product responses
-//
-typedef enum
-{
-    eInvalidProduct,                // productid = 1
-    eSaturn                         // productid=Saturn
-} EProductId;
-
-typedef enum
-{
-    ePrototype1,                // productid = 1
-    eProductionV1                         // productid=Saturn
-} EProductVersion;
-
-typedef enum
-{
-    eInvalidSWID,
-    e1stProtoFirmware,
-    e2ndProtofirmware,
-    eFallback,
-    eFullFunction
-} ESoftwareID;
-
 
 //
 // void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt);
@@ -84,7 +60,7 @@ void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt);
 
 
 //
-// uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed, bool* OverThreshold, bool* Underflowed, unsigned int* Current);
+// uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed);
 //
 // Read number of locations in a FIFO
 // for a read FIFO: returns the number of occupied locations available to read
@@ -93,9 +69,8 @@ void SetupFIFOMonitorChannel(EDMAStreamSelect Channel, bool EnableInterrupt);
 //   Overflowed:    true if an overflow has occurred. Reading clears the overflow bit.
 //   OverThreshold:		true if overflow occurred  measures by threshold. Cleared by read.
 //   Underflowed:       true if underflow has occurred. Cleared by read.
-//   Current:           number of locations occupied (in either FIFO type)
 //
-uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed, bool* OverThreshold, bool* Underflowed, unsigned int* Current);
+uint32_t ReadFIFOMonitorChannel(EDMAStreamSelect Channel, bool* Overflowed, bool* OverThreshold, bool* Underflowed);
 
 
 //
