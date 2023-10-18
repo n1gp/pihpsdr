@@ -27,7 +27,6 @@ AUDIO=
 # EXTENDED_NR  | If ON, piHPSDR can use extended noise reduction (VU3RDD WDSP version)
 # SERVER       | If ON, include client/server code (still far from being complete)
 # AUDIO        | If AUDIO=ALSA, use ALSA rather than PulseAudio on Linux
-#              | If AUDIO=PULSE, use PulseAudio rather than PortAudio on MacOS
 
 #######################################################################################
 #
@@ -40,7 +39,8 @@ UNAME_S := $(shell uname -s)
 
 # Get git commit version and date
 GIT_DATE := $(firstword $(shell git --no-pager show --date=short --format="%ai" --name-only))
-GIT_VERSION := $(shell git describe --abbrev=0 --tags --always)
+GIT_VERSION := $(shell git describe --abbrev=0 --tags --always --dirty)
+GIT_COMMIT := $(shell git log --pretty=format:"%h"  -1)
 
 CFLAGS?= -O3 -Wno-deprecated-declarations -Wall
 LINK?=   $(CC)
@@ -197,13 +197,11 @@ endif
 
 #
 # Options for audio module
-#  - MacOS: only PORTAUDIO tested (although PORTAUDIO might work)
+#  - MacOS: only PORTAUDIO
 #  - Linux: either PULSEAUDIO (default) or ALSA (upon request)
 #
 ifeq ($(UNAME_S), Darwin)
-  ifneq ($(AUDIO), PULSE)
-    AUDIO=PORTAUDIO
-  endif
+  AUDIO=PORTAUDIO
 endif
 ifeq ($(UNAME_S), Linux)
   ifneq ($(AUDIO) , ALSA)
@@ -279,7 +277,7 @@ OPTIONS=$(MIDI_OPTIONS) $(USBOZY_OPTIONS) \
 	$(STEMLAB_OPTIONS) \
 	$(SERVER_OPTIONS) \
 	$(AUDIO_OPTIONS) $(EXTNR_OPTIONS)\
-	-D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' $(DEBUG_OPTION)
+	-D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' -D GIT_COMMIT='"$(GIT_COMMIT)"'
 
 INCLUDES=$(GTKINCLUDES)
 COMPILE=$(CC) $(CFLAGS) $(OPTIONS) $(INCLUDES)
@@ -337,6 +335,7 @@ src/meter.c \
 src/meter_menu.c \
 src/mode.c \
 src/mode_menu.c \
+src/mystring.c \
 src/new_discovery.c \
 src/new_menu.c \
 src/new_protocol.c \
@@ -419,6 +418,7 @@ src/meter.h \
 src/meter_menu.h \
 src/mode.h \
 src/mode_menu.h \
+src/mystring.h \
 src/new_discovery.h \
 src/new_menu.h \
 src/new_protocol.h \
@@ -496,6 +496,7 @@ src/meter.o \
 src/meter_menu.o \
 src/mode.o \
 src/mode_menu.o \
+src/mystring.o \
 src/new_discovery.o \
 src/new_menu.o \
 src/new_protocol.o \
@@ -539,6 +540,7 @@ src/zoompan.o
 #
 $(PROGRAM):  $(OBJS) $(AUDIO_OBJS) $(USBOZY_OBJS) $(SOAPYSDR_OBJS) \
 		$(MIDI_OBJS) $(STEMLAB_OBJS) $(SERVER_OBJS) $(SATURN_OBJS)
+	$(COMPILE) -c -o src/version.o src/version.c
 	$(LINK) -o $(PROGRAM) $(OBJS) $(AUDIO_OBJS) $(USBOZY_OBJS) $(SOAPYSDR_OBJS) \
 		$(MIDI_OBJS) $(STEMLAB_OBJS) $(SERVER_OBJS) $(SATURN_OBJS) $(LIBS)
 

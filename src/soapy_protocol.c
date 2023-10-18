@@ -296,7 +296,7 @@ void soapy_protocol_init(gboolean hf) {
   SoapySDRKwargs_set(&args, "driver", radio->name);
 
   if (strcmp(radio->name, "rtlsdr") == 0) {
-    sprintf(temp, "%d", radio->info.soapy.rtlsdr_count);
+    snprintf(temp, 32, "%d", radio->info.soapy.rtlsdr_count);
     SoapySDRKwargs_set(&args, "rtl", temp);
 
     if (hf) {
@@ -305,7 +305,7 @@ void soapy_protocol_init(gboolean hf) {
       SoapySDRKwargs_set(&args, "direct_samp", "0");
     }
   } else if (strcmp(radio->name, "sdrplay") == 0) {
-    sprintf(temp, "SDRplay Dev%d", radio->info.soapy.sdrplay_count);
+    snprintf(temp, 32, "SDRplay Dev%d", radio->info.soapy.sdrplay_count);
     t_print("%s: label=%s\n", __FUNCTION__, temp);
     SoapySDRKwargs_set(&args, "label", temp);
   }
@@ -460,8 +460,6 @@ void soapy_protocol_iq_samples(float isample, float qsample) {
     }
   }
 }
-
-
 
 void soapy_protocol_stop() {
   t_print("soapy_protocol_stop\n");

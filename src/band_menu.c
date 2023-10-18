@@ -45,10 +45,8 @@ struct _CHOICE {
 
 typedef struct _CHOICE CHOICE;
 
-
 static struct _CHOICE *first = NULL;
 static struct _CHOICE *current = NULL;
-
 
 static void cleanup() {
   if (dialog != NULL) {
@@ -119,7 +117,7 @@ void band_menu(GtkWidget *parent) {
   dialog = gtk_dialog_new();
   gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent));
   char title[64];
-  sprintf(title, "piHPSDR - Band (RX %d VFO %s)", active_receiver->id, active_receiver->id == 0 ? "A" : "B");
+  snprintf(title, 64, "piHPSDR - Band (RX %d VFO %s)", active_receiver->id, active_receiver->id == 0 ? "A" : "B");
   GtkWidget *headerbar = gtk_header_bar_new();
   gtk_window_set_titlebar(GTK_WINDOW(dialog), headerbar);
   gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(headerbar), TRUE);

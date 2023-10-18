@@ -181,11 +181,11 @@ typedef struct _receiver {
   gint local_audio;
   gint mute_when_not_active;
   gint audio_device;
-  gchar *audio_name;
+  gchar audio_name[128];
 #ifdef PORTAUDIO
   PaStream *playstream;
-  gint local_audio_buffer_inpt;    // pointer in audio ring-buffer
-  gint local_audio_buffer_outpt;   // pointer in audio ring-buffer
+  volatile gint local_audio_buffer_inpt;    // pointer in audio ring-buffer
+  volatile gint local_audio_buffer_outpt;   // pointer in audio ring-buffer
   float *local_audio_buffer;
 #endif
 #ifdef ALSA

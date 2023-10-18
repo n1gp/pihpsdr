@@ -18,8 +18,9 @@
 
 char build_date[] = GIT_DATE;
 char build_version[] = GIT_VERSION;
+char build_commit[] = GIT_COMMIT;
 
-char version[] =
+char build_options[] =
 #ifdef GPIO
   "GPIO "
 #endif
@@ -38,13 +39,24 @@ char version[] =
 #ifdef STEMLAB_DISCOVERY
   "STEMLAB "
 #endif
-#ifdef ALSA
-  "ALSA "
-#endif
 #ifdef EXTNR
   "EXTNR "
 #endif
 #ifdef CLIENT_SERVER
   "SERVER "
 #endif
-  "" ;
+   "";
+
+char build_audio[] =
+#ifdef ALSA
+  "ALSA";
+#endif
+#ifdef PULSEAUDIO
+  "PulseAudio";
+#endif
+#ifdef PORTAUDIO
+  "PortAudio";
+#endif
+#if !defined(ALSA) && !defined(PORTAUDIO) && !defined(PULSEAUDIO)
+  "(unkown)";
+#endif

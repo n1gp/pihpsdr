@@ -21,6 +21,8 @@
 
 extern char build_version[];
 extern char build_date[];
-extern char version[];
+extern char build_commit[];
+extern char build_options[];
+extern char build_audio[];
 
 #endif

@@ -259,7 +259,7 @@ void send_radio_data(const REMOTE_CLIENT *client) {
   radio_data.header.sync = REMOTE_SYNC;
   radio_data.header.data_type = htons(INFO_RADIO);
   radio_data.header.version = htonl(CLIENT_SERVER_VERSION);
-  strcpy(radio_data.name, radio->name);
+  strlcpy(radio_data.name, radio->name, sizeof(radio_data.name));
   radio_data.protocol = htons(protocol);
   radio_data.device = htons(device);
   uint64_t temp = (uint64_t)radio->frequency_min;
@@ -1885,7 +1885,6 @@ void send_mute_rx(int s, int mute) {
   }
 }
 
-
 static void *listen_thread(void *arg) {
   struct sockaddr_in address;
   int on = 1;
@@ -2033,7 +2032,7 @@ static void *client_thread(void* arg) {
       t_print("INFO_RADIO: %d\n", bytes_read);
       // build a radio (discovered) structure
       radio = g_new(DISCOVERED, 1);
-      strcpy(radio->name, radio_data.name);
+      strlcpy(radio->name, radio_data.name, sizeof(radio->name));
       // Note we use "protocol" and "device" througout the program
       protocol = radio->protocol = ntohs(radio_data.protocol);
       device = radio->device = ntohs(radio_data.device);
@@ -2070,7 +2069,7 @@ static void *client_thread(void* arg) {
       // A semaphore for safely writing to the props file
       //
       g_mutex_init(&property_mutex);
-      sprintf(title, "piHPSDR: %s remote at %s", radio->name, server);
+      snprintf(title, 128, "piHPSDR: %s remote at %s", radio->name, server);
       g_idle_add(ext_set_title, (void *)title);
     }
     break;
@@ -2168,7 +2167,6 @@ static void *client_thread(void* arg) {
       receiver[rx]->local_audio_buffer = NULL;
       receiver[rx]->local_audio = 0;
       g_mutex_init(&receiver[rx]->local_audio_mutex);
-      receiver[rx]->audio_name = NULL;
       receiver[rx]->mute_when_not_active = 0;
       receiver[rx]->audio_channel = STEREO;
       receiver[rx]->audio_device = -1;
@@ -2606,7 +2604,7 @@ static void *client_thread(void* arg) {
 
       // cppcheck-suppress uninitStructMember
       int rx = rx_select_cmd.id;
-      active_receiver = receiver[rx];
+      receiver_set_active(receiver[rx]);
     }
 
     g_idle_add(ext_vfo_update, (gpointer)NULL);
@@ -2767,7 +2765,7 @@ int radio_connect_remote(char *host, int port) {
   }
 
   t_print("radio_connect_remote: socket %d bound to %s:%d\n", client_socket, host, port);
-  sprintf(server_host, "%s:%d", host, port);
+  snprintf(server_host, 128, "%s:%d", host, port);
   client_thread_id = g_thread_new("remote_client", client_thread, &server_host);
   return 0;
 }

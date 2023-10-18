@@ -254,7 +254,7 @@ void discovery() {
       discovered[devices].protocol = ORIGINAL_PROTOCOL;
       discovered[devices].device = DEVICE_OZY;
       discovered[devices].software_version = 10;              // we can't know yet so this isn't a real response
-      strcpy(discovered[devices].name, "Ozy on USB");
+      strlcpy(discovered[devices].name, "Ozy on USB", sizeof(discovered[devices].name));
       discovered[devices].frequency_min = 0.0;
       discovered[devices].frequency_max = 61440000.0;
 
@@ -265,7 +265,7 @@ void discovery() {
       discovered[devices].status = STATE_AVAILABLE;
       discovered[devices].info.network.address_length = 0;
       discovered[devices].info.network.interface_length = 0;
-      strcpy(discovered[devices].info.network.interface_name, "USB");
+      strlcpy(discovered[devices].info.network.interface_name, "USB", sizeof(discovered[devices].info.network.interface_name));
       discovered[devices].use_tcp = 0;
       discovered[devices].use_routing = 0;
       discovered[devices].supported_receivers = 2;
@@ -365,7 +365,7 @@ void discovery() {
       case ORIGINAL_PROTOCOL:
       case NEW_PROTOCOL:
         if (d->device == DEVICE_OZY) {
-          snprintf(text, sizeof(text), "%s (%s) on USB /dev/ozy", d->name,
+          snprintf(text, sizeof(text), "%s (%s via USB)", d->name,
                    d->protocol == ORIGINAL_PROTOCOL ? "Protocol 1" : "Protocol 2");
         } else if (d->device == NEW_DEVICE_SATURN && strcmp(d->info.network.interface_name, "XDMA") == 0) {
           snprintf(text, sizeof(text), "%s (%s v%d) fpga:%x (%s) on /dev/xdma*", d->name,

@@ -45,16 +45,13 @@ struct _CHOICE {
 
 typedef struct _CHOICE CHOICE;
 
-
 static struct _CHOICE *first = NULL;
 static struct _CHOICE *current = NULL;
-
 
 static GtkWidget *var1_spin_low;
 static GtkWidget *var1_spin_high;
 static GtkWidget *var2_spin_low;
 static GtkWidget *var2_spin_high;
-
 
 static void cleanup() {
   if (dialog != NULL) {
@@ -311,7 +308,7 @@ void filter_menu(GtkWidget *parent) {
   dialog = gtk_dialog_new();
   gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(parent));
   char title[64];
-  sprintf(title, "piHPSDR - Filter (RX %d VFO %s)", id, id == 0 ? "A" : "B");
+  snprintf(title, 64, "piHPSDR - Filter (RX %d VFO %s)", id, id == 0 ? "A" : "B");
   GtkWidget *headerbar = gtk_header_bar_new();
   gtk_window_set_titlebar(GTK_WINDOW(dialog), headerbar);
   gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(headerbar), TRUE);

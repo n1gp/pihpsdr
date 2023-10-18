@@ -209,7 +209,7 @@ void transmitterSaveState(const TRANSMITTER *tx) {
   SetPropF1("transmitter.%d.drive_iscal",       tx->id,               tx->drive_iscal);
   SetPropI1("transmitter.%d.do_scale",          tx->id,               tx->do_scale);
   SetPropI1("transmitter.%d.compressor",        tx->id,               tx->compressor);
-  SetPropF1("transmitter.%d.compressor_level",  tx->id,               tx->compressor);
+  SetPropF1("transmitter.%d.compressor_level",  tx->id,               tx->compressor_level);
   SetPropI1("transmitter.%d.dialog_x",          tx->id,               tx->dialog_x);
   SetPropI1("transmitter.%d.dialog_y",          tx->id,               tx->dialog_y);
 }
@@ -248,7 +248,7 @@ static void transmitterRestoreState(TRANSMITTER *tx) {
   GetPropF1("transmitter.%d.drive_iscal",       tx->id,               tx->drive_iscal);
   GetPropI1("transmitter.%d.do_scale",          tx->id,               tx->do_scale);
   GetPropI1("transmitter.%d.compressor",        tx->id,               tx->compressor);
-  GetPropF1("transmitter.%d.compressor_level",  tx->id,               tx->compressor);
+  GetPropF1("transmitter.%d.compressor_level",  tx->id,               tx->compressor_level);
   GetPropI1("transmitter.%d.dialog_x",          tx->id,               tx->dialog_x);
   GetPropI1("transmitter.%d.dialog_y",          tx->id,               tx->dialog_y);
 }
@@ -569,7 +569,6 @@ static gboolean update_display(gpointer data) {
   return FALSE; // no more timer events
 }
 
-
 static void init_analyzer(TRANSMITTER *tx) {
   int flp[] = {0};
   double keep_time = 0.1;
@@ -627,7 +626,7 @@ void create_dialog(TRANSMITTER *tx) {
   gtk_window_set_transient_for(GTK_WINDOW(tx->dialog), GTK_WINDOW(top_window));
   GtkWidget *headerbar = gtk_header_bar_new();
   gtk_window_set_titlebar(GTK_WINDOW(tx->dialog), headerbar);
-  gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(headerbar), TRUE);
+  gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(headerbar), FALSE);
   gtk_header_bar_set_title(GTK_HEADER_BAR(headerbar), "TX");
   g_signal_connect (tx->dialog, "delete_event", G_CALLBACK (close_cb), NULL);
   g_signal_connect (tx->dialog, "destroy", G_CALLBACK (close_cb), NULL);
@@ -750,8 +749,7 @@ TRANSMITTER *create_transmitter(int id, int fps, int width, int height) {
   tx->compressor = 0;
   tx->compressor_level = 0.0;
   tx->local_microphone = 0;
-  tx->microphone_name = g_new(gchar, 128);
-  strcpy(tx->microphone_name, "NO LOCAL MIC");
+  strlcpy(tx->microphone_name, "NO MIC", 128);
   tx->dialog_x = -1;
   tx->dialog_y = -1;
   tx->swr = 1.0;
@@ -1204,8 +1202,14 @@ static void full_tx_buffer(TRANSMITTER *tx) {
     }
   } else {   // isTransmitting()
     if (txflag == 1 && protocol == NEW_PROTOCOL) {
-      // We arrive here ONCE after a TX/RX transition
-      new_protocol_flush_iq_samples();
+      //
+      // We arrive here ONCE after a TX -> RX transition
+      // and send 240 zero samples to make sure everything
+      // will be sent out (some silence may remain but just
+      // adds to the silence sent in the next RX->TX transition
+      for (j = 0; j < 240; j++) {
+        new_protocol_iq_samples(0, 0);
+      }
     }
 
     txflag = 0;

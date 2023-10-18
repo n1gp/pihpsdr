@@ -24,7 +24,6 @@
 * @date 2009-10-13
 */
 
-
 /*
 * modified by Bob Wisdom VK4YA May 2015 to create ozymetis
 * modified further Laurence Barker G8NJJ to add USB functionality to pihpsdr
@@ -56,7 +55,6 @@
 
 #define VRQ_I2C_WRITE (0x08)
 #define VRT_VENDOR_OUT (0x40)
-
 
 #define VENDOR_REQ_SET_LED 0x01
 #define VENDOR_REQ_FPGA_LOAD 0x02
@@ -91,10 +89,6 @@ unsigned char penny_fw = 0, mercury_fw = 0;
 // variables accessed via ozy_i2c_readpwr
 unsigned short penny_fp = 0, penny_rp = 0, penny_alc = 0;
 int adc_overflow;
-
-
-
-
 
 int ozy_open() {
   int rc;
@@ -450,7 +444,6 @@ int ozy_i2c_read(unsigned char* buffer, int buffer_size, unsigned char cmd) {
   return rc;
 }
 
-
 void ozy_i2c_readpwr(int addr) {
   int rc = 0;
   unsigned char buffer[8];
@@ -595,8 +588,6 @@ void writepenny(unsigned char mode) {
   t_print("write Penny done..\n");
 }
 
-
-
 static int file_exists (const char * fileName) {
   struct stat buf;
   int i = stat ( fileName, &buf );
@@ -604,11 +595,11 @@ static int file_exists (const char * fileName) {
 }
 
 #if defined(__linux__) || defined(__APPLE__)
-int filePath (char *sOut, const char *sIn) {
+int filePath (char *sOut, const char *sIn, size_t len) {
   int rc = 0;
 
   if ((rc = file_exists (sIn))) {
-    strcpy (sOut, sIn);
+    strlcpy (sOut, sIn, len);
     rc = 1;
   } else {
     char xPath [PATH_MAX] = {0};
@@ -622,25 +613,25 @@ int filePath (char *sOut, const char *sIn) {
       if ( (p = strrchr (xPath, '/')) ) { *(p + 1) = '\0'; }
 
       t_print( "%d, Path of executable: [%s]\n", rc, xPath);
-      strcpy (s, xPath);
-      strcat (s, sIn);
+      strlcpy (s, xPath, PATH_MAX);
+      strlcat (s, sIn, PATH_MAX);
 
       if ((rc = file_exists (s))) {
         // found in the same dir of executable
         t_print( "File: [%s]\n", s);
-        strcpy(sOut, s);
+        strlcpy(sOut, s, len);
       } else {
         char cwd[PATH_MAX];
 
         if (getcwd(cwd, sizeof(cwd)) != NULL) {
           t_print( "Current working dir: %s\n", cwd);
-          strcpy (s, cwd);
-          strcat (s, "/");
-          strcat (s, sIn);
+          strlcpy (s, cwd, PATH_MAX);
+          strlcat (s, "/", PATH_MAX);
+          strlcat (s, sIn, PATH_MAX);
 
           if ((rc = file_exists (s))) {
             t_print( "File: [%s]\n", s);
-            strcpy(sOut, s);
+            strlcpy(sOut, s, len);
           }
         }
       }
@@ -653,8 +644,6 @@ int filePath (char *sOut, const char *sIn) {
 }
 #endif
 
-
-
 //
 // initialise a USB ozy device.
 // renamed as "initialise" and combined with the "ozyinit" code
@@ -662,9 +651,9 @@ int filePath (char *sOut, const char *sIn) {
 int ozy_initialise() {
   int rc;
 
-  if (strlen(ozy_firmware) == 0) { filePath (ozy_firmware, "ozyfw-sdr1k.hex"); }
+  if (strlen(ozy_firmware) == 0) { filePath (ozy_firmware, "ozyfw-sdr1k.hex", sizeof(ozy_firmware)); }
 
-  if (strlen(ozy_fpga) == 0) { filePath (ozy_fpga, "Ozy_Janus.rbf"); }
+  if (strlen(ozy_fpga) == 0) { filePath (ozy_fpga, "Ozy_Janus.rbf", sizeof(ozy_fpga)); }
 
   // open ozy
   rc = ozy_open();
@@ -698,8 +687,6 @@ int ozy_initialise() {
   ozy_open();
   return 0;
 }
-
-
 
 //
 // modified from "ozy_open" code: just finds out if there is a USB

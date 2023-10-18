@@ -47,7 +47,6 @@
 
 static PaStream *record_handle = NULL;
 
-
 int n_input_devices;
 AUDIO_DEVICE input_devices[MAX_AUDIO_DEVICES];
 int n_output_devices;
@@ -95,9 +94,9 @@ int n_output_devices = 0;
 // NOTE: lead large buffer for some "loopback" devices which produce
 //       samples in large chunks if fed from digimode programs.
 //
-float  *mic_ring_buffer = NULL;
-int     mic_ring_outpt = 0;
-int     mic_ring_inpt = 0;
+static          float  *mic_ring_buffer = NULL;
+static volatile int     mic_ring_outpt = 0;
+static volatile int     mic_ring_inpt = 0;
 
 //
 // AUDIO_GET_CARDS
@@ -138,9 +137,8 @@ void audio_get_cards() {
         // we copy the device name to local storage. This is referenced both
         // by the name and description element.
         //
-        input_devices[n_input_devices].name = input_devices[n_input_devices].description = g_new0(char,
-                                              strlen(deviceInfo->name) + 1);
-        strcpy(input_devices[n_input_devices].name, deviceInfo->name);
+        input_devices[n_input_devices].name = g_strdup(deviceInfo->name);
+        input_devices[n_input_devices].description = g_strdup(deviceInfo->name);
         input_devices[n_input_devices].index = i;
         n_input_devices++;
       }
@@ -156,9 +154,8 @@ void audio_get_cards() {
 
     if (Pa_IsFormatSupported(NULL, &outputParameters, 48000.0) == paFormatIsSupported) {
       if (n_output_devices < MAX_AUDIO_DEVICES) {
-        output_devices[n_output_devices].name = output_devices[n_output_devices].description = g_new0(char,
-                                                strlen(deviceInfo->name) + 1);
-        strcpy(output_devices[n_output_devices].name, deviceInfo->name);
+        output_devices[n_output_devices].name = g_strdup(deviceInfo->name);
+        output_devices[n_output_devices].description = g_strdup(deviceInfo->name);
         output_devices[n_output_devices].index = i;
         n_output_devices++;
       }
@@ -185,11 +182,6 @@ int audio_open_input() {
   int padev;
 
   if (!can_transmit) {
-    return -1;
-  }
-
-  if (transmitter->microphone_name == NULL) {
-    transmitter->local_microphone = 0;
     return -1;
   }
 
@@ -298,6 +290,7 @@ int pa_out_cb(const void *inputBuffer, void *outputBuffer, unsigned long framesP
 
         if (newpt >= MY_RING_BUFFER_SIZE) { newpt = 0; }
 
+        MEMORY_BARRIER;
         rx->local_audio_buffer_outpt = newpt;
       }
     }
@@ -365,8 +358,10 @@ int pa_mic_cb(const void *inputBuffer, void *outputBuffer, unsigned long framesP
       if (newpt == MY_RING_BUFFER_SIZE) { newpt = 0; }
 
       if (newpt != mic_ring_outpt) {
+        MEMORY_BARRIER;
         // buffer space available, do the write
         mic_ring_buffer[mic_ring_inpt] = in[i];
+        MEMORY_BARRIER;
         // atomic update of mic_ring_inpt
         mic_ring_inpt = newpt;
       }
@@ -401,8 +396,10 @@ float audio_get_next_mic_sample() {
 
     if (newpt == MY_RING_BUFFER_SIZE) { newpt = 0; }
 
+    MEMORY_BARRIER;
     sample = mic_ring_buffer[mic_ring_outpt];
     // atomic update of read pointer
+    MEMORY_BARRIER;
     mic_ring_outpt = newpt;
   }
 
@@ -420,11 +417,6 @@ int audio_open_output(RECEIVER *rx) {
   PaStreamParameters outputParameters;
   int padev;
   int i;
-
-  if (rx->audio_name == NULL) {
-    rx->local_audio = 0;
-    return -1;
-  }
 
   //
   // Look up device name and determine device ID
@@ -623,6 +615,7 @@ int audio_write (RECEIVER *rx, float left, float right) {
         if (oldpt >= MY_RING_BUFFER_SIZE) { oldpt = 0; }
       }
 
+      MEMORY_BARRIER;
       rx->local_audio_buffer_inpt = oldpt;
       //t_print("%s: buffer was nearly empty, inserted silence.\n", __FUNCTION__);
     }
@@ -656,8 +649,10 @@ int audio_write (RECEIVER *rx, float left, float right) {
       //
       // buffer space available
       //
+      MEMORY_BARRIER;
       buffer[2 * oldpt] = left;
       buffer[2 * oldpt + 1] = right;
+      MEMORY_BARRIER;
       rx->local_audio_buffer_inpt = newpt;
     }
   }
@@ -692,7 +687,9 @@ int cw_audio_write(RECEIVER *rx, float sample) {
       // empty audio buffer and insert *a little bit of* silence
       //
       bzero(rx->local_audio_buffer, 2 * MY_CW_MID_WATER * sizeof(float));
+      MEMORY_BARRIER;
       rx->local_audio_buffer_inpt = MY_CW_MID_WATER;
+      MEMORY_BARRIER;
       rx->local_audio_buffer_outpt = 0;
       avail = MY_CW_MID_WATER;
       count = 0;
@@ -726,8 +723,10 @@ int cw_audio_write(RECEIVER *rx, float sample) {
         //
         // buffer space available
         //
+        MEMORY_BARRIER;
         rx->local_audio_buffer[2 * oldpt] = sample;
         rx->local_audio_buffer[2 * oldpt + 1] = -sample;
+        MEMORY_BARRIER;
         rx->local_audio_buffer_inpt = newpt;
       }
 
@@ -751,6 +750,7 @@ int cw_audio_write(RECEIVER *rx, float sample) {
 
       if (oldpt == MY_RING_BUFFER_SIZE) { oldpt = 0; }
 
+      MEMORY_BARRIER;
       rx->local_audio_buffer_inpt = oldpt;
       break;
 
