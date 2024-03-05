@@ -825,6 +825,10 @@ static void create_visual() {
             pk = 0.6121;
             break;
 
+          case NEW_DEVICE_ATLAS:
+            pk = 0.3629;
+            break;
+
           default:
             // recommended "new protocol value"
             pk = 0.2899;
@@ -843,6 +847,11 @@ static void create_visual() {
           case DEVICE_STEMLAB:
             // measured value: 0.4155
             pk = 0.4160;
+            break;
+
+          case DEVICE_METIS:
+            // measured value: 0.3863
+            pk = 0.3870;
             break;
 
           default:
@@ -1073,9 +1082,14 @@ void start_radio() {
   // Set various capabilities, depending in the radio model
   //
   switch (device) {
+  case NEW_DEVICE_ATLAS:
+    if (filter_board == ALEX)
+      have_alex_att = 1;
+    have_preamp = 1;
+    break;
+
   case DEVICE_METIS:
   case DEVICE_OZY:
-  case NEW_DEVICE_ATLAS:
     have_rx_att = 1; // Sure?
     have_alex_att = 1;
     have_preamp = 1;
@@ -1268,7 +1282,6 @@ void start_radio() {
   case DEVICE_HERMES:
   case DEVICE_HERMES_LITE:
   case DEVICE_HERMES_LITE2:
-  case NEW_DEVICE_ATLAS:
   case NEW_DEVICE_HERMES:
   case NEW_DEVICE_HERMES2:
   case NEW_DEVICE_HERMES_LITE:
@@ -1280,6 +1293,15 @@ void start_radio() {
     // RX2: second mercury card).
     //
     n_adc = 1;
+    break;
+
+  case NEW_DEVICE_ATLAS:
+    if (mercury_software_version[1]) {
+      n_adc = 2;
+    } else {
+      n_adc = 1;
+      //n_adc = 2;
+    }
     break;
 
   case SOAPYSDR_USB_DEVICE:

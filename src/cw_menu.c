@@ -135,12 +135,14 @@ void cw_menu(GtkWidget *parent) {
   gtk_widget_set_name(close_b, "close_button");
   g_signal_connect (close_b, "button-press-event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid), close_b, 0, 0, 1, 1);
-  GtkWidget *cw_keyer_internal_b = gtk_check_button_new_with_label("CW handled in Radio");
-  gtk_widget_set_name(cw_keyer_internal_b, "boldlabel");
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (cw_keyer_internal_b), cw_keyer_internal);
-  gtk_widget_show(cw_keyer_internal_b);
-  gtk_grid_attach(GTK_GRID(grid), cw_keyer_internal_b, 1, 0, 1, 1);
-  g_signal_connect(cw_keyer_internal_b, "toggled", G_CALLBACK(cw_keyer_internal_cb), NULL);
+  if (device != NEW_DEVICE_ATLAS) { // firmware not supporting this yet
+    GtkWidget *cw_keyer_internal_b = gtk_check_button_new_with_label("CW handled in Radio");
+    gtk_widget_set_name(cw_keyer_internal_b, "boldlabel");
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (cw_keyer_internal_b), cw_keyer_internal);
+    gtk_widget_show(cw_keyer_internal_b);
+    gtk_grid_attach(GTK_GRID(grid), cw_keyer_internal_b, 1, 0, 1, 1);
+    g_signal_connect(cw_keyer_internal_b, "toggled", G_CALLBACK(cw_keyer_internal_cb), NULL);
+  }
   GtkWidget *cw_speed_label = gtk_label_new("CW Speed (WPM)");
   gtk_widget_set_name(cw_speed_label, "boldlabel");
   gtk_widget_set_halign(cw_speed_label, GTK_ALIGN_END);

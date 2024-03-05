@@ -403,8 +403,8 @@ static gboolean update_display(gpointer data) {
       fwd_power = 0;
       rev_power = 0;
       break;
-#ifdef USBOZY
 
+#ifdef USBOZY
     case DEVICE_OZY:
       if (filter_board == ALEX) {
         constant1 = 3.3;
@@ -428,6 +428,24 @@ static gboolean update_display(gpointer data) {
 #endif
 
     case DEVICE_METIS:
+    case NEW_DEVICE_ATLAS:
+      if (filter_board == ALEX) {
+        constant1 = 3.3;
+        constant2 = 0.09;
+        rconstant2 = 0.09;
+        rev_cal_offset = 3;
+        fwd_cal_offset = 6;
+      } else {
+        constant1 = 3.3;
+        constant2 = 18.0;
+        rconstant2 = 18.0;
+        rev_cal_offset = 0;
+        fwd_cal_offset = 90;
+        fwd_power = exciter_power;
+        rev_power = 0;
+      }
+      break;
+
     case DEVICE_HERMES:
     case DEVICE_ANGELIA:
     case NEW_DEVICE_HERMES2:

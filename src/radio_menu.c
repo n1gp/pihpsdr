@@ -359,7 +359,8 @@ static void micsource_cb(GtkWidget *widget, gpointer data) {
 }
 
 static void tx_cb(GtkWidget *widget, gpointer data) {
-  atlas_penelope = SET(gtk_combo_box_get_active (GTK_COMBO_BOX(widget)));
+  atlas_penelope = gtk_combo_box_get_active (GTK_COMBO_BOX(widget));
+  calcDriveLevel();
 }
 
 void radio_menu(GtkWidget *parent) {
@@ -602,7 +603,7 @@ void radio_menu(GtkWidget *parent) {
   // The HPSDR machine-specific stuff is now put in columns 3+4
   // either the ATLAS bits (METIS) or the ORION microphone settings
   //
-  if (device == DEVICE_OZY || device == DEVICE_METIS) {
+  if (device == DEVICE_OZY || device == DEVICE_METIS || device == NEW_DEVICE_ATLAS) {
     row = 1;
     label = gtk_label_new("ATLAS bus settings:");
     gtk_widget_set_name(label, "boldlabel");
@@ -632,17 +633,6 @@ void radio_menu(GtkWidget *parent) {
     my_combo_attach(GTK_GRID(grid), ck128mhz_combo, 4, row, 1, 1);
     g_signal_connect(ck128mhz_combo, "changed", G_CALLBACK(ck128mhz_cb), NULL);
     row++;
-    label = gtk_label_new("Mic source:");
-    gtk_widget_set_name(label, "boldlabel");
-    gtk_widget_set_halign(label, GTK_ALIGN_END);
-    gtk_grid_attach(GTK_GRID(grid), label, 3, row, 1, 1);
-    GtkWidget *micsource_combo = gtk_combo_box_text_new();
-    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(micsource_combo), NULL, "Janus");
-    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(micsource_combo), NULL, "Penelope");
-    gtk_combo_box_set_active(GTK_COMBO_BOX(micsource_combo), SET(atlas_mic_source));
-    my_combo_attach(GTK_GRID(grid), micsource_combo, 4, row, 1, 1);
-    g_signal_connect(micsource_combo, "changed", G_CALLBACK(micsource_cb), NULL);
-    row++;
     label = gtk_label_new("TX config:");
     gtk_widget_set_name(label, "boldlabel");
     gtk_widget_set_halign(label, GTK_ALIGN_END);
@@ -654,6 +644,20 @@ void radio_menu(GtkWidget *parent) {
     gtk_combo_box_set_active(GTK_COMBO_BOX(tx_combo), atlas_penelope);
     my_combo_attach(GTK_GRID(grid), tx_combo, 4, row, 1, 1);
     g_signal_connect(tx_combo, "changed", G_CALLBACK(tx_cb), NULL);
+    row++;
+  }
+
+  if (device == DEVICE_OZY || device == DEVICE_METIS) {
+    label = gtk_label_new("Mic source:");
+    gtk_widget_set_name(label, "boldlabel");
+    gtk_widget_set_halign(label, GTK_ALIGN_END);
+    gtk_grid_attach(GTK_GRID(grid), label, 3, row, 1, 1);
+    GtkWidget *micsource_combo = gtk_combo_box_text_new();
+    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(micsource_combo), NULL, "Janus");
+    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(micsource_combo), NULL, "Penelope");
+    gtk_combo_box_set_active(GTK_COMBO_BOX(micsource_combo), SET(atlas_mic_source));
+    my_combo_attach(GTK_GRID(grid), micsource_combo, 4, row, 1, 1);
+    g_signal_connect(micsource_combo, "changed", G_CALLBACK(micsource_cb), NULL);
     row++;
 
     //

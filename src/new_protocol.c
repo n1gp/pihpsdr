@@ -644,6 +644,14 @@ static void new_protocol_general() {
   general_buffer[37] = 0x08; //  phase word (not frequency)
   general_buffer[38] = 0x01; //  enable hardware timer
 
+  if (device == NEW_DEVICE_ATLAS) {
+    general_buffer[57] |= atlas_clock_source_10mhz; // 0-Atlas, 1-Penny, 2-Mercury
+
+    if (atlas_clock_source_128mhz) {
+      general_buffer[58] |= 0x04;  // Mercury provides 122 Mhz
+    } // else Penelope provides 122 Mhz
+  }
+
   if (!pa_enabled || band->disablePA) {
     local_pa_enable = 0;
     general_buffer[58] = 0x00;
@@ -872,6 +880,17 @@ static void new_protocol_high_priority() {
     }
   } else {
     high_priority_buffer_to_radio[1401] = rxband->OCrx << 1;
+  }
+
+  if (device == NEW_DEVICE_ATLAS) {
+    int preamp_mask = !active_receiver->preamp;
+    // this actually controls a -20dB attenuator on Mercury
+    if (active_receiver->adc == 1) {
+      high_priority_buffer_to_radio[1403] = preamp_mask << 1;
+    } else {
+      high_priority_buffer_to_radio[1403] = preamp_mask;
+    }
+// TBD   high_priority_buffer_to_radio[1402] = User Outputs DB9 pins 1-4
   }
 
   //
@@ -1319,7 +1338,7 @@ static void new_protocol_high_priority() {
   high_priority_buffer_to_radio[1429] = (alex1 >> 16) & 0xFF;
   high_priority_buffer_to_radio[1430] = (alex1 >> 8) & 0xFF;
   high_priority_buffer_to_radio[1431] = alex1 & 0xFF;
-  //t_print("ALEX0 bits:  %02X %02X %02X %02X\n",high_priority_buffer_to_radio[1428],high_priority_buffer_to_radio[1429],high_priority_buffer_to_radio[1430],high_priority_buffer_to_radio[1431]);
+  //t_print("ALEX1 bits:  %02X %02X %02X %02X\n",high_priority_buffer_to_radio[1428],high_priority_buffer_to_radio[1429],high_priority_buffer_to_radio[1430],high_priority_buffer_to_radio[1431]);
 
   //
   // ADC step attenuator of ADC0 and ADC1
