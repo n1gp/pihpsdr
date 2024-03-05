@@ -44,6 +44,8 @@
 #include "message.h"
 #include "mystring.h"
 
+int midiIgnoreCtrlPairs = 0;
+
 enum {
   EVENT_COLUMN = 0,
   CHANNEL_COLUMN,
@@ -130,6 +132,10 @@ static void cleanup() {
 static gboolean close_cb () {
   cleanup();
   return TRUE;
+}
+
+static void ignore_cb(GtkWidget *widget, gpointer data) {
+  midiIgnoreCtrlPairs = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 }
 
 static void device_cb(GtkWidget *widget, gpointer data) {
@@ -370,97 +376,6 @@ static void clear_cb(GtkWidget *widget, gpointer user_data) {
   gtk_list_store_clear(store);
   MidiReleaseCommands();
 }
-
-#if 0
-//
-// Treatment of "legacy" midi props files is obsolete now,
-// as well as writing the midi props into a separate file
-//
-static void save_cb(GtkWidget *widget, gpointer user_data) {
-  GtkWidget *save_dialog;
-  GtkFileChooser *chooser;
-  GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
-  int res;
-  save_dialog = gtk_file_chooser_dialog_new ("Save File",
-                GTK_WINDOW(dialog),
-                action,
-                "_Cancel",
-                GTK_RESPONSE_CANCEL,
-                "_Save",
-                GTK_RESPONSE_ACCEPT,
-                NULL);
-  chooser = GTK_FILE_CHOOSER (save_dialog);
-  gtk_file_chooser_set_do_overwrite_confirmation (chooser, TRUE);
-  gtk_file_chooser_set_current_name(chooser, "midi.midi");
-  res = gtk_dialog_run (GTK_DIALOG (save_dialog));
-
-  if (res == GTK_RESPONSE_ACCEPT) {
-    char *savefilename = gtk_file_chooser_get_filename(chooser);
-    clearProperties();
-    midiSaveState();
-    saveProperties(savefilename);
-    g_free(savefilename);
-  }
-
-  gtk_widget_destroy(save_dialog);
-}
-
-static void load_cb(GtkWidget *widget, gpointer user_data) {
-  GtkWidget *load_dialog;
-  GtkFileChooser *chooser;
-  GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-  int res;
-  load_dialog = gtk_file_chooser_dialog_new ("Open MIDI File",
-                GTK_WINDOW(dialog),
-                action,
-                "_Cancel",
-                GTK_RESPONSE_CANCEL,
-                "_Load",
-                GTK_RESPONSE_ACCEPT,
-                NULL);
-  chooser = GTK_FILE_CHOOSER (load_dialog);
-  res = gtk_dialog_run (GTK_DIALOG (load_dialog));
-
-  if (res == GTK_RESPONSE_ACCEPT) {
-    char *loadfilename = gtk_file_chooser_get_filename(chooser);
-    clear_cb(NULL, NULL);
-    clearProperties();
-    loadProperties(loadfilename);
-    midiRestoreState();
-    load_store();
-    g_free(loadfilename);
-  }
-
-  gtk_widget_destroy(load_dialog);
-}
-
-static void load_original_cb(GtkWidget *widget, gpointer user_data) {
-  GtkWidget *load_dialog;
-  GtkFileChooser *chooser;
-  GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
-  int res;
-  load_dialog = gtk_file_chooser_dialog_new ("Open ORIGINAL MIDI File",
-                GTK_WINDOW(dialog),
-                action,
-                "_Cancel",
-                GTK_RESPONSE_CANCEL,
-                "_Load",
-                GTK_RESPONSE_ACCEPT,
-                NULL);
-  chooser = GTK_FILE_CHOOSER (load_dialog);
-  res = gtk_dialog_run (GTK_DIALOG (load_dialog));
-
-  if (res == GTK_RESPONSE_ACCEPT) {
-    char *loadfilename = gtk_file_chooser_get_filename(chooser);
-    clear_cb(NULL, NULL);
-    ReadLegacyMidiFile(loadfilename);
-    load_store();
-    g_free(loadfilename);
-  }
-
-  gtk_widget_destroy(load_dialog);
-}
-#endif
 
 static void add_store(int key, const struct desc *cmd) {
   char str_channel[64];
@@ -707,22 +622,6 @@ void midi_menu(GtkWidget *parent) {
 
   row++;
   col = 0;
-#if 0
-  GtkWidget *save_b = gtk_button_new_with_label("Save");
-  gtk_grid_attach(GTK_GRID(grid), save_b, col, row, 1, 1);
-  g_signal_connect(save_b, "clicked", G_CALLBACK(save_cb), NULL);
-  col++;
-  GtkWidget *load_b = gtk_button_new_with_label("Load");
-  gtk_grid_attach(GTK_GRID(grid), load_b, col, row, 1, 1);
-  g_signal_connect(load_b, "clicked", G_CALLBACK(load_cb), NULL);
-  col++;
-  GtkWidget *load_original_b = gtk_button_new_with_label("Load Original");
-  gtk_grid_attach(GTK_GRID(grid), load_original_b, col, row, 1, 1);
-  g_signal_connect(load_original_b, "clicked", G_CALLBACK(load_original_cb), NULL);
-  col++;
-#endif
-  row++;
-  col = 0;
   GtkWidget *label = gtk_label_new("Event");
   gtk_widget_set_name(label, "boldlabel");
   gtk_grid_attach(GTK_GRID(grid), label, col++, row, 1, 1);
@@ -767,15 +666,22 @@ void midi_menu(GtkWidget *parent) {
   newAction = gtk_button_new_with_label("    ");
   g_signal_connect(newAction, "button-press-event", G_CALLBACK(action_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid), newAction, col, row, 3, 1);
+
   row++;
-  col = 0;
   clear_b = gtk_button_new_with_label("Delete All");
-  gtk_grid_attach(GTK_GRID(grid), clear_b, col, row, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), clear_b, 0, row, 1, 1);
   g_signal_connect(clear_b, "clicked", G_CALLBACK(clear_cb), NULL);
-  col++;
+
   delete_b = gtk_button_new_with_label("Delete");
   g_signal_connect(delete_b, "button-press-event", G_CALLBACK(delete_cb), NULL);
-  gtk_grid_attach(GTK_GRID(grid), delete_b, col++, row, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), delete_b, 1, row, 1, 1);
+
+  GtkWidget *ignore_b = gtk_check_button_new_with_label("Ignore Controller Pairs");
+  gtk_widget_set_name(ignore_b, "boldlabel");
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ignore_b), midiIgnoreCtrlPairs);
+  gtk_grid_attach(GTK_GRID(grid), ignore_b, 3, row, 3, 1);
+  g_signal_connect(ignore_b, "toggled", G_CALLBACK(ignore_cb), NULL);
+
   row++;
   col = 0;
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
@@ -1195,6 +1101,7 @@ void midiSaveState() {
   int i;
   entry = 0;
 
+  SetPropI0("midiIgnoreCtrlPairs", midiIgnoreCtrlPairs);
   for (i = 0; i < n_midi_devices; i++) {
     if (midi_devices[i].active) {
       SetPropS1("mididevice[%d].name", entry, midi_devices[i].name);
@@ -1263,6 +1170,7 @@ void midiRestoreState() {
 
   //t_print("%s\n",__FUNCTION__);
 
+  GetPropI0("midiIgnoreCtrlPairs", midiIgnoreCtrlPairs);
   //
   // Note this is too early to open the MIDI devices, since the
   // radio has not yet fully been configured. Therefore, only

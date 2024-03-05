@@ -1672,11 +1672,11 @@ void tx_set_twotone(TRANSMITTER *tx, int state) {
     case modeCWL:
     case modeLSB:
     case modeDIGL:
-      SetTXAPostGenTTFreq(tx->id, -900.0, -1700.0);
+      SetTXAPostGenTTFreq(tx->id, -700.0, -1900.0);
       break;
 
     default:
-      SetTXAPostGenTTFreq(tx->id, 900.0, 1700.0);
+      SetTXAPostGenTTFreq(tx->id, 700.0, 1900.0);
       break;
     }
 

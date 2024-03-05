@@ -249,7 +249,6 @@ static pthread_mutex_t tx_spec_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t hi_prio_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t general_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static int radio_ptt = 0;
 static int radio_dash = 0;
 static int radio_dot = 0;
 
@@ -738,12 +737,16 @@ static void new_protocol_high_priority() {
       // For "internal" CW, we should not set
       // the MOX bit, everything is done in the FPGA.
       //
-      // However, if we are doing CAT CW, local CW or tuning/TwoTone,
+      // However, if we are doing CAT CW, MIDI CW or tuning/TwoTone,
       // we must put the SDR into TX mode. The same applies if the
       // radio reports a PTT signal, since only then we can use
       // a foot-switch to extend the TX time in a rag-chew QSO
       //
-      if (tune || CAT_cw_is_active || !cw_keyer_internal || transmitter->twotone || radio_ptt) {
+      if (tune || CAT_cw_is_active
+               || MIDI_cw_is_active
+               || !cw_keyer_internal
+               || transmitter->twotone
+               || radio_ptt) {
         high_priority_buffer_to_radio[4] |= 0x02;
       }
     } else {
@@ -1409,9 +1412,11 @@ static void new_protocol_transmit_specific() {
   transmit_specific_buffer[4] = 1; // 1 DAC
   transmit_specific_buffer[5] = 0; //  default no CW
 
-  if ((txmode == modeCWU || txmode == modeCWL) && cw_keyer_internal && !CAT_cw_is_active) {
+  if ((txmode == modeCWU || txmode == modeCWL) && cw_keyer_internal
+                                               && !CAT_cw_is_active
+                                               && !MIDI_cw_is_active) {
     //
-    // Set this byte only if in CW, and if using the "internal" keyer
+    // Set this byte only if in CW, and if using "CW handled in radio"
     //
     transmit_specific_buffer[5] |= 0x02;
 
@@ -2417,7 +2422,15 @@ static void process_high_priority() {
     radio_cw = buffer[59] & 0x08;
   }
   if (radio_dash || radio_dot || radio_cw) {
-    CAT_cw_is_active = 0;
+    //
+    // If currently a CAT or Keyer CW transmission is running,
+    // clear CAT/MIDI_cw_is_active to re-enable "CW handled in radio"
+    //
+    if (CAT_cw_is_active || MIDI_cw_is_active) {
+      CAT_cw_is_active = 0;
+      MIDI_cw_is_active = 0;
+      new_protocol_transmit_specific();
+    }
     cw_key_hit = 1;
   }
 

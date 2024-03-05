@@ -284,6 +284,8 @@ double vox_threshold = 0.001;
 double vox_hang = 250.0;
 int vox = 0;
 int CAT_cw_is_active = 0;
+int MIDI_cw_is_active = 0;
+int radio_ptt = 0;
 int cw_key_hit = 0;
 int n_adc = 1;
 
@@ -1229,12 +1231,15 @@ void start_radio() {
                p,
                version);
     } else {
-      snprintf(text, 1024, "piHPSDR: %s (%s %s) %s (%s) on %s",
+      // radio MAC address removed from the top bar otherwise
+      // it does not fit  in windows 640 pixels wide.
+      // if needed, the MAC address of the radio can be
+      // found in the ABOUT menu.
+      snprintf(text, 1024, "piHPSDR: %s (%s %s) %s on %s",
                radio->name,
                p,
                version,
                ip,
-               mac,
                iface);
     }
 

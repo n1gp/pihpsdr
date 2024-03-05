@@ -134,7 +134,6 @@ static int current_rx = 0;
 static int mic_samples = 0;
 static int mic_sample_divisor = 1;
 
-static int radio_ptt = 0;
 static int radio_dash = 0;
 static int radio_dot = 0;
 
@@ -770,7 +769,7 @@ static void open_tcp_socket() {
 static gpointer receive_thread(gpointer arg) {
   struct sockaddr_in addr;
   socklen_t length;
-  unsigned char buffer[2048];
+  unsigned char buffer[1032];
   int bytes_read;
   int ret, left;
   int ep;
@@ -1154,8 +1153,9 @@ static void process_control_bytes() {
 
   // Stops CAT cw transmission if radio reports "CW action"
   if (radio_dash || radio_dot) {
-    cw_key_hit = 1;
     CAT_cw_is_active = 0;
+    MIDI_cw_is_active = 0;
+    cw_key_hit = 1;
   }
 
   if (!cw_keyer_internal) {
@@ -2350,8 +2350,12 @@ void ozy_send_buffer() {
     case 7:
       output_buffer[C0] = 0x1E;
 
-      if ((txmode == modeCWU || txmode == modeCWL) && !tune && cw_keyer_internal && !transmitter->twotone
-          && !CAT_cw_is_active) {
+      if ((txmode == modeCWU || txmode == modeCWL) && !tune
+                                                   && !transmitter->twotone
+                                                   && cw_keyer_internal
+                                                   && !transmitter->twotone
+                                                   && !MIDI_cw_is_active
+                                                   && !CAT_cw_is_active) {
         output_buffer[C1] |= 0x01;
       }
 
@@ -2457,7 +2461,11 @@ void ozy_send_buffer() {
       //    However, if we are doing CAT CW, local CW or tuning/TwoTone,
       //    we must put the SDR into TX mode *here*.
       //
-      if (tune || CAT_cw_is_active || !cw_keyer_internal || transmitter->twotone || radio_ptt) {
+      if (tune || CAT_cw_is_active
+               || MIDI_cw_is_active
+               || !cw_keyer_internal
+               || transmitter->twotone
+               || radio_ptt) {
         output_buffer[C0] |= 0x01;
       }
     } else {

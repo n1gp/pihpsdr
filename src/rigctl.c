@@ -641,23 +641,28 @@ static gpointer rigctl_cw_thread(gpointer data) {
       // CW transmission has been aborted, either due to manually
       // removing MOX, changing the mode to non-CW, or because a CW key has been hit.
       // Do not remove PTT in the latter case
-      CAT_cw_is_active = 0;
       buffered_speed = 0;
+      CAT_cw_is_active = 0;
       schedule_transmit_specific();
 
       // If a CW key has been hit, we continue in TX mode.
+      // This also applies if we have an active foot-switch
       // Otherwise, switch PTT off.
-      if (!cw_key_hit && mox) {
+      if (!cw_key_hit && mox && !radio_ptt) {
         g_idle_add(ext_mox_update, GINT_TO_POINTER(0));
       }
 
       //
-      // drain ring buffer, then wait 0.5 sec, then drain again
-      // this lets the CAT system swallow further incoming CW messages
+      // keep draining ring buffer until it stays empty for 0.5 seconds
+      // This is necessary: after aborting a very long CW
+      // text such as a CQ call by hitting a Morse key,
+      // CW characters may flow in for quite a while.
       //
-      cw_buf_out = cw_buf_in;
-      usleep(500000L);
-      cw_buf_out = cw_buf_in;
+      do {
+        cw_buf_out = cw_buf_in;
+        usleep(500000L);
+      } while (cw_buf_out != cw_buf_in);
+
     } else {
       if (cwchar) { rigctl_send_cw_char(cwchar); }
 
@@ -665,8 +670,7 @@ static gpointer rigctl_cw_thread(gpointer data) {
       // Character has been sent, so continue.
       // Since the second character possibly comes 250 msec after
       // the first one, we have to wait if the buffer stays
-      // empty. If so, stop CAT CW
-      // If the ring buffer is empty for 500 msec, stop CAT CW
+      // empty. Only then, stop CAT CW.
       //
       for (i = 0; i < 5; i++ ) {
         if (cw_buf_in != cw_buf_out) { break; }
@@ -679,7 +683,7 @@ static gpointer rigctl_cw_thread(gpointer data) {
       CAT_cw_is_active = 0;
       schedule_transmit_specific();
 
-      if (!cw_key_hit) {
+      if (!cw_key_hit && !radio_ptt) {
         g_idle_add(ext_mox_update, GINT_TO_POINTER(0));
         // wait up to 500 msec for MOX having gone
         // otherwise there might be a race condition when sending

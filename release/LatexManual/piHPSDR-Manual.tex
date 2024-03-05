@@ -1280,7 +1280,7 @@ determined by the width and height chosen above.
  only makes sense of using an external GPIO or MIDI controller. Note that
  when using the piHPSDR Controller1, the toolbar should remain on display since
  this then serves as an indication which function is associtated with each of
- the 8 push buttone immediately below the screen.
+ the 8 push buttons immediately below the screen.
 
 \rett{Display Warnings} There are several non-fatal conditions that can
 be displayed either on the panadapter of the first receiver or, in non-duplex
@@ -2318,7 +2318,10 @@ The elements have the following function:
 \rett{Enable PS} With this check box, PS can be enabled/disabled.
 
 \rett{Two Tone} With this button, a two-tone experiment can be started/stopped. The button
-will be highlighted as long as the two-tone signal is transmitted.
+will be highlighted as long as the two-tone signal is transmitted. In the lower sideband
+modes (LSB, DIGL, CWL), an RF two-tone signal with frequencies 700 and 1900 Hz 
+\textit{below} the dial frequency are transmitted, in all other modes the two
+RF frequencies are 700 and 1900 Hz \textit{above} the dial frequency. 
 
 \rett{Auto Attenuate} This enables/disables automatic adjustment of the RF input
 attenuator to give the feedback level the correct strength. It is highly recommened
@@ -2420,7 +2423,7 @@ two peaks on the TX panadapter during the two-tone experiment.
 \label{fig:PSoff}
 \end{figure}
 
-To demonstrate what happens, I show an example performed with a HermesLite-II
+To demonstrate what happens, I show an example performed with a Hermes\-Lite-II
 radio running P1. Checking both \rett{Enable PS} and
 \rett{Auto Attenuation}, and hitting the \rett{Two Tone} button, it needs only few
 seconds to stabilize and then Fig. \ref{fig:PSnomon} results, where the TX
@@ -2444,9 +2447,9 @@ is shown in Fig. \ref{fig:PSoff}. After hitting that button, IM3 satellites imme
 grow and rise to about $-40$ dbM (which means IM3
 about $-34$ dBc), which is s reflects the intrinsic
 non-linearity of the PA.
- Note that this is a very good value,
+ Note that this is still a quite acceptable value,
 unless you have a class-A amplifier, your PA probably won't be much better.
-This shows that adaptive predistortion is a mechanism that allows you to produce a clean
+This experiment demonstrates that adaptive predistortion is a mechanism that allows you to produce a clean
 signal with a quality that would be impossible (or \textit{very} difficult) to achieve
 with traditional hardware.
 
@@ -3014,6 +3017,22 @@ This way it is possible to run two instances of piHPSDR on the same computer, bo
 connected to different radios, and control them independently with two different MIDI
 consoles. The first thing you have to do is to check all MIDI devices you want to use.
 
+\rett{Ignore Controller Pairs}. This check box  which is un-checked by default
+The MIDI standard offers the possiblity to combine two controllers, one
+(primary one) in the range 0--31 and the other (auxiliary one)
+with a a controller number larger by 32, thus in
+the range 32--63. The value of the auxiliary controller is then interpreted as a
+fine resolution correction of the value of the primary controller. Technically
+speaking,
+a pair of ControllerChange events sets a 14-bit value for the lower controller.
+Some MIDI consoles
+from the music market (for example, the Hercules DJ200 controller)
+use this mechanism. piHPSDR, especially the MIDI menu, gets confused
+by these "controller pairs". Checking the \rett{Ignore Controller Pairs} box just tells
+piHPSDR to ignore MIDI ControllerChange event if the controller number is between 32 and 63.
+As a consequence, only the most signicant 7 bits of the 14-bit value are used, which
+is fine for most applications.
+
 \begin{figure}[ht]
 \center
 \includegraphics[width=12cm]{MIDImenu2.png}
@@ -3021,8 +3040,8 @@ consoles. The first thing you have to do is to check all MIDI devices you want t
 \label{fig:MIDImenu2}
 \end{figure}
 
-It is important to note that as long as the MIDI menu is open, piHPSDR cannot be
-operated through MIDI. Instead all MIDI messages are captured by the menu and
+It is important to note that as long as the MIDI menu is open, the radio cannot be
+operated through MIDI since all MIDI messages are captured by the menu and
 displayed. This is used to implement a ,,self-learning'' configuration. To explain
 this in detail, we demonstrate how to configure MIDI such that the big wheel on the
 controller is used as a VFO knob. After I have activated the checkbox of our
@@ -3079,7 +3098,7 @@ the \bltt{VFO} button, which then becomes highlighted (Fig. \ref{fig:MIDImenu3})
  Then one has to click the OK button to make the choice, and one returns to the
  MIDI menu (see Fig. \ref{fig:MIDImenu4}).
 
-One sees that the choise has entered the MIDI configuration, as documented by the
+One sees that the choice just made has entered the MIDI configuration, as documented by the
 list in the bottom right part of the menu. At this stage, we can continue
 assigning more encoders, potentiometers, or buttons. If we close the menu at
 this point, then the big wheel on the MIDI console can immediately be used
@@ -3833,7 +3852,11 @@ OC menu).}
 \action{Two-Tone}{2TONE}{B}{Toggle (on/off) the two-tone state of the transmitter. If the two-tone state is
 engaged, the radio will go TX and emit a two-tone signal. If PURESIGNAL is enabled with auto calibration,
 then the PURESIGNAL engine will be restarted and the attenuation of the feedback
-signal re-adjusted while the two-tone signal is being sent.}
+signal re-adjusted while the two-tone signal is being sent.
+In the lower sideband
+modes (LSB, DIGL, CWL), an RF two-tone signal with frequencies 700 and 1900 Hz 
+\textit{below} the dial frequency are transmitted, in all other modes the two
+RF frequencies are 700 and 1900 Hz \textit{above} the dial frequency. }
 
 \action{VFO}{VFO}{E}{This is  the VFO frequency control of the active receiver.}
 
@@ -4104,13 +4127,45 @@ For example, the string \texttt{[.ar]} is transmitted exactly as if it were a pl
 for a joined character is \texttt{[.sk]} which is sometimes used to mark the end of a transmission.    
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter[Connect a Morse Key]{How to connect a Morse key or paddle}
+\chapter[Connect a Morse Key]{Attaching Morse Keys or Paddles}
 \label{sec:ConnectCW}
 
+\section{CW priorities}
+As detailed in the next section, there are many ways to produce CW with piHPSDR,
+namely
+\begin{itemize}
+\item[a)]{A key/paddle attached to the radio, and CW handled in the radio FPGA.}
+\item[b)]{A key/paddle attached to the radio, but using piHPSDR's built-in iambic keyer}
+\item[c)]{A key/paddle attached via GPIO/MIDI controlling piHPSDR's built-in iambic keyer}
+\item[d)]{An external keyer attached via GPIO/MIDI}
+\item[e)]{Sending CW using CAT messages (see Appendix \ref{sec:catcommands}).}
+\end{itemize}
+
+Case a) requires that the check box \rett{CW handled in Radio} within the \bltt{CW} menu
+is active. On the other hand, cases b) and c) require that this box is inactive. Cases
+d) and e) work in either case. This implies that with \rett{CW handled in Radio} checked,
+you can still operate CW via CAT messages or via a keyer attached to GPIO or MIDI
+(this is a standard setup while contesting).
+
+For example, a contest logger might key piHPSDR using CAT commands, while the CW key is
+attached to the radio. In this case, one wants to be able to abort the message from the contest
+logger just by hitting the key and smoothly continue CW transmission using the key. This
+makes clear that one has to prioritize the CW sources such that a CW event with a higher
+priority aborts a CW event running a lower priority. piHPSDR assigns CAT CW (case e)
+the lowest priority, a key attached to the radio (cases a,b,c) the highest priority
+and an external, GPIO or MIDI attached keyer (case d) intermediate priority. In other words,
+hitting a key attached to the radio aborts a CW message being sent either by CAT CW or
+by a GPIO/MIDI attached keyer, and hitting the key of a GPIO/MIDI attached keyer aborts
+a CAT CW message. Note that one can also make dual use of an external keyer, having a key
+attached there and talking to the keyer from a contest logger. In this case, the priorities
+are handled inside the keyer, usually in the sense that hitting a key aborts a message
+being sent that came from the contest logger.
+
+\section{How to connect}
 Most SDR radios have the possibility to connect a Paddle or at least a straight key to the
 radio itself, and then the firmware inside the radio takes care of all the CW processing.
 If, in addition, the radio has the option to  connect a headphone, you will get a low-latency
-side tone, generated by the radio firmware, in this headphon.
+side tone, generated by the radio firmware, in this headphone.
 This is the easiest case (do not forget to check \rett{CW handled in Radio} within the
 \bltt{CW} menu). If the radio (such as the HermesLite-II) can only connect a straight key,
 use an external keyer and connect the output of the keyer to the straight key input of the radio.
@@ -4119,7 +4174,7 @@ side tone. You can use the keyer output to key a hardware side tone generator an
 output with the audio that you feed to your headphone. This gives a hardware generated low
 latency side tone.
 
-More complications arise if you have to connect the Morse key to the host computer running
+It is only slightly more difficult if you have to connect the Morse key to the host computer running
 piHPSDR. This is necessary, for example, if there is a considerable distance between the
 radio and the host computer running piHPSDR. Imagine, for example, that the radio is
 in the attic close to the antenna feed point, but that you are sitting in your living room
@@ -4152,22 +4207,32 @@ an explanation of the commands. Briefly, use \bltt{CW Left} and \bltt{CW Right}
 when using piHPSDR's internal iambic keyer, and use \bltt{PTT (keyer)} and
 \bltt{CW Key (keyer)} when using an external keyer. Note when using an external
 keyer, it must generate both a key-down and a PTT signal, and it must be configured
-such that the PTT signal arrives about 150 msec earlier than the first key-down.
-K1EL WinKey keyers and Arduino clones thereof, which are the most abundant sort
-of keyers used, can easily be configured to do so. Depending on the audio subsystem,
+such that the PTT signal arrives earlier than the first key-down. The required time
+delay between PTT and the first key-down depends  on how fast piHPSDR can do the
+RX/TX transition, and this for examples depends on whether you have one or two receivers
+running. A delay in the range 100-150 msec is usually long enough.
+K1EL ,,WinKey'' keyers and Arduino clones thereof, which are the most frequently
+used sort
+of keyers, can easily be configured to do so. Depending on the audio subsystem,
 the latency of the side tone, when using the internal keyer, may be a problem.
-The ALSA audio module for Linux takes special provisions to
-keep this latency small.
+The ALSA audio module for Linux, as well as the PortAudio audio  module for MacOS,
+ take special provisions to keep this latency small. Still, ,,small'' might not
+ be small enough for CW at higher speeds, so the present author normally uses
+ external hardware to generate a nearly zero latency side tone that is then 
+ mixed with the audio from piHPDSR.
 
-\textbf{MIDI}
-If there are no spare GPIO lines (this is the case for the RaspPi if using the
-Controller2 or the G2 frontpanel), or if there are no GPIO lines at all (this is
-the case for piHPSDR running on Desktop Linux or Macintosh computers), the best
+\textbf{MIDI.}
+If running piHPSDR on non-Raspi Linux or Macintosh computers, there are no GPIO
+lines. The same problem arises for piHPDSR running on a RaspPi if using the
+Controller2 or the G2 frontpanel, simply because nearly all GPIO lines are 
+reserved for the controller.
+In these cases, the best
 choice to get "the key into the computer" is to use MIDI. There are low-cost
 microcontrollers which can be programmed such that they act as MIDI input devices
-if connected (via USB) to the host computer (Arduino Leonardo, Teensy LC). You can
+if connected (via USB) to the host computer (in the simplest case, 32U4 based
+microcontrollers like the Arduino Leonardo or the Teensy LC). You can
 run a Winkey Clone on the microcontroller and add code that for key-up/down and
-PTT on/off sends MIDI NoteOn/Off messages to the computer. The use the
+PTT on/off sends MIDI NoteOn/Off messages to the computer. Then, use the
 \bltt{MIDI} menu to configure. More powerful microcontrollers (e.g. the Teensy4)
 can even show up at the computer as a MIDI input device \textit{and} a serial port,
 in this case you can even connect from a contest logging program to  the keyer
@@ -4198,54 +4263,51 @@ You must install the MIDIUSB library from within the Arduino IDE, through the
 \texttt{Tools} $\to$ \texttt{Manage Libraries ...}  menu. The sketch monitors four
 input lines (0, 1, 2, 3 in the example) with debouncing. You can connect a CW paddle
 to lines 0 and 1, or the Key and PTT outputs of a Keyer to lines 2 and 3.
+If you are experienced, you can combine this code with a ,,WinKey'' compatible
+Arduino sketch and thus build an external keyer which then communicates with piHPSDR
+via MIDI over the USB cable.
 
-\clearpage
 \begin{small}
 \begin{verbatim}
 /*
- * define four I/O lines for the four inputs
+ * Small Arduino sketch to demonstrate MIDI connection to piHPDSR
+ * ===============================================================
  */
+ 
+// Define four I/O lines for the four inputs
 
 #define CWLEFT_IO   0   // Dot paddle
 #define CWRIGHT_IO  1   // Dash paddle or StraightKey
 #define CWKEY_IO    2   // from Keyer: CW
 #define PTT_IO      3   // from Keyer: PTT
 
-
-/*
- * define MIDI channel four MIDI notes for these four events
- */
+// Define MIDI channel four MIDI notes for these four events
 
 #define MIDI_CHANNEL 10
 #define CWLEFT_NOTE  10
 #define CWRIGHT_NOTE 11
 #define CWKEY_NOTE   12
 #define PTT_NOTE     13
+\end{verbatim}
+\clearpage
+\begin{verbatim}
 
-/*
- * define a debouncing time for CWLEFT/CWRIGHT
- * and a (possibly shorter) one for CWKEY/PTT
- */
+ // Define a debouncing time for CWLEFT/CWRIGHT
+ // and a (possibly shorter) one for CWKEY/PTT
 
 #define DEBOUNCE_PADDLE 15
 #define DEBOUNCE_KEYER   5
 
 #include "MIDIUSB.h"
 
-/*
- * Debouncing timers
- */
+// Debouncing timers
 
 static uint8_t CWLEFT_time;
 static uint8_t CWRIGHT_time;
 static uint8_t CWKEY_time;
 static uint8_t PTT_time;
-\end{verbatim}
-\clearpage
-\begin{verbatim}
-/*
- * last reported states
- */
+
+// Last reported states
 
 static uint8_t CWLEFT_last;
 static uint8_t CWRIGHT_last;
@@ -4271,6 +4333,7 @@ void setup() {
 \begin{verbatim}
 /*
  * Send MIDI NoteOn/Off message
+ * This is for the Arduino "MIDIUSB" package
  */
 
 void SendOnOff(int note, int state) {
@@ -4388,10 +4451,14 @@ In this section, we will cover four different scenarios, namely
 \item{piHPSDR and digimode program running on the same LINUX computer
 (including RaspPi) using ALSA.}
 \item{piHPSDR and digimode program running on the same LINUX computer
-(including RaspPi) using PulseAudio.}
+(including RaspPi) using PulseAudio or PipeWire. {\color{red} In the most recent Linux distributions,
+ PulseAudio has been abandoned and is replaced by
+PipeWire. From the user's perspective the difference is marginal.}}
 \item{piHPSDR and digimode program running on the same MacOS computer.}
 \end{itemize}
 
+
+ 
 \textbf{\color{red}Running piHPSDR and Digi on different computers}. \\
 This typically is the situation if piHPSDR is running on a computer with a very small
 screen, such as it is the case if you are using a piHPSDR controller or the G2 frontpanel.

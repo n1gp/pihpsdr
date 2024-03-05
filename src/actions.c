@@ -110,8 +110,9 @@ ACTION_TABLE ActionTable[] = {
   {CW_LEFT,             "CW Left",              "CWL",          MIDI_KEY   | CONTROLLER_SWITCH},
   {CW_RIGHT,            "CW Right",             "CWR",          MIDI_KEY   | CONTROLLER_SWITCH},
   {CW_SPEED,            "CW Speed",             "CWSPD",        MIDI_KNOB  | MIDI_WHEEL | CONTROLLER_ENCODER},
-  {CW_KEYER_KEYDOWN,    "CW Key\n(keyer)",      "CWKy",         MIDI_KEY   | CONTROLLER_SWITCH},
-  {CW_KEYER_PTT,        "PTT\n(CW keyer)",      "CWKyPTT",      MIDI_KEY   | CONTROLLER_SWITCH},
+  {CW_KEYER_KEYDOWN,    "CW Key\n(Keyer)",      "CWKy",         MIDI_KEY   | CONTROLLER_SWITCH},
+  {CW_KEYER_PTT,        "PTT\n(CW Keyer)",      "CWKyPTT",      MIDI_KEY   | CONTROLLER_SWITCH},
+  {CW_KEYER_SPEED,      "Speed\n(Keyer)",       "CWKySpd",      MIDI_KNOB},
   {DIV,                 "DIV On/Off",           "DIVT",         MIDI_KEY   | CONTROLLER_SWITCH},
   {DIV_GAIN,            "DIV Gain",             "DIVG",         MIDI_WHEEL | CONTROLLER_ENCODER},
   {DIV_GAIN_COARSE,     "DIV Gain\nCoarse",     "DIVGC",        MIDI_WHEEL | CONTROLLER_ENCODER},
@@ -304,7 +305,8 @@ static inline double KnobOrWheel(const PROCESS_ACTION *a, double oldval, double 
     break;
 
   case ABSOLUTE:
-    oldval = minval + a->val * (maxval - minval) * 0.01;
+    // The magic floating point  constant is 1/127
+    oldval = minval + a->val * (maxval - minval) * 0.00787401574803150;
     break;
 
   default:
@@ -345,7 +347,7 @@ void schedule_action(enum ACTION action, enum ACTION_MODE mode, int val) {
     // intended for external keyers (MIDI or GPIO connected)
     // which take care of PTT themselves.
     //
-    if (mode == PRESSED && (cw_keyer_internal == 0 || CAT_cw_is_active)) {
+    if (mode == PRESSED && (!cw_keyer_internal || MIDI_cw_is_active)) {
       gpio_set_cw(1);
       cw_key_down = 960000; // max. 20 sec to protect hardware
       cw_key_up = 0;
@@ -1615,34 +1617,35 @@ int process_action(void *data) {
   case CW_KEYER_PTT:
 
     //
-    // If you do CW with the key attached to the radio, and use a foot-switch for
-    // PTT, then this should trigger the standard PTT event. However, if you have the
-    // the key attached to the radio and want to use an external keyer (e.g.
-    // controlled by a contest logger), then "internal CW" muste temporarily be
-    // disabled in the radio (while keying from piHPSDR) in the radio.
-    // This is exactly the same situation as when using CAT
-    // CW commands together with "internal" CW (status variable CAT_cw_is_active),
-    // so the mechanism is already there. Therefore, the present case is just
-    // the same as "PTT" except that we set/clear the "CAT CW" condition.
+    // This is a PTT signal from an external keyer (either MIDI or GPIO connected).
+    // In addition to activating PTT, we have to set MIDI_cw_is_active to temporarily
+    // enable CW from piHPSDR even if CW is handled  in the radio.
     //
-    // If the "CAT CW" flag is already cleared when the PTT release arrives, this
-    // means that the CW message from the keyer has been aborted by hitting the
-    // CW key. In this case, the radio takes care of "going RX".
+    // This is to support a configuration where a key is attached to (and handled in)
+    // the radio, while a contest logger controls a keyer whose key up/down events
+    // arrive via MIDI/GPIO.
     //
+    // When KEYER_PTT is removed, clear MIDI_CW_is_active to (re-)allow CW being handled in the
+    // radio. piHPSDR then goes RX unless "Radio PTT" is seen, which indicates that either
+    // a footswitch has been pushed, or that the radio went TX due to operating a Morse key
+    // attached to the radio.
+    // In both cases, piHPSDR stays TX and the radio will induce the TX/RX transition by removing radio_ptt.
+    //
+
     switch (a->mode) {
     case PRESSED:
-      CAT_cw_is_active = 1;
+      MIDI_cw_is_active = 1;         // disable "CW handled in radio"
+      cw_key_hit = 1;                // this tells rigctl to abort CAT CW
       schedule_transmit_specific();
       mox_update(1);
       break;
 
     case RELEASED:
-      if (CAT_cw_is_active == 1) {
-        CAT_cw_is_active = 0;
-        schedule_transmit_specific();
+      MIDI_cw_is_active = 0;         // enable "CW handled in radio", if it was selected
+      schedule_transmit_specific();
+      if (!radio_ptt) {
         mox_update(0);
       }
-
       break;
 
     default:
@@ -1650,6 +1653,17 @@ int process_action(void *data) {
       break;
     }
 
+    break;
+
+  case CW_KEYER_SPEED:
+    //
+    // This is a MIDI message from a CW keyer. The MIDI controller
+    // value maps 1:1 to the speed, but we keep it within limits.
+    //
+    i = a->val;
+    if (i >= 1 && i <= 60) { cw_keyer_speed = i; }
+    keyer_update();
+    g_idle_add(ext_vfo_update, NULL);
     break;
 
   case NO_ACTION:

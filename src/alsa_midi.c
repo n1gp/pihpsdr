@@ -210,11 +210,17 @@ static void *midi_thread(void *arg) {
           break;
 
         case CMD_CTRL:
-          if (configure) {
-            NewMidiConfigureEvent(MIDI_CTRL, chan, arg1, arg2);
-          } else {
-            NewMidiEvent(MIDI_CTRL, chan, arg1, arg2);
-          }
+          //
+          // When ignoring "controller pairs", all ControllerChange events
+          // for controllers 32...63 are ignored
+          //
+          if (!midiIgnoreCtrlPairs || arg1 < 32 || arg1 >= 64) {
+            if (configure) {
+              NewMidiConfigureEvent(MIDI_CTRL, chan, arg1, arg2);
+            } else {
+              NewMidiEvent(MIDI_CTRL, chan, arg1, arg2);
+            }
+          } 
 
           break;
 

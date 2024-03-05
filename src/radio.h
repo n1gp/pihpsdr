@@ -227,6 +227,8 @@ extern double vox_threshold;
 extern double vox_hang;
 extern int vox;
 extern int CAT_cw_is_active;
+extern int MIDI_cw_is_active;
+extern int radio_ptt;
 extern int cw_key_hit;
 extern int n_adc;
 

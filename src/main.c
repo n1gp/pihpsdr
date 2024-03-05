@@ -318,8 +318,13 @@ static void activate_pihpsdr(GtkApplication *app, gpointer data) {
   // window jump back to the center each time the window is
   // re-created, e.g. in reconfigure_radio()
   //
+  // Note: enabling "resizable" leads to strange behaviour in the
+  //       Wayland window manager so we  suppress this. All resize
+  //       events are "programmed" and not "user intervention"
+  //       anyway.
+  //
   gtk_window_set_position(GTK_WINDOW(top_window), GTK_WIN_POS_CENTER);
-  gtk_window_set_resizable(GTK_WINDOW(top_window), TRUE);
+  gtk_window_set_resizable(GTK_WINDOW(top_window), FALSE);
   //
   // Get the position of the top window, and then determine
   // to which monitor this position belongs.
@@ -336,10 +341,9 @@ static void activate_pihpsdr(GtkApplication *app, gpointer data) {
   screen_width = rect.width;
   screen_height = rect.height;
   t_print("Monitor: width=%d height=%d\n", screen_width, screen_height);
-  // Start with the smallest possible screen, 800x480, since this can now
-  // be fully configured in the SCREEN menu.
+  // Start with 800x480, since this width is required for the "discovery" screen.
   // Go to "full screen" mode if display nearly matches 800x480
-  // This is all overridden from the props file
+  // This is all overridden later for the radio from the props file
   display_width  = 800;
   display_height = 480;
   full_screen    = 0;
