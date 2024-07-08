@@ -341,7 +341,7 @@ void update_action_table() {
   int flag = 0;
   int xmit = isTransmitting(); // store such that it cannot change while building the flag
   int newdev = (device == NEW_DEVICE_ANGELIA  || device == NEW_DEVICE_ORION ||
-                device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN);
+                device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN || NEW_DEVICE_ATLAS);
 
   if (duplex && xmit) { flag += 10000; }
 
