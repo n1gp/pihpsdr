@@ -266,6 +266,7 @@ extern int have_rx_att;          // step attenuator available -31 ... 0 dB
 extern int have_preamp;          // switchable preamp
 extern int have_alex_att;        // ALEX board does have 0/10/20/30 dB attenuator
 extern int have_saturn_xdma;     // Saturn can use Network or XDMA interface
+extern int have_racm5;           // running on a Raxda CM5
 extern int rx_gain_calibration;  // used to calibrate the input signal
 
 extern double drive_max;         // maximum value of the drive slider

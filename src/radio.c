@@ -261,6 +261,7 @@ int have_rx_att = 0;
 int have_alex_att = 0;
 int have_preamp = 0;
 int have_saturn_xdma = 0;
+int have_racm5 = 0;
 int rx_gain_calibration = 0;
 
 int split = 0;
@@ -1007,15 +1008,25 @@ void radio_start_radio() {
   }
 
   //
+  // Init Radxa CM5 serial port
+  //
+  if (have_racm5) {
+    SerialPorts[MAX_SERIAL - 1].baud = B115200;
+    snprintf(SerialPorts[MAX_SERIAL - 1].port, sizeof(SerialPorts[MAX_SERIAL - 1].port), "/dev/ttyS7");
+  }
+
+  //
   // If the controller is G2_V2, enable last serial port for the
   // built-in ANDROMEDA-type panel on /dev/ttyAMA1.
   //
   if (controller == G2_V2) {
     SerialPorts[MAX_SERIAL - 1].enable = 1;
     SerialPorts[MAX_SERIAL - 1].andromeda = 1;
-    SerialPorts[MAX_SERIAL - 1].baud = B9600;
     SerialPorts[MAX_SERIAL - 1].autoreporting = 0;
-    snprintf(SerialPorts[MAX_SERIAL - 1].port, sizeof(SerialPorts[MAX_SERIAL - 1].port), "/dev/ttyAMA1");
+    if (!have_racm5) {
+      SerialPorts[MAX_SERIAL - 1].baud = B9600;
+      snprintf(SerialPorts[MAX_SERIAL - 1].port, sizeof(SerialPorts[MAX_SERIAL - 1].port), "/dev/ttyAMA1");
+    }
   }
 
   protocol = radio->protocol;
@@ -2458,7 +2469,7 @@ static void radio_restore_state() {
     GetPropI1("rigctl_serial_autoreporting[%d]", id,         SerialPorts[id].autoreporting);
 
     if (SerialPorts[id].andromeda) {
-      SerialPorts[id].baud = B9600;
+      SerialPorts[id].baud = (have_racm5) ? B115200 : B9600;
     }
   }
 

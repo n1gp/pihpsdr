@@ -6279,9 +6279,10 @@ int launch_serial_rigctl (int id) {
 
   //
   // ANDROMEDA uses a hard-wired baud rate 9600
+  // accept when running on a Radxa CM5
   //
   if (SerialPorts[id].andromeda) {
-    baud = B9600;
+    baud = (have_racm5) ? B115200 : B9600;
   }
 
   serial_client[id].fifo = 0;

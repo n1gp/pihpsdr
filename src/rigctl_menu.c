@@ -113,8 +113,13 @@ static void andromeda_cb(GtkWidget *widget, gpointer data) {
   SerialPorts[id].andromeda = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 
   if (SerialPorts[id].andromeda) {
-    gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[id]), 1);
-    SerialPorts[id].baud = B9600;
+    if (have_racm5) {
+      gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[id]), 4);
+      SerialPorts[id].baud = B115200;
+    } else {
+      gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[id]), 1);
+      SerialPorts[id].baud = B9600;
+    }
   }
 }
 
@@ -141,9 +146,11 @@ static void baud_cb(GtkWidget *widget, gpointer data) {
 
   //
   // If ANDROMEDA is active, keep 9600
+  // unless were running on a Radxa CM5
   //
-  if (SerialPorts[id].andromeda && SerialPorts[id].baud == B9600) {
-    gtk_combo_box_set_active(GTK_COMBO_BOX(widget), 1);
+  if (SerialPorts[id].andromeda && ((SerialPorts[id].baud == B9600) ||
+                                    (have_racm5 && SerialPorts[id].baud == B115200))) {
+    gtk_combo_box_set_active(GTK_COMBO_BOX(widget), (have_racm5) ? 4 : 1);
     return;
   }
 
@@ -167,6 +174,10 @@ static void baud_cb(GtkWidget *widget, gpointer data) {
 
   case 3:
     new = B38400;
+    break;
+    
+  case 4:
+    new = B115200;
     break;
   }
 
@@ -251,6 +262,7 @@ void rigctl_menu(GtkWidget *parent) {
     gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_baud[i]), NULL, "9600 Bd");
     gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_baud[i]), NULL, "19200 Bd");
     gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_baud[i]), NULL, "38400 Bd");
+    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_baud[i]), NULL, "115200 Bd");
 
     switch (SerialPorts[i].baud) {
     case B9600:
@@ -263,6 +275,10 @@ void rigctl_menu(GtkWidget *parent) {
 
     case B38400:
       gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[i]), 3);
+      break;
+
+    case B115200:
+      gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[i]), 4);
       break;
 
     default:
