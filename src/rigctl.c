@@ -106,7 +106,7 @@ typedef struct _client {
   guint auto_timer;                 // for auto-reporting FA/FB
   int auto_reporting;               // auto-reporting (AI, ZZAI) on/off
   int andromeda_type;               // 1: Andromeda, 5: G2Mk2
-  int last_fa, last_fb;             // last VFO-A/B frequency reported
+  int last_fa, last_fb, last_md;    // last VFO-A/B frequency and VFO-A mode reported
   int last_led[MAX_ANDROMEDA_LEDS]; // last status of ANDROMEDA LEDs
 } CLIENT;
 
@@ -799,6 +799,89 @@ static void send_resp (int fd, char * msg) {
   }
 }
 
+static int wdspmode(int kenwoodmode) {
+  int wdspmode;
+
+  switch (kenwoodmode) {
+  case 1:                // Kenwood LSB
+    wdspmode = modeLSB;
+    break;
+  case 2:                // Kenwood USB
+    wdspmode = modeUSB;
+    break;
+  case 3:                // Kenwood CW (upper side band)
+    wdspmode = modeCWU;
+    break;
+  case 4:                // Kenwood FM
+    wdspmode = modeFMN;
+    break;
+  case 5:                // Kenwood AM
+    wdspmode = modeAM;
+    break;
+  case 6:                // Kenwood FSK (lower side band)
+    wdspmode = modeDIGL;
+    break;
+  case 7:                // Kenwood CW-R (lower side band)
+    wdspmode = modeCWL;
+    break;
+  case 9:                // Kenwood FSK-R (upper side band)
+    wdspmode = modeDIGU;
+    break;
+  default:
+    // NOTREACHED?
+    wdspmode = modeLSB;
+    break;
+  }
+
+  return wdspmode;
+}
+
+static int ts2000_mode(int wdspmode) {
+  int kenwoodmode;
+
+  switch (wdspmode) {
+  case modeLSB:
+    kenwoodmode = 1;  // Kenwood LDB
+    break;
+
+  case modeUSB:
+    kenwoodmode = 2;  // Kenwood USB
+    break;
+
+  case modeCWL:
+    kenwoodmode = 7;  // Kenwood CW-R
+    break;
+
+  case modeCWU:
+    kenwoodmode = 3;  // Kenwood CW
+    break;
+
+  case modeFMN:
+    kenwoodmode = 4;  // Kenwood FM
+    break;
+
+  case modeAM:
+  case modeSAM:
+    kenwoodmode = 5;  // Kenwood AM
+    break;
+
+  case modeDIGL:
+    kenwoodmode = 6;  // Kenwood FSK
+    break;
+
+  case modeDIGU:
+    kenwoodmode = 9;  // Kenwood FSK-R
+    break;
+
+  default:
+    // NOTREACHED?
+    kenwoodmode = 1;  // LSB 
+    break;
+  }
+
+  return kenwoodmode;
+}
+
 static gboolean autoreport_handler(gpointer data) {
   CLIENT *client = (CLIENT *) data;
   //
@@ -822,6 +905,7 @@ static gboolean autoreport_handler(gpointer data) {
   if (client->auto_reporting) {
     long long fa = vfo[VFO_A].ctun ? vfo[VFO_A].ctun_frequency : vfo[VFO_A].frequency;
     long long fb = vfo[VFO_B].ctun ? vfo[VFO_B].ctun_frequency : vfo[VFO_B].frequency;
+    int md = vfo[VFO_A].mode;
     char reply[256];
 
     if (fa != client->last_fa) {
@@ -834,6 +918,12 @@ static gboolean autoreport_handler(gpointer data) {
       snprintf(reply, 256, "FB%011lld;", fb);
       send_resp(client->fd, reply);
       client->last_fb = fb;
+    }
+
+    if (md != client->last_md) {
+      snprintf(reply, 256, "MD%1d;", ts2000_mode(md));
+      send_resp(client->fd, reply);
+      client->last_md = md;
     }
   }
 
@@ -1072,8 +1162,9 @@ static gpointer rigctl_server(gpointer data) {
     tcp_client[spare].andromeda_timer = 0;
     tcp_client[spare].auto_reporting  = SET(rigctl_tcp_autoreporting);
     tcp_client[spare].andromeda_type  = 0;
-    tcp_client[spare].last_fa         = 0;
-    tcp_client[spare].last_fb         = 0;
+    tcp_client[spare].last_fa         = -1;
+    tcp_client[spare].last_fb         = -1;
+    tcp_client[spare].last_md         = -1;
 
     for (int i = 0; i < MAX_ANDROMEDA_LEDS; i++) {
       tcp_client[spare].last_led[i] = -1;
@@ -1187,50 +1278,6 @@ static gpointer rigctl_client (gpointer data) {
   g_mutex_unlock(&mutex_numcat);
   g_idle_add(ext_vfo_update, NULL);
   return NULL;
-}
-
-static int ts2000_mode(int m) {
-  int mode = 1;
-
-  switch (m) {
-  case modeLSB:
-    mode = 1;
-    break;
-
-  case modeUSB:
-    mode = 2;
-    break;
-
-  case modeCWL:
-    mode = 7;
-    break;
-
-  case modeCWU:
-    mode = 3;
-    break;
-
-  case modeFMN:
-    mode = 4;
-    break;
-
-  case modeAM:
-  case modeSAM:
-    mode = 5;
-    break;
-
-  case modeDIGL:
-    mode = 6;
-    break;
-
-  case modeDIGU:
-    mode = 9;
-    break;
-
-  default:
-    break;
-  }
-
-  return mode;
 }
 
 gboolean parse_extended_cmd (const char *command, CLIENT *client) {
@@ -4886,45 +4933,7 @@ int parse_cmd(void *data) {
         snprintf(reply, 256, "MD%d;", mode);
         send_resp(client->fd, reply);
       } else if (command[3] == ';') {
-        int mode = modeUSB;
-
-        switch (atoi(&command[2])) {
-        case 1:
-          mode = modeLSB;
-          break;
-
-        case 2:
-          mode = modeUSB;
-          break;
-
-        case 3:
-          mode = modeCWU;
-          break;
-
-        case 4:
-          mode = modeFMN;
-          break;
-
-        case 5:
-          mode = modeAM;
-          break;
-
-        case 6:
-          mode = modeDIGL;
-          break;
-
-        case 7:
-          mode = modeCWL;
-          break;
-
-        case 9:
-          mode = modeDIGU;
-          break;
-
-        default:
-          break;
-        }
-
+        int mode = wdspmode(atoi(&command[2]));
         vfo_id_mode_changed(VFO_A, mode);
       }
 
