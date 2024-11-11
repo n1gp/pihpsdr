@@ -64,6 +64,28 @@ static gboolean has_moved = FALSE;
 static gboolean pressed = FALSE;
 static gboolean making_active = FALSE;
 
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+static gint ftune_time = 0;
+long get_current_ms (void)
+{
+    long            ms;
+    time_t          s;
+    struct timespec spec;
+
+    clock_gettime(CLOCK_REALTIME, &spec);
+
+    s  = spec.tv_sec;
+    ms = round(spec.tv_nsec / 1.0e6);
+    if (ms > 999) 
+    {    
+        s++;
+        ms = 0; 
+    }    
+
+    return ((int)s*1000 + ms); 
+}
+#endif
+
 //
 // PART 1. Functions releated to the receiver display
 //
@@ -79,6 +101,12 @@ gboolean rx_button_press_event(GtkWidget *widget, GdkEventButton *event, gpointe
 
   if (rx == active_receiver) {
     if (event->button == GDK_BUTTON_PRIMARY) {
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+      gint newtime = get_current_ms() - ftune_time;
+      ftune_time = get_current_ms();
+      if (newtime <= 250)
+        return TRUE;
+#endif
       last_x = (int)event->x;
       has_moved = FALSE;
       pressed = TRUE;
@@ -199,9 +227,26 @@ gboolean rx_motion_notify_event(GtkWidget *widget, GdkEventMotion *event, gpoint
 
     if (moved) {
       if (has_moved || moved < -1 || moved > 1) {
-        vfo_move((long long)((float)moved * rx->hz_per_pixel), FALSE);
         last_x = x;
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+        // N1GP: step the VFO when dragging, useful on touchscreen for fine tuning
+        if (active_receiver->ftune_enable)
+        {
+          static int vmove = 0;
+          if (moved > 0) vmove += 1;
+          else if (moved < 0) vmove -= 1;
+          if (abs(vmove) > (int)active_receiver->ftune)
+          {
+            vmove = (vmove > 0)?1:-1;
+            vfo_step((vmove < 0)?1:-1);
+            has_moved = TRUE;
+          }
+          ftune_time = get_current_ms();
+      } else
+#else
         has_moved = TRUE;
+#endif
+        vfo_move((long long)((float)moved*rx->hz_per_pixel),FALSE);
       }
     }
   }
@@ -300,8 +345,13 @@ void rx_save_state(const RECEIVER *rx) {
   SetPropF1("receiver.%d.nr4_post_filter_threshold", rx->id,    rx->nr4_post_filter_threshold);
 #endif
   SetPropI1("receiver.%d.deviation", rx->id,                    rx->deviation);
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+  SetPropI1("receiver.%d.ftune_enable", rx->id,                 rx->ftune_enable);
+  SetPropF1("receiver.%d.ftune", rx->id,                        rx->ftune);
+#else
   SetPropI1("receiver.%d.squelch_enable", rx->id,               rx->squelch_enable);
   SetPropF1("receiver.%d.squelch", rx->id,                      rx->squelch);
+#endif
   SetPropI1("receiver.%d.binaural", rx->id,                     rx->binaural);
   SetPropI1("receiver.%d.zoom", rx->id,                         rx->zoom);
   SetPropI1("receiver.%d.pan", rx->id,                          rx->pan);
@@ -405,8 +455,13 @@ void rx_restore_state(RECEIVER *rx) {
   GetPropF1("receiver.%d.nr4_post_filter_threshold", rx->id,    rx->nr4_post_filter_threshold);
 #endif
   GetPropI1("receiver.%d.deviation", rx->id,                    rx->deviation);
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+  GetPropI1("receiver.%d.ftune_enable", rx->id,                 rx->ftune_enable);
+  GetPropF1("receiver.%d.ftune", rx->id,                        rx->ftune);
+#else
   GetPropI1("receiver.%d.squelch_enable", rx->id,               rx->squelch_enable);
   GetPropF1("receiver.%d.squelch", rx->id,                      rx->squelch);
+#endif
   GetPropI1("receiver.%d.binaural", rx->id,                     rx->binaural);
   GetPropI1("receiver.%d.zoom", rx->id,                         rx->zoom);
   GetPropI1("receiver.%d.pan", rx->id,                          rx->pan);
@@ -781,8 +836,13 @@ RECEIVER *rx_create_receiver(int id, int pixels, int width, int height) {
   rx->mute_when_not_active = 0;
   rx->audio_channel = STEREO;
   rx->audio_device = -1;
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+  rx->ftune_enable = 0;
+  rx->ftune = 0;
+#else
   rx->squelch_enable = 0;
   rx->squelch = 0;
+#endif
   rx->binaural = 0;
   rx->filter_high = 525;
   rx->filter_low = 275;

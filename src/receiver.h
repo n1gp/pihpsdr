@@ -217,6 +217,9 @@ typedef struct _receiver {
   int squelch_enable;
   double squelch;
 
+  int ftune_enable;
+  double ftune;
+
   int binaural;
 
   int deviation;

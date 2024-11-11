@@ -72,7 +72,13 @@ static GtkWidget *mic_gain_label;
 static GtkWidget *mic_gain_scale;
 static GtkWidget *drive_label;
 static GtkWidget *drive_scale;
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+static GtkWidget *ftune_label;
+static GtkWidget *ftune_scale;
+static GtkWidget *ftune_enable;
+#else
 static GtkWidget *squelch_label;
+#endif
 static GtkWidget *squelch_scale;
 static gulong     squelch_signal_id;
 static GtkWidget *squelch_enable;
@@ -165,6 +171,10 @@ int sliders_active_receiver_changed(void *data) {
     //
     gtk_range_set_value(GTK_RANGE(af_gain_scale), active_receiver->volume);
     gtk_range_set_value (GTK_RANGE(agc_scale), active_receiver->agc_gain);
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+    gtk_range_set_value (GTK_RANGE(ftune_scale), active_receiver->ftune);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON(ftune_enable), active_receiver->ftune_enable);
+#else
     //
     // need block/unblock so setting the value of the receivers does not
     // enable/disable squelch
@@ -173,6 +183,7 @@ int sliders_active_receiver_changed(void *data) {
     gtk_range_set_value (GTK_RANGE(squelch_scale), active_receiver->squelch);
     g_signal_handler_unblock(G_OBJECT(squelch_scale), squelch_signal_id);
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(squelch_enable), active_receiver->squelch_enable);
+#endif
 
     if (filter_board == CHARLY25) {
       update_c25_att();
@@ -592,6 +603,15 @@ void set_filter_cut_low(int rx, int var) {
   show_popup_slider(FILTER_CUT_LOW, rx, (double)(min), (double)(max), 1.00, (double) var, title);
 }
 
+#ifdef FTUNE_SLIDER_INSTEAD_OF_SQUELCH
+static void ftune_value_changed_cb(GtkWidget *widget, gpointer data) {
+  active_receiver->ftune=gtk_range_get_value(GTK_RANGE(widget));
+}
+
+static void ftune_enable_cb(GtkWidget *widget, gpointer data) {
+  active_receiver->ftune_enable=gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+}
+#else
 static void squelch_value_changed_cb(GtkWidget *widget, gpointer data) {
   active_receiver->squelch = gtk_range_get_value(GTK_RANGE(widget));
   active_receiver->squelch_enable = (active_receiver->squelch > 0.5);
@@ -617,6 +637,7 @@ static void squelch_enable_cb(GtkWidget *widget, gpointer data) {
     rx_set_squelch(active_receiver);
   }
 }
+#endif
 
 void set_squelch(RECEIVER *rx) {
   //t_print("%s\n",__FUNCTION__);
@@ -830,6 +851,28 @@ GtkWidget *sliders_init(int my_width, int my_height) {
     drive_scale = NULL;
   }
 
+#if defined(FTUNE_SLIDER_INSTEAD_OF_SQUELCH)
+  ftune_label = gtk_label_new("Ftune");
+  gtk_widget_set_name(ftune_label, csslabel);
+  gtk_widget_set_halign(ftune_label, GTK_ALIGN_END);
+  gtk_widget_show(ftune_label);
+  gtk_grid_attach(GTK_GRID(sliders), ftune_label, t3pos, 1, twidth, 1);
+  ftune_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0, 20.0, 1.0);
+  gtk_widget_set_size_request(ftune_scale, 0, height / 2);
+  gtk_widget_set_valign(ftune_scale, GTK_ALIGN_CENTER);
+  gtk_range_set_increments (GTK_RANGE(ftune_scale), 1.0, 1.0);
+  gtk_range_set_value (GTK_RANGE(ftune_scale), active_receiver->ftune);
+  gtk_widget_show(ftune_scale);
+  gtk_grid_attach(GTK_GRID(sliders), ftune_scale, sqpos, 1, swidth - 1, 1);
+  squelch_signal_id = g_signal_connect(G_OBJECT(ftune_scale), "value_changed", G_CALLBACK(ftune_value_changed_cb),
+                                       NULL);
+  ftune_enable = gtk_check_button_new();
+  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ftune_enable), active_receiver->ftune_enable);
+  gtk_widget_show(ftune_enable);
+  gtk_grid_attach(GTK_GRID(sliders), ftune_enable, s3pos, 1, 1, 1);
+  gtk_widget_set_halign(ftune_enable, GTK_ALIGN_CENTER);
+  g_signal_connect(ftune_enable, "toggled", G_CALLBACK(ftune_enable_cb), NULL);
+#else
   squelch_label = gtk_label_new("Sqlch");
   gtk_widget_set_name(squelch_label, csslabel);
   gtk_widget_set_halign(squelch_label, GTK_ALIGN_END);
@@ -850,5 +893,7 @@ GtkWidget *sliders_init(int my_width, int my_height) {
   gtk_grid_attach(GTK_GRID(sliders), squelch_enable, s3pos, 1, 1, 1);
   gtk_widget_set_halign(squelch_enable, GTK_ALIGN_CENTER);
   g_signal_connect(squelch_enable, "toggled", G_CALLBACK(squelch_enable_cb), NULL);
+#endif
+
   return sliders;
 }
