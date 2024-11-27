@@ -1855,13 +1855,16 @@ can be used for connecting a dedicated RX antenna.
 \textbf{Note: Diversity}. When using \bltt{Diversity} reception, the ADC setting is
 overridden, since there data streams from ADC0 and ADC1 are combined (mixed).
 
-
-
 \rett{Dither}. When checked, the ,,dither'' bit is set which affects the operation of
 the ADC converter in some HPSDR boards.
 
 \rett{Random}. When checked, the ,,random'' bit is set which affects the operation of
 the ADC converter in some HPSDR boards.
+
+\textbf{Note:} On radios where the ,,dither'' and ,,random'' bits have no effect, these
+two check boxes do not appear. Examples for such radios are RedPitaya based radios,
+the HermesLite-II or the RadioBerry, or all radios connected through the SoapySDR
+library.
 
 \rett{Preamp}. This checkbox is not shown in Fig. \ref{fig:RXMenu}, it only occurs
 for some legacy HPSDR boards which had a switch-able RX preamp.
@@ -1876,22 +1879,24 @@ connected to the radio. Local audio (to a sound card or a virtual audio cable)
 is not affected. The main use of this checkbox is
 to mute a radio-connected headphone while doing digi mode via local RX output.
 
-\rett{Bypass ADC0 RX filters}. This box is only shown if the ALEX filter board
+\rett{Bypass ADC0 RX filters}. This box is only shown if the radio is an HPSDR radio
+and an ALEX filter board
 is selected (see the \bltt{Radio} menu). If checked, the filters in the RF front-end for ADC0
-are by-passed during receive. This option will normally only used for radios that
-have band-pass filters in the front end, if one operates two receivers both running
+are by-passed during receive. This option will normally only be used for radios that
+have band-pass filters in the front end, and if one operates two receivers both running
 on ADC0 data on different bands. Without checking this option, only the signals for
-the band of the active receiver will pass. Older radios (up to Anan-100/200)  have a
+the band of the active receiver will pass the RF frontend filters.
+Older radios (up to Anan-100/200)  have a
 combination of a low-pass and a high-pass filter in the RX path to ADC0. If these
 radios run two receivers, the low-pass filter is selected based on the higher
 of the two RX frequencies, and the high-pass filters is selected based on the
 lower one. This ensures that the signals for both receivers fall into  the filter
 pass band.
 
-\rett{Bypass ADC1 RX filters}. This box is only shown if the RF front-end for ADC1
-features a filter board (Anan-7000/8000 and G2 radios),
-and if the ALEX filter board
-is selected (see the \bltt{Radio} menu). If checked, the filters in the RF front-end for ADC1
+\rett{Bypass ADC1 RX filters}. This box is only shown for HPSDR radios with the ALEX filter board
+selected (see the \bltt{Radio} menu), and if the RF front-end for ADC1
+features a filter board (Anan-7000/8000 and G2 radios).
+If checked, the filters in the RF front-end for ADC1
 are by-passed during receive.
 
 \rett{Local Audio Output:} If checked, the audio from this radio is sent to a local
@@ -4718,10 +4723,8 @@ $\phantom{\Big|}$\textbf{\large AI} & Sets/Reads auto reporting status \\\cline{
 $\phantom{\Big|}${\large Set} & {AIp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {AI;} \\\hline
 $\phantom{\Big|}${\large Response} & {AIp$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: auto-reporting disabled, p$_1$=1: enabled} \\
- & \multicolumn{1}{|p{11cm}|}{Auto-reporting is affected for the client that sends this command.} \\
- & \multicolumn{1}{|p{11cm}|}{For p$_1$=1, only frequency changes are sent via FA/FB commands.} \\
- & \multicolumn{1}{|p{11cm}|}{For p$_1$>1, mode changes are also sent via MD commands.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: auto-reporting disabled, p$_1$$>$0: enabled.} \\
+ & \multicolumn{1}{|p{11cm}|}{Auto-reporting is affected for the client that sends this command. For p$_1$=1, only frequency changes are sent via FA/FB commands. For p$_1$$>$1, mode changes are also sent via MD commands.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -4753,17 +4756,7 @@ $\phantom{\Big|}$\textbf{\large CN} & Sets/Reads the CTCSS frequency \\\cline{1-
 $\phantom{\Big|}${\large Set} & {CNp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {CN;} \\\hline
 $\phantom{\Big|}${\large Response} & {CNp$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ =  1...38. CTCSS frequencies in Hz are:} \\
- & \multicolumn{1}{|p{11cm}|}{67.0 (p$_1$=1),  71.9 (p$_1$=2),  74.4 (p$_1$=3),  77.0 (p$_1$=4),} \\
- & \multicolumn{1}{|p{11cm}|}{79.7 (p$_1$=5),  82.5 (p$_1$=6),  85.4 (p$_1$=7),  88.5 (p$_1$=8),} \\
- & \multicolumn{1}{|p{11cm}|}{91.5 (p$_1$=9),  94.8 (p$_1$=10), 97.4 (p$_1$=11), 100.0 (p$_1$=12)} \\
- & \multicolumn{1}{|p{11cm}|}{103.5 (p$_1$=13), 107.2 (p$_1$=14), 110.9 (p$_1$=15), 114.8 (p$_1$=16)} \\
- & \multicolumn{1}{|p{11cm}|}{118.8 (p$_1$=17), 123.0 (p$_1$=18), 127.3 (p$_1$=19), 131.8 (p$_1$=20)} \\
- & \multicolumn{1}{|p{11cm}|}{136.5 (p$_1$=21), 141.3 (p$_1$=22), 146.2 (p$_1$=23), 151.4 (p$_1$=24)} \\
- & \multicolumn{1}{|p{11cm}|}{156.7 (p$_1$=25), 162.2 (p$_1$=26), 167.9 (p$_1$=27), 173.8 (p$_1$=28)} \\
- & \multicolumn{1}{|p{11cm}|}{179.9 (p$_1$=29), 186.2 (p$_1$=30), 192.8 (p$_1$=31), 203.5 (p$_1$=32)} \\
- & \multicolumn{1}{|p{11cm}|}{210.7 (p$_1$=33), 218.1 (p$_1$=34), 225.7 (p$_1$=35), 233.6 (p$_1$=36)} \\
- & \multicolumn{1}{|p{11cm}|}{241.8 (p$_1$=37), 250.3 (p$_1$=38)} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ =  1...38. CTCSS frequencies in Hz are: 67.0 (p$_1$=1),  71.9 (p$_1$=2),  74.4 (p$_1$=3),  77.0 (p$_1$=4), 79.7 (p$_1$=5),  82.5 (p$_1$=6),  85.4 (p$_1$=7),  88.5 (p$_1$=8), 91.5 (p$_1$=9),  94.8 (p$_1$=10), 97.4 (p$_1$=11), 100.0 (p$_1$=12) 103.5 (p$_1$=13), 107.2 (p$_1$=14), 110.9 (p$_1$=15), 114.8 (p$_1$=16) 118.8 (p$_1$=17), 123.0 (p$_1$=18), 127.3 (p$_1$=19), 131.8 (p$_1$=20) 136.5 (p$_1$=21), 141.3 (p$_1$=22), 146.2 (p$_1$=23), 151.4 (p$_1$=24) 156.7 (p$_1$=25), 162.2 (p$_1$=26), 167.9 (p$_1$=27), 173.8 (p$_1$=28) 179.9 (p$_1$=29), 186.2 (p$_1$=30), 192.8 (p$_1$=31), 203.5 (p$_1$=32) 210.7 (p$_1$=33), 218.1 (p$_1$=34), 225.7 (p$_1$=35), 233.6 (p$_1$=36) 241.8 (p$_1$=37), 250.3 (p$_1$=38).} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -4845,8 +4838,7 @@ $\phantom{\Big|}$\textbf{\large FW} & Set/Read VFO-A filter width (CW, AM, FM) \
 $\phantom{\Big|}${\large Set} & {FWp$_1$p$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {FW;} \\\hline
 $\phantom{\Big|}${\large Response} & {FWp$_1$p$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting, this switches to the Var1 filter and sets its  width to p$_1$.} \\
- & \multicolumn{1}{|p{11cm}|}{Only valid for CW, FM, AM. Use SH/SL for LSB, USB, DIGL, DIGU.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting, this switches to the Var1 filter and sets its  width to p$_1$. Only valid for CW, FM, AM. Use SH/SL for LSB, USB, DIGL, DIGU.} \\
  & \multicolumn{1}{|p{11cm}|}{For AM, 8kHz filter width (p$_1$=0) or  16 kHz (p$_1$$\ne$0)} \\
  & \multicolumn{1}{|p{11cm}|}{For FM, 2.5kHz deviation (p$_1$=0) or 5 kHz (p$_1$$\ne$0)} \\
 \bottomrule
@@ -4860,8 +4852,7 @@ $\phantom{\Big|}$\textbf{\large GT} & Set/Read RX1 AGC \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {GTp$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {GT;} \\\hline
 $\phantom{\Big|}${\large Response} & {GTp$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: AGC OFF, p$_1$=5: LONG, p$_1$=10: SLOW} \\
- & \multicolumn{1}{|p{11cm}|}{p$_1$=15: MEDIUM, p$_1$=20: FAST} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: AGC OFF, p$_1$=5: LONG, p$_1$=10: SLOW, p$_1$=15: MEDIUM, p$_1$=20: FAST.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -4922,10 +4913,8 @@ $\phantom{\Big|}$\textbf{\large KY} & Send Morse/query Morse buffer \\\cline{1-2
 $\phantom{\Big|}${\large Set} & {KYp$_1$p$_2$p$_2$p$_2$...p$_2$p$_2$p$_2$;} \\\hline
 $\phantom{\Big|}${\large Read} & {KY;} \\\hline
 $\phantom{\Big|}${\large Response} & {KYp$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting (sending), p$_1$ must be a space.} \\
- & \multicolumn{1}{|p{11cm}|}{When reading, p$_1$=1 indicates buffer space is available, p$_1$=0  buffer full} \\
- & \multicolumn{1}{|p{11cm}|}{p$_2$: string of up to 24 characters NOT containing ';'} \\
- & \multicolumn{1}{|p{11cm}|}{trailing blanks are ignored in p$_2$, but if it is completely blank it causes an inter-word space.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting (sending), p$_1$ must be a space. When reading, p$_1$=1 indicates buffer space is available, p$_1$=0  buffer full} \\
+ & \multicolumn{1}{|p{11cm}|}{p$_2$: string of up to 24 characters NOT containing ';'. Trailing blanks are ignored in p$_2$, but if it is completely blank it causes an inter-word space.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -4937,8 +4926,7 @@ $\phantom{\Big|}$\textbf{\large LK} & Set/Read Lock status \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {LKp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {LK;} \\\hline
 $\phantom{\Big|}${\large Response} & {LKp$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting, any nonzero p$_1$ sets lock status} \\
- & \multicolumn{1}{|p{11cm}|}{When reading, p$_1$ = 00 (not locked) or p$_1$ = 11 (locked)} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting, any nonzero p$_1$ sets lock status. When reading, p$_1$ = 00 (not locked) or p$_1$ = 11 (locked)} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -4950,9 +4938,7 @@ $\phantom{\Big|}$\textbf{\large MD} & Set/Read VFO-A modes \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {MDp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {MD;} \\\hline
 $\phantom{\Big|}${\large Response} & {MDp$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{Kenwood-type  mode  list:} \\
- & \multicolumn{1}{|p{11cm}|}{LSB (p$_1$=1), USB (p$_1$=2), CWU (p$_1$=3), FMN (p$_1$=4),} \\
- & \multicolumn{1}{|p{11cm}|}{AM (p$_1$=5), DIGL (p$_1$=6), CWL (p$_1$=7), DIGU (p$_1$=9)} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{Kenwood-type  mode  list: LSB (p$_1$=1), USB (p$_1$=2), CWU (p$_1$=3), FMN (p$_1$=4), AM (p$_1$=5), DIGL (p$_1$=6), CWL (p$_1$=7), DIGU (p$_1$=9)} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5065,10 +5051,8 @@ $\phantom{\Big|}$\textbf{\large RA} & Set/Read RX1 attenuator or RX1 gain \\\cli
 $\phantom{\Big|}${\large Set} & {RAp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {RA;} \\\hline
 $\phantom{\Big|}${\large Response} & {RAp$_1$p$_1$p$_2$p$_2$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ = 0 ... 99 is mapped to the range available} \\
- & \multicolumn{1}{|p{11cm}|}{HPSDR radios: attenuator range 0...31 dB} \\
- & \multicolumn{1}{|p{11cm}|}{HermesLite-II etc.: gain range -12...48 dB} \\
- & \multicolumn{1}{|p{11cm}|}{p$_2$ is always zero.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ = 0 ... 99 is mapped to the attenuation range available.} \\
+ & \multicolumn{1}{|p{11cm}|}{HPSDR radios: attenuator range 0...31 dB, HermesLite-II etc.: gain range -12...48 dB. p$_2$ is always zero.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5087,8 +5071,7 @@ $\phantom{\Big|}${\large Set} & {RC;} \\\hline
 \toprule
 $\phantom{\Big|}$\textbf{\large RD} & Set or Decrement VFO-A RIT value \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {RDp$_1$p$_1$p$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{when p$_1$ is not given (RD;)  decrement by 10 Hz (CW modes) or 50 Hz (other modes)} \\
- & \multicolumn{1}{|p{11cm}|}{when p$_1$ is given, set VFO-A rit value to the negative of p$_1$} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When p$_1$ is not given (RD;)  decrement by 10 Hz (CW modes) or 50 Hz (other modes). When p$_1$ is given, set VFO-A rit value to the negative of p$_1$.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5110,8 +5093,7 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: VFO-A RIT 
 \toprule
 $\phantom{\Big|}$\textbf{\large RU} & Set or Increment VFO-A RIT value \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {RUp$_1$p$_1$p$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{when p$_1$ is not given (RU;)  increment by 10 Hz (CW modes) or 50 Hz (other modes)} \\
- & \multicolumn{1}{|p{11cm}|}{when p$_1$ is given, set VFO-A rit value to p$_1$} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When p$_1$ is not given (RU;)  increment by 10 Hz (CW modes) or 50 Hz (other modes). When p$_1$ is given, set VFO-A rit value to p$_1$} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5137,8 +5119,7 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: neither SA
  & \multicolumn{1}{|p{11cm}|}{p$_6$ = 1 indicates SAT mode (TRACE)} \\
  & \multicolumn{1}{|p{11cm}|}{p$_7$ = 1 indicates RSAT mode (TRACE REV)} \\
  & \multicolumn{1}{|p{11cm}|}{p$_8$ = eight-character label, here "SAT     "} \\
- & \multicolumn{1}{|p{11cm}|}{when setting, p$_6$ == p$_7$ == 1 is illegal} \\
- & \multicolumn{1}{|p{11cm}|}{when setting, p$_4$ is ignored} \\
+ & \multicolumn{1}{|p{11cm}|}{when setting, p$_6$=1 and/or p$_7$=1 is illegal, and p$_4$ is ignored.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5150,8 +5131,7 @@ $\phantom{\Big|}$\textbf{\large SD} & Set/Read CW break-in hang time \\\cline{1-
 $\phantom{\Big|}${\large Set} & {SDp$_1$p$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {SD;} \\\hline
 $\phantom{\Big|}${\large Response} & {SDp$_1$p$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ = 0...1000 (in milli seconds)} \\
- & \multicolumn{1}{|p{11cm}|}{when setting, p$_1$ = 0  disables break-in} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ = 0...1000 (in milli seconds). When setting, p$_1$ = 0  disables break-in} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5165,9 +5145,7 @@ $\phantom{\Big|}${\large Read} & {SH;} \\\hline
 $\phantom{\Big|}${\large Response} & {SHp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting, the Var1 filter is activated} \\
  & \multicolumn{1}{|p{11cm}|}{p$_1$ = 0...11 encodes filter high water mark in Hz:} \\
- & \multicolumn{1}{|p{11cm}|}{1400 (p$_1$=0), 1600 (p$_1$=1), 1800 (p$_1$=2), 2000 (p$_1$=3)} \\
- & \multicolumn{1}{|p{11cm}|}{2200 (p$_1$=4), 2400 (p$_1$=5), 2600 (p$_1$=6), 2800 (p$_1$=7)} \\
- & \multicolumn{1}{|p{11cm}|}{3000 (p$_1$=8), 3400 (p$_1$=9), 4000 (p$_1$=10), 5000 (p$_1$=11)} \\
+ & \multicolumn{1}{|p{11cm}|}{1400 (p$_1$=0), 1600 (p$_1$=1), 1800 (p$_1$=2), 2000 (p$_1$=3) 2200 (p$_1$=4), 2400 (p$_1$=5), 2600 (p$_1$=6), 2800 (p$_1$=7) 3000 (p$_1$=8), 3400 (p$_1$=9), 4000 (p$_1$=10), 5000 (p$_1$=11).} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5181,9 +5159,7 @@ $\phantom{\Big|}${\large Read} & {SL;} \\\hline
 $\phantom{\Big|}${\large Response} & {SLp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting, the Var1 filter is activated} \\
  & \multicolumn{1}{|p{11cm}|}{p$_1$ = 0...11 encodes filter low water mark in Hz:} \\
- & \multicolumn{1}{|p{11cm}|}{10 (p$_1$=0), 50 (p$_1$=1), 100 (p$_1$=2), 200 (p$_1$=3)} \\
- & \multicolumn{1}{|p{11cm}|}{300 (p$_1$=4), 400 (p$_1$=5), 500 (p$_1$=6), 600 (p$_1$=7)} \\
- & \multicolumn{1}{|p{11cm}|}{700 (p$_1$=8), 800 (p$_1$=9), 900 (p$_1$=10), 1000 (p$_1$=11)} \\
+ & \multicolumn{1}{|p{11cm}|}{10 (p$_1$=0), 50 (p$_1$=1), 100 (p$_1$=2), 200 (p$_1$=3) 300 (p$_1$=4), 400 (p$_1$=5), 500 (p$_1$=6), 600 (p$_1$=7) 700 (p$_1$=8), 800 (p$_1$=9), 900 (p$_1$=10), 1000 (p$_1$=11).} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5207,7 +5183,7 @@ $\phantom{\Big|}$\textbf{\large SQ} & Set/Read squelch level (Squelch slider) \\
 $\phantom{\Big|}${\large Set} & {SQp$_1$p$_2$p$_2$p$_2$;} \\\hline
 $\phantom{\Big|}${\large Read} & {SQp$_1$;} \\\hline
 $\phantom{\Big|}${\large Response} & {SQp$_1$p$_2$p$_2$p$_2$} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: read/set RX1 squelch, p$_1$=1: RX2} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: read/set RX1 squelch, p$_1$=1: RX2.} \\
  & \multicolumn{1}{|p{11cm}|}{p$_2$ : 0-255 mapped to 0-100} \\
 \bottomrule
 \end{tabular}
@@ -5250,8 +5226,7 @@ $\phantom{\Big|}$\textbf{\large VG} & Set/Read VOX threshold \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {VGp$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {VG;} \\\hline
 $\phantom{\Big|}${\large Response} & {VGp$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ is in the range 0-9, mapped to an amplitude} \\
- & \multicolumn{1}{|p{11cm}|}{threshold 0.0-1.0} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ is in the range 0-9, mapped to an amplitude threshold 0.0-1.0} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5262,7 +5237,7 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ is in the ran
 $\phantom{\Big|}$\textbf{\large VX} & Set/Read VOX status \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {VXp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {VX;} \\\hline
-$\phantom{\Big|}${\large Response} & {VGp$_1$;} \\\hline
+$\phantom{\Big|}${\large Response} & {VXp$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: VOX disabled, p$_1$=1: enabled} \\
 \bottomrule
 \end{tabular}
@@ -5279,6 +5254,8 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: XIT disabl
 \bottomrule
 \end{tabular}
 \end{center}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -5301,12 +5278,7 @@ $\phantom{\Big|}${\large Set} & {ZZACp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZAC;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZACp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ 0...16 encodes the step size:} \\
- & \multicolumn{1}{|p{11cm}|}{1 Hz (p$_1$=0), 10 Hz (p$_1$=1), 25 Hz (p$_1$=2), 50 Hz (p$_1$=3)} \\
- & \multicolumn{1}{|p{11cm}|}{100 Hz (p$_1$=4), 250 Hz (p$_1$=5), 500 Hz (p$_1$=6)} \\
- & \multicolumn{1}{|p{11cm}|}{1000 Hz (p$_1$=7), 5000 Hz (p$_1$=8), 6250 Hz (p$_1$=9)} \\
- & \multicolumn{1}{|p{11cm}|}{9 kHz (p$_1$=10), 10 kHz (p$_1$=11), 12.5 kHz (p$_1$=12)} \\
- & \multicolumn{1}{|p{11cm}|}{100 kHz (p$_1$=13), 250 kHz (p$_1$=14)} \\
- & \multicolumn{1}{|p{11cm}|}{500 kHz (p$_1$=15), 1 MHz (p$_1$=16)} \\
+ & \multicolumn{1}{|p{11cm}|}{1 Hz (p$_1$=0), 10 Hz (p$_1$=1), 25 Hz (p$_1$=2), 50 Hz (p$_1$=3) 100 Hz (p$_1$=4), 250 Hz (p$_1$=5), 500 Hz (p$_1$=6) 1000 Hz (p$_1$=7), 5000 Hz (p$_1$=8), 6250 Hz (p$_1$=9) 9 kHz (p$_1$=10), 10 kHz (p$_1$=11), 12.5 kHz (p$_1$=12) 100 kHz (p$_1$=13), 250 kHz (p$_1$=14) 500 kHz (p$_1$=15), 1 MHz (p$_1$=16).} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5360,10 +5332,8 @@ $\phantom{\Big|}$\textbf{\large ZZAI} & Set/Read auto-reporting \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZAIp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZAI;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZAIp$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: auto-reporting disabled, p$_1$>1: enabled} \\
- & \multicolumn{1}{|p{11cm}|}{Auto-reporting is affected for the client that sends this command.} \\
- & \multicolumn{1}{|p{11cm}|}{For p$_1$=1, only frequency changes are sent via FA/FB commands.} \\
- & \multicolumn{1}{|p{11cm}|}{For p$_1$>1, mode changes are also sent via MD commands.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: auto-reporting disabled, p$_1$$>$0: enabled.} \\
+ & \multicolumn{1}{|p{11cm}|}{Auto-reporting is affected for the client that sends this command. For p$_1$=1, only frequency changes are sent via FA/FB commands. For p$_1$$>$1, mode changes are also sent via MD commands.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5478,9 +5448,7 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ 0...16 select
 $\phantom{\Big|}$\textbf{\large ZZBS} & Set/Read VFO-A band \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZBSp$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ 0...999 encodes the band:} \\
- & \multicolumn{1}{|p{11cm}|}{136 kHz (p$_1$=136), 472 kHz (p$_1$=472), 160p$_{15}$ (p$_1$=160)} \\
- & \multicolumn{1}{|p{11cm}|}{80p$_{15}$ (p$_1$=80), 60p$_{15}$ (p$_1$=60), 40p$_{15}$ (p$_1$=40), 30p$_{15}$ (p$_1$=30)} \\
- & \multicolumn{1}{|p{11cm}|}{10p$_{15}$ (p$_1$=10), 6p$_{15}$ (p$_1$=6), Gen (p$_1$=888), WWV (p$_1$=999)} \\
+ & \multicolumn{1}{|p{11cm}|}{136 kHz (p$_1$=136), 472 kHz (p$_1$=472), 160M (p$_1$=160) 80M (p$_1$=80), 60M (p$_1$=60), 40M (p$_1$=40), 30M (p$_1$=30) 20M (p$_1$=20), 17M (p$_1$=17), 15M (p$_1$=15), 12M (p$_1$=12) 10M (p$_1$=10), 6M (p$_1$=6), Gen (p$_1$=888), WWV (p$_1$=999).} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5560,9 +5528,7 @@ $\phantom{\Big|}$\textbf{\large ZZFH} & Set/Read RX1 filter high water \\\cline{
 $\phantom{\Big|}${\large Set} & {ZZFHp$_1$p$_1$p$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZFH;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZFHp$_1$p$_1$p$_1$p$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{If setting, this switches to the Var1 filter first.} \\
- & \multicolumn{1}{|p{11cm}|}{p$_1$ -9999 ... 9999. Must start with  minus sign if negative.} \\
- & \multicolumn{1}{|p{11cm}|}{In LSB, the filter high water affects the low audio frequencies} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ must be in the range -9999 ... 9999 and start with a minus sign if negative. If setting, this switches to the Var1 filter first. The convention is such that LSB, the filter high cut is negative and affects the low audio frequencies.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5574,9 +5540,7 @@ $\phantom{\Big|}$\textbf{\large ZZFL} & Set/Read RX1 filter low water \\\cline{1
 $\phantom{\Big|}${\large Set} & {ZZFLp$_1$p$_1$p$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZFL;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZFLp$_1$p$_1$p$_1$p$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{If setting, this switches to the Var1 filter first.} \\
- & \multicolumn{1}{|p{11cm}|}{p$_1$ -9999 ... 9999. Must start with minus sign if negative.} \\
- & \multicolumn{1}{|p{11cm}|}{In LSB, the filter-low affects the high audio frequencies} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$ must be in the range -9999 ... 9999 and start with a minus sign if negative. If setting, this switches to the Var1 filter first. The convention is such that LSB, the filter low cut is negative and affects the high audio frequencies.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5648,8 +5612,7 @@ $\phantom{\Big|}$\textbf{\large ZZMA} & Mute/Unmute RX1 \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZMAp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZMA;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZMAp$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: RX1 not muted, p$_1$=1: muted.} \\
- & \multicolumn{1}{|p{11cm}|}{This only affects the audio sent to the radio via the HPSDR protocol.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: RX1 not muted, p$_1$=1: muted. This only affects the audio sent to the radio via the HPSDR protocol.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5661,8 +5624,7 @@ $\phantom{\Big|}$\textbf{\large ZZMB} & Mute/Unmute RX2 \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZMBp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZMB;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZMBp$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: RX2 not muted, p$_1$=1: muted} \\
- & \multicolumn{1}{|p{11cm}|}{This only affects the audio sent to the radio via the HPSDR protocol.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: RX2 not muted, p$_1$=1: muted. This only affects the audio sent to the radio via the HPSDR protocol.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5674,9 +5636,7 @@ $\phantom{\Big|}$\textbf{\large ZZMD} & Set/Read VFO-A modes \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZMDp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZMD;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZMDp$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{Modes: LSB (p$_1$=0), USB (p$_1$=1), DSB (p$_1$=3), CWL (p$_1$=4)} \\
- & \multicolumn{1}{|p{11cm}|}{CWU (p$_1$=5), FMN (p$_1$=6), AM (p$_1$=7), DIGU (p$_1$=7)} \\
- & \multicolumn{1}{|p{11cm}|}{SPEC (p$_1$=8), DIGL (p$_1$=9), SAM (p$_1$=10), DRM (p$_1$=11)} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{Modes: LSB (p$_1$=0), USB (p$_1$=1), DSB (p$_1$=3), CWL (p$_1$=4) CWU (p$_1$=5), FMN (p$_1$=6), AM (p$_1$=7), DIGU (p$_1$=7) SPEC (p$_1$=8), DIGL (p$_1$=9), SAM (p$_1$=10), DRM (p$_1$=11)} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5811,11 +5771,7 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{The active receiver
 $\phantom{\Big|}$\textbf{\large ZZZD} & Move down frequency of active receiver \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZZDp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{ANDROMEDA extension. p$_1$ = number of VFO steps.} \\
- & \multicolumn{1}{|p{11cm}|}{For p$_1$$>$10, the number of VFO steps is multiplied with} \\
- & \multicolumn{1}{|p{11cm}|}{a speed-up factor that increases up to 4 at p$_1$=30} \\
- & \multicolumn{1}{|p{11cm}|}{(corresponds to 3 turns of the VFO dial per second).} \\
- & \multicolumn{1}{|p{11cm}|}{This implements an over-proportional tuning speed if} \\
- & \multicolumn{1}{|p{11cm}|}{turning the VFO knob faster and faster.} \\
+ & \multicolumn{1}{|p{11cm}|}{For p$_1$$>$10, the number of VFO steps is multiplied with a speed-up factor that increases up to 4 at p$_1$=30 (corresponds to 3 turns of the VFO dial per second). This implements an over-proportional tuning speed if turning the VFO knob faster and faster.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5865,12 +5821,7 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{ANDROMEDA extension
 $\phantom{\Big|}$\textbf{\large ZZZS} & Log ANDROMEDA version \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZZSp$_1$p$_1$p$_2$p$_2$p$_3$p$_3$p$_3$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{ANDROMEDA extension.} \\
- & \multicolumn{1}{|p{11cm}|}{The ANDROMEDA type (p$_1$), hardware (p$_2$) and} \\
- & \multicolumn{1}{|p{11cm}|}{software (p$_3$) version is printed in the log file.} \\
- & \multicolumn{1}{|p{11cm}|}{The type (p$_1$) sent by a client does affect the} \\
- & \multicolumn{1}{|p{11cm}|}{processing of ZZZE and ZZZP commands from that client.} \\
- & \multicolumn{1}{|p{11cm}|}{Only the cases p$_1$=1 (original ANDROMEDA console)} \\
- & \multicolumn{1}{|p{11cm}|}{and p$_1$=5 (G2V2 console) are implemented.} \\
+ & \multicolumn{1}{|p{11cm}|}{The ANDROMEDA type (p$_1$), hardware (p$_2$) and software (p$_3$) version is printed in the log file. The type (p$_1$) sent by a client does affect the processing of ZZZE and ZZZP commands from that client. Only the cases p$_1$=1 (original ANDROMEDA console) and p$_1$=5 (G2 Ultra console) are implemented.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5881,14 +5832,12 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{ANDROMEDA extension
 $\phantom{\Big|}$\textbf{\large ZZZU} & Move up frequency of active receiver \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZZUp$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{ANDROMEDA extension. p$_1$ = number of steps.} \\
- & \multicolumn{1}{|p{11cm}|}{For p$_1$$>$10, the number of VFO steps is multiplied with} \\
- & \multicolumn{1}{|p{11cm}|}{a speed-up factor that increases up to 4 at p$_1$=30} \\
- & \multicolumn{1}{|p{11cm}|}{(corresponds to 3 turns of the VFO dial per second).} \\
- & \multicolumn{1}{|p{11cm}|}{This implements an over-proportional tuning speed if} \\
- & \multicolumn{1}{|p{11cm}|}{turning the VFO knob faster and faster.} \\
+ & \multicolumn{1}{|p{11cm}|}{For p$_1$$>$10, the number of VFO steps is multiplied with a speed-up factor that increases up to 4 at p$_1$=30 (corresponds to 3 turns of the VFO dial per second). This implements an over-proportional tuning speed if turning the VFO knob faster and faster.} \\
 \bottomrule
 \end{tabular}
 \end{center}
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

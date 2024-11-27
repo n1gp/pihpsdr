@@ -121,25 +121,6 @@ pthread_t HighPriorityFromSDRThread;
 pthread_t CheckForNoActivityThread;           // thread looks for inactvity
 
 //
-// set the port for a given thread. If 0, set the default according to HPSDR spec.
-// if port is different from the currently assigned one, set the "change port" bit
-//
-void SetPort(uint32_t ThreadNum, uint16_t PortNum) {
-  uint16_t CurrentPort;
-  CurrentPort = SocketData[ThreadNum].Portid;
-
-  if (PortNum == 0) {
-    SocketData[ThreadNum].Portid = DefaultPorts[ThreadNum];  //default if not set
-  } else {
-    SocketData[ThreadNum].Portid = PortNum;
-  }
-
-  if (SocketData[ThreadNum].Portid != CurrentPort) {
-    SocketData[ThreadNum].Cmdid |= VBITCHANGEPORT;
-  }
-}
-
-//
 // function to make an incoming or outgoing socket, bound to the specified port in the structure
 // 1st parameter is a link into the socket data table
 //
@@ -659,6 +640,7 @@ void *IncomingDUCSpecific(void *arg) {                  // listener thread
 // if sufficient FIFO data available: DMA that data and transfer it out.
 // if it turns out to be too inefficient, we'll have to try larger DMA.
 //
+#if 0
 void *IncomingSpkrAudio(void *arg) {                    // listener thread
   struct ThreadSocketData *ThreadData;                  // socket etc data for this thread
   struct sockaddr_in addr_from;                         // holds MAC address of source of incoming messages
@@ -755,6 +737,7 @@ void *IncomingSpkrAudio(void *arg) {                    // listener thread
   ThreadData->Active = false;                   // indicate it is closed
   return NULL;
 }
+#endif
 
 #define VIQSAMPLESPERFRAME 240                      // samples per UDP frame
 #define VMEMDUCWORDSPERFRAME 180                       // memory writes per UDP frame
@@ -810,21 +793,4 @@ void *IncomingDUCIQ(void *arg) {                        // listener thread
   ThreadData->Socketid = 0;
   ThreadData->Active = false;                   // indicate it is closed
   return NULL;
-}
-
-//
-// HandlerCheckDDCSettings()
-// called when DDC settings have been changed. Check which DDCs are enabled, and sample rate.
-// arguably don't need this, as it finds out from the embedded data in the DDC stream
-//
-void HandlerCheckDDCSettings(void) {
-}
-
-//
-// HandlerSetEERMode (bool EEREnabled)
-// enables amplitude restoration mode. Generates envelope output alongside I/Q samples.
-// NOTE hardware does not properly support this yet!
-// TX FIFO must be empty. Stop multiplexer; set bit; restart
-//
-void HandlerSetEERMode(bool EEREnabled) {
 }

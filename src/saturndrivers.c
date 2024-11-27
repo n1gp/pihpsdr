@@ -91,11 +91,20 @@ int CloseXDMADriver(void) {
 //
 unsigned int GetFirmwareVersion(ESoftwareID* ID) {
   unsigned int Version = 0;
-  uint32_t SoftwareInformation;     // swid & version
+  uint32_t SoftwareInformation;                                 // swid & version
   SoftwareInformation = RegisterRead(VADDRSWVERSIONREG);
-  Version = (SoftwareInformation >> 4) & 0xFFFF;      // 16 bit sw version
-  *ID = (ESoftwareID)(SoftwareInformation >> 20);           // 12 bit software ID
+  Version = (SoftwareInformation >> 4) & 0xFFFF;                // 16 bit sw version
+  *ID = (ESoftwareID)((SoftwareInformation >> 20) & 0x1F);      //  5 bit software ID
   return Version;
+}
+
+unsigned int GetFirmwareMajorVersion(void)
+{
+  unsigned int MajorVersion = 0;
+  uint32_t SoftwareInformation;                                 // swid & version
+  SoftwareInformation = RegisterRead(VADDRSWVERSIONREG);
+  MajorVersion = (SoftwareInformation >> 25) & 0x7F;            // 7 bit major fw version
+  return MajorVersion;
 }
 
 //
@@ -342,16 +351,6 @@ void ResetDMAStreamFIFO(EDMAStreamSelect DDCNum) {
   Data = Data | DataBit;
   RegisterWrite(VADDRFIFORESET, Data);        // set reset bit to 1
   sem_post(&DDCResetFIFOMutex);                       // release protected access
-}
-
-//
-// SetTXAmplitudeEER (bool EEREnabled)
-// enables amplitude restoratino mode. Generates envelope output alongside I/Q samples.
-// NOTE hardware does not properly support this yet!
-//
-void SetTXAmplitudeEER(bool EEREnabled) {
-  //GEEREnabled = EEREnabled;               // save value
-  //HandlerSetEERMode(EEREnabled);              // I/Q send handler
 }
 
 //

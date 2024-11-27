@@ -260,6 +260,7 @@ int have_rx_gain = 0;
 int have_rx_att = 0;
 int have_alex_att = 0;
 int have_preamp = 0;
+int have_dither = 1;
 int have_saturn_xdma = 0;
 int have_racm5 = 0;
 int rx_gain_calibration = 0;
@@ -1148,19 +1149,26 @@ void radio_start_radio() {
   case DEVICE_HERMES_LITE2:
   case NEW_DEVICE_HERMES_LITE:
   case NEW_DEVICE_HERMES_LITE2:
+    have_dither = 0;
     have_rx_gain = 1;
     rx_gain_calibration = 14;
     break;
 
   case SOAPYSDR_USB_DEVICE:
+    have_dither = 0;
     have_rx_gain = 1;
     rx_gain_calibration = 10;
+    break;
+
+  case DEVICE_STEMLAB:
+    have_dither = 0;
     break;
 
   default:
     //
     // DEFAULT: we have a step attenuator nothing else
     //
+    have_dither = 0;
     have_rx_att = 1;
     break;
   }
@@ -1937,6 +1945,30 @@ void radio_set_tune(int state) {
     }
 
     if (state) {
+      //
+      // Ron has reported that TX underruns occur if TUNEing with
+      // compressor or CFC engaged, and that this can be
+      // suppressed by either turning off the phase rotator or
+      // by *NOT* silencing the TX audio samples while TUNEing.
+      //
+      // Experimentally, this means the phase rotator may make
+      // funny things when it sees only zero samples.
+      //
+      // A clean solution is to disable compressor/CFC temporarily
+      // while TUNEing.
+      //
+      int save_cfc  = transmitter->cfc;
+      int save_cmpr = transmitter->compressor;
+      transmitter->cfc = 0;
+      transmitter->compressor = 0;
+      tx_set_compressor(transmitter);
+      //
+      // Keep previous state in transmitter data, so we just need
+      // call tx_set_compressor when TUNEing ends.
+      //
+      transmitter->cfc = save_cfc;
+      transmitter->compressor = save_cmpr;
+
       if (transmitter->puresignal && ! transmitter->ps_oneshot) {
         //
         // DL1YCF:
@@ -2062,6 +2094,7 @@ void radio_set_tune(int state) {
         //
         tx_ps_resume(transmitter);
       }
+      tx_set_compressor(transmitter);
 
       tune = state;
       radio_calc_drive_level();

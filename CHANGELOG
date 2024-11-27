@@ -11,6 +11,7 @@ October 2024:
 
 - RigCtl CAT "auto-reporting" now also reports changes of the
   mode of VFO-A. Some logbook programs need this.
+  (AI commands can now set a "verbosity level").
 
 - Settings "stored with the mode": In the three groups
   USB/LSB/DSB, CWU/CWL, and DIGU/DIGL, changes applied while
