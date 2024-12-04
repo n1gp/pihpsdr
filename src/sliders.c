@@ -494,6 +494,7 @@ void set_filter_shift(int rx, int shift) {
 static void micgain_value_changed_cb(GtkWidget *widget, gpointer data) {
   if (can_transmit) {
     transmitter->mic_gain = gtk_range_get_value(GTK_RANGE(widget));
+    mode_settings[vfo_get_tx_mode()].mic_gain = transmitter->mic_gain;
     tx_set_mic_gain(transmitter);
   }
 }
@@ -508,6 +509,7 @@ void set_mic_gain(double value) {
   //t_print("%s value=%f\n",__FUNCTION__, value);
   if (can_transmit) {
     transmitter->mic_gain = value;
+    mode_settings[vfo_get_tx_mode()].mic_gain = transmitter->mic_gain;
     tx_set_mic_gain(transmitter);
 
     if (display_sliders) {

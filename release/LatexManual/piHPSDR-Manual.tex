@@ -79,8 +79,15 @@ input (either by mouse/touch-screen, keyboard, or external "knobs and buttons"),
 to run on different variants of Unix/Linux. It runs on all sorts of Linux systems,
 including a Raspberry Pi (hence
 the name \pH), but equally well on Linux desktop or laptop computers, and on Apple Macintosh (Mac OSX)
-computers which have a Unix variant under the hood. The present author is not aware of \pH running
-under the Windows operating system, although with environments such as MinGW, this should be possible.
+computers which have a Unix variant under the hood.
+It is possible to run
+piHPSDR under the Windows operating system, see e.g. \texttt{https://github.com/ew8bak/pihpsdr}.
+This page reports how to set up an ,,ecosystem'' under Windows which can then be used to compile
+\pH. The resource mentioned seems to come with an older version of \pH, but others have reported
+that using that ,,ecosystem'' it is possible to run the version of \pH described in this document
+as well. Note that this is what has been reported to me, I never tried to use \pH under Windows
+myself.
+
 
 Although \pH can be operated entirely by using mouse and keyboard as input devices, many users prefer to
 have physical push-buttons and/or knobs or dials. To this end, \pH can control push-buttons and rotary
@@ -3664,6 +3671,7 @@ $\bullet$ TX equaliser (all settings) \cr
 $\bullet$ TX speech processor (on/off, compression level) \cr
 $\bullet$ TX continuous frequency compressor (CFC, all settings) \cr
 $\bullet$ TX downward expander (DEXP, on/off) \cr
+$\bullet$ TX mic gain slider position \cr
 \bottomrule
 \end{tabular}
 \end{center}

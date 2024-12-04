@@ -125,4 +125,5 @@
 //
 #define ANAN7000_XVTR_OUT               0x00000001   //  if PTT is set, Orion-II RF output is routed to the "XVTR Port" jack (1 = enabled)
 #define ANAN7000_SPKR_MUTE              0x00000002   //  Enable/mute audio (1 = mute)
+#define ANAN7000_ATU                    0x00000004   //  another output used to start a Tuner - needs firmware/hardware modification
 #endif

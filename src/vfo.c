@@ -60,6 +60,7 @@
 #include "noise_menu.h"
 #include "equalizer_menu.h"
 #include "message.h"
+#include "sliders.h"
 
 static int my_width;
 static int my_height;
@@ -137,6 +138,7 @@ static void modesettingsSaveState() {
     SetPropI1("modeset.%d.en_txeq", i,               mode_settings[i].en_txeq);
     SetPropI1("modeset.%d.compressor", i,            mode_settings[i].compressor);
     SetPropF1("modeset.%d.compressor_level", i,      mode_settings[i].compressor_level);
+    SetPropF1("modeset.%d.mic_gain", i,              mode_settings[i].mic_gain);
     SetPropI1("modeset.%d.dexp", i,                  mode_settings[i].dexp);
     SetPropI1("modeset.%d.dexp_trigger", i,          mode_settings[i].dexp_trigger);
     SetPropF1("modeset.%d.dexp_tau", i,              mode_settings[i].dexp_tau);
@@ -232,6 +234,7 @@ static void modesettingsRestoreState() {
     mode_settings[i].en_txeq = 0;
     mode_settings[i].compressor = 0;
     mode_settings[i].compressor_level = 0.0;
+    mode_settings[i].mic_gain = 0.0;
     mode_settings[i].dexp = 0;
     mode_settings[i].dexp_trigger = -25;
     mode_settings[i].dexp_tau = 0.01;
@@ -316,6 +319,7 @@ static void modesettingsRestoreState() {
     GetPropI1("modeset.%d.en_txeq", i,               mode_settings[i].en_txeq);
     GetPropI1("modeset.%d.compressor", i,            mode_settings[i].compressor);
     GetPropF1("modeset.%d.compressor_level", i,      mode_settings[i].compressor_level);
+    GetPropF1("modeset.%d.mic_gain", i,              mode_settings[i].mic_gain);
     GetPropI1("modeset.%d.dexp", i,                  mode_settings[i].dexp);
     GetPropI1("modeset.%d.dexp_trigger", i,          mode_settings[i].dexp_trigger);
     GetPropF1("modeset.%d.dexp_tau", i,              mode_settings[i].dexp_tau);
@@ -619,6 +623,8 @@ void vfo_apply_mode_settings(RECEIVER *rx) {
 
     tx_set_compressor(transmitter);
     tx_set_dexp(transmitter);
+
+    set_mic_gain(mode_settings[m].mic_gain);
   }
 
   //
