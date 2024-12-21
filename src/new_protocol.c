@@ -345,7 +345,7 @@ void update_action_table() {
   int flag = 0;
   int xmit = radio_is_transmitting(); // store such that it cannot change while building the flag
   int newdev = (device == NEW_DEVICE_ANGELIA  || device == NEW_DEVICE_ORION ||
-  device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN);
+                device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN || device == NEW_DEVICE_ATLAS);
 
   if (duplex && xmit) { flag += 10000; }
 
@@ -419,12 +419,22 @@ void update_action_table() {
 
   case 1000:                                                          // ORION, RX, no DIVERSITY
   case 11100:                                                         // ORION, TX, no PureSignal, DUPLEX
-    rxid[2] = 0;
-    rxcase[2] = RXACTION_NORMAL;
+    if (device == NEW_DEVICE_ATLAS) {
+      rxid[0] = 0;
+      rxcase[0] = RXACTION_NORMAL;
 
-    if (receivers > 1) {
-      rxid[3] = 1;
-      rxcase[3] = RXACTION_NORMAL;
+      if (receivers > 1) {
+        rxid[1] = 1;
+        rxcase[1] = RXACTION_NORMAL;
+      }
+    } else {
+      rxid[2] = 0;
+      rxcase[2] = RXACTION_NORMAL;
+
+      if (receivers > 1) {
+        rxid[3] = 1;
+        rxcase[3] = RXACTION_NORMAL;
+      }
     }
 
     break;
@@ -643,6 +653,14 @@ static void new_protocol_general() {
   // use defaults apart from
   general_buffer[37] = 0x08; //  phase word (not frequency)
   general_buffer[38] = 0x01; //  enable hardware timer
+
+  if (device == NEW_DEVICE_ATLAS) {
+    general_buffer[57] |= atlas_clock_source_10mhz; // 0-Atlas, 1-Penny, 2-Mercury
+
+    if (atlas_clock_source_128mhz) {
+      general_buffer[58] |= 0x04;  // Mercury provides 122 Mhz
+    } // else Penelope provides 122 Mhz
+  }
 
   if (!pa_enabled || band->disablePA) {
     local_pa_enable = 0;
@@ -888,6 +906,17 @@ static void new_protocol_high_priority() {
     }
   } else {
     high_priority_buffer_to_radio[1401] = rxband->OCrx << 1;
+  }
+
+  if (device == NEW_DEVICE_ATLAS) {
+    int preamp_mask = !active_receiver->preamp;
+    // this actually controls a -20dB attenuator on Mercury
+    if (active_receiver->adc == 1) {
+      high_priority_buffer_to_radio[1403] = preamp_mask << 1;
+    } else {
+      high_priority_buffer_to_radio[1403] = preamp_mask;
+    }
+// TBD   high_priority_buffer_to_radio[1402] = User Outputs DB9 pins 1-4
   }
 
   //

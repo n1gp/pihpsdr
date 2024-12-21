@@ -36,6 +36,7 @@
 #include "discovery.h"
 #include "message.h"
 #include "mystring.h"
+#include "radio.h"
 
 static char interface_name[64];
 static struct sockaddr_in interface_addr = {0};
@@ -307,6 +308,18 @@ gpointer new_discover_receive_thread(gpointer data) {
               STRLCPY(discovered[devices].name, "Atlas", sizeof(discovered[devices].name));
               frequency_min = 0.0;
               frequency_max = 61440000.0;
+              if ((buffer[14] & 0xFF) > 0 && (buffer[14] & 0xFF) < 127) {
+                mercury_software_version[0] = buffer[14] & 0xFF;
+                t_print("new_discover: mercury_software_version_0: %d\n", mercury_software_version[0]);
+              }
+              if ((buffer[15] & 0xFF) > 0 && (buffer[15] & 0xFF) < 127) {
+                mercury_software_version[1] = buffer[15] & 0xFF;
+                t_print("new_discover: mercury_software_version_1: %d\n", mercury_software_version[1]);
+              }
+              if ((buffer[18] & 0xFF) > 0 && (buffer[18] & 0xFF) < 127) {
+                penelope_software_version = buffer[18] & 0xFF;
+                t_print("new_discover: penelope_software_version: %d\n", penelope_software_version);
+              }
               break;
 
             case NEW_DEVICE_HERMES:

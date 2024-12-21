@@ -858,6 +858,10 @@ static void radio_create_visual() {
             tx_ps_setpk(transmitter, 0.6121);
             break;
 
+          case NEW_DEVICE_ATLAS:
+            tx_ps_setpk(transmitter, 0.3629);
+            break;
+
           default:
             // recommended "new protocol value"
             tx_ps_setpk(transmitter, 0.2899);
@@ -1119,9 +1123,14 @@ void radio_start_radio() {
   // Set various capabilities, depending in the radio model
   //
   switch (device) {
+  case NEW_DEVICE_ATLAS:
+    if (filter_board == ALEX)
+      have_alex_att = 1;
+    have_preamp = 1;
+    break;
+
   case DEVICE_METIS:
   case DEVICE_OZY:
-  case NEW_DEVICE_ATLAS:
     have_rx_att = 1; // Sure?
     have_alex_att = 1;
     have_preamp = 1;
@@ -1315,7 +1324,6 @@ void radio_start_radio() {
   case DEVICE_HERMES:
   case DEVICE_HERMES_LITE:
   case DEVICE_HERMES_LITE2:
-  case NEW_DEVICE_ATLAS:
   case NEW_DEVICE_HERMES:
   case NEW_DEVICE_HERMES2:
   case NEW_DEVICE_HERMES_LITE:
@@ -1329,13 +1337,20 @@ void radio_start_radio() {
     n_adc = 1;
     break;
 
+  case NEW_DEVICE_ATLAS:
+    if (mercury_software_version[1]) {
+      n_adc = 2;
+    } else {
+      n_adc = 1;
+    }
+    break;
+
   case SOAPYSDR_USB_DEVICE:
     if (strcmp(radio->name, "lime") == 0) {
       n_adc = 2;
     } else {
       n_adc = 1;
     }
-
     break;
 
   default:
