@@ -110,6 +110,8 @@ void meter_update(RECEIVER *rx, int meter_type, double value, double alc, double
   char sf[32];
   cairo_t *cr = cairo_create (meter_surface);
   int txvfo = vfo_get_tx_vfo();
+  int txmode = vfo[txvfo].mode;
+  int cwmode = (txmode == modeCWU || txmode == modeCWL);
   const BAND *band = band_get_band(vfo[txvfo].band);
 
   //
@@ -445,18 +447,23 @@ void meter_update(RECEIVER *rx, int meter_type, double value, double alc, double
       snprintf(sf, 32, "SWR %1.1f:1", swr);
       cairo_move_to(cr, cx - 40, cx - radius + 28);
       cairo_show_text(cr, sf);
-      cairo_set_source_rgba(cr, COLOUR_METER);
-      snprintf(sf, 32, "ALC %2.1f dB", max_alc);
-      cairo_move_to(cr, cx - 40, cx - radius + 41);
-      cairo_show_text(cr, sf);
+      if (!cwmode) {
+        cairo_set_source_rgba(cr, COLOUR_METER);
+        snprintf(sf, 32, "ALC %2.1f dB", max_alc);
+        cairo_move_to(cr, cx - 40, cx - radius + 41);
+        cairo_show_text(cr, sf);
+      }
     }
     break;
     }
 
     //
     // Both analog and digital, VOX status
+    // The mic level meter is not shown in CW modes,
+    // otherwise it is always shown while TX, and shown
+    // during RX only if VOX is enabled
     //
-    if ((meter_type == POWER) || (vox_enabled)) {
+    if (((meter_type == POWER) || vox_enabled) && !cwmode) {
       double offset = ((double)METER_WIDTH - 100.0) / 2.0;
       double peak = vox_get_peak();
 
@@ -508,7 +515,7 @@ void meter_update(RECEIVER *rx, int meter_type, double value, double alc, double
     cairo_select_font_face(cr, DISPLAY_FONT_BOLD, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
     cairo_set_line_width(cr, PAN_LINE_THICK);
 
-    if (can_transmit) {
+    if (((meter_type == POWER) || vox_enabled) && !cwmode) {
       cairo_set_source_rgba(cr, COLOUR_METER);
       cairo_move_to(cr, 5.0, Y1);
       cairo_line_to(cr, 5.0, Y1 - 10);
@@ -685,12 +692,14 @@ void meter_update(RECEIVER *rx, int meter_type, double value, double alc, double
         snprintf(sf, 32, "SWR %1.1f:1", swr);
         cairo_move_to(cr, METER_WIDTH / 2, Y2);
         cairo_show_text(cr, sf);
-        cairo_select_font_face(cr, DISPLAY_FONT_BOLD, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
-        cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
-        cairo_set_source_rgba(cr, COLOUR_METER);  // revert to white color
-        snprintf(sf, 32, "ALC %2.1f dB", max_alc);
-        cairo_move_to(cr, METER_WIDTH / 2, Y4);
-        cairo_show_text(cr, sf);
+        if (!cwmode) {
+          cairo_select_font_face(cr, DISPLAY_FONT_BOLD, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+          cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
+          cairo_set_source_rgba(cr, COLOUR_METER);  // revert to white color
+          snprintf(sf, 32, "ALC %2.1f dB", max_alc);
+          cairo_move_to(cr, METER_WIDTH / 2, Y4);
+          cairo_show_text(cr, sf);
+        }
       }
 
       break;
