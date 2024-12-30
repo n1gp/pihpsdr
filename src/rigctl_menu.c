@@ -30,6 +30,9 @@
 #include "band.h"
 #include "radio.h"
 #include "vfo.h"
+#ifdef TCI
+#include "tci.h"
+#endif
 #include "message.h"
 #include "mystring.h"
 
@@ -67,8 +70,31 @@ static void rigctl_value_changed_cb(GtkWidget *widget, gpointer data) {
 
 static void rigctl_debug_cb(GtkWidget *widget, gpointer data) {
   rigctl_debug = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
-  t_print("---------- RIGCTL DEBUG %s ----------\n", rigctl_debug ? "ON" : "OFF");
 }
+
+#ifdef TCI
+static void tci_enable_cb(GtkWidget *widget, gpointer data) {
+  tci_enable = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (tci_enable) {
+    launch_tci();
+  } else {
+    shutdown_tci();
+  }
+}
+
+static void tci_port_changed_cb(GtkWidget *widget, gpointer data) {
+  if (tci_enable) { shutdown_tci(); }
+
+  tci_port = gtk_spin_button_get_value(GTK_SPIN_BUTTON(widget));
+
+  if (tci_enable) { launch_tci(); }
+
+}
+
+static void tci_txonly_changed_cb(GtkWidget *widget, gpointer data) {
+  tci_txonly = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+}
+#endif
 
 static void rigctl_tcp_enable_cb(GtkWidget *widget, gpointer data) {
   rigctl_tcp_enable = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
@@ -81,7 +107,7 @@ static void rigctl_tcp_enable_cb(GtkWidget *widget, gpointer data) {
 }
 
 //
-// That that this call-back is invoked on each and every key stroke
+// Note that this call-back is invoked on each and every key stroke
 // in the text field
 //
 static void serial_port_cb(GtkWidget *widget, gpointer data) {
@@ -205,17 +231,38 @@ void rigctl_menu(GtkWidget *parent) {
   GtkWidget *headerbar = gtk_header_bar_new();
   gtk_window_set_titlebar(GTK_WINDOW(dialog), headerbar);
   gtk_header_bar_set_show_close_button(GTK_HEADER_BAR(headerbar), TRUE);
-  gtk_header_bar_set_title(GTK_HEADER_BAR(headerbar), "piHPSDR - RigCtl");
+#ifdef TCI
+  gtk_header_bar_set_title(GTK_HEADER_BAR(headerbar), "piHPSDR - CAT/TCI");
+#else
+  gtk_header_bar_set_title(GTK_HEADER_BAR(headerbar), "piHPSDR - CAT");
+#endif
   g_signal_connect (dialog, "delete_event", G_CALLBACK (close_cb), NULL);
   g_signal_connect (dialog, "destroy", G_CALLBACK (close_cb), NULL);
   GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
   GtkWidget *grid = gtk_grid_new();
+  gtk_grid_set_row_spacing (GTK_GRID(grid), 5);
   gtk_grid_set_column_spacing (GTK_GRID(grid), 10);
   int row = 0;
   w = gtk_button_new_with_label("Close");
   gtk_widget_set_name(w, "close_button");
   g_signal_connect (w, "button-press-event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid), w, 0, row, 2, 1);
+
+#ifdef TCI
+  w = gtk_check_button_new_with_label("Enable CAT/TCI Debug Logging");
+#else
+  w = gtk_check_button_new_with_label("Enable CAT Debug Logging");
+#endif
+  gtk_widget_set_name(w, "boldlabel");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (w), rigctl_debug);
+  gtk_grid_attach(GTK_GRID(grid), w, 4, row, 4, 1);
+  g_signal_connect(w, "toggled", G_CALLBACK(rigctl_debug_cb), NULL);
+
+  row++;
+  w = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+  gtk_widget_set_size_request(w, -1, 3);
+  gtk_grid_attach(GTK_GRID(grid), w, 0, row, 7, 1);
+
   row++;
   w = gtk_label_new("TCP");
   gtk_widget_set_name(w, "boldlabel");
@@ -312,12 +359,34 @@ void rigctl_menu(GtkWidget *parent) {
     }
   }
 
+#ifdef TCI
   row++;
-  w = gtk_check_button_new_with_label("Enable RigCtl Debug Logging");
+  w = gtk_separator_new(GTK_ORIENTATION_HORIZONTAL);
+  gtk_widget_set_size_request(w, -1, 3);
+  gtk_grid_attach(GTK_GRID(grid), w, 0, row, 7, 1);
+  row++;
+  w = gtk_label_new("TCI");
   gtk_widget_set_name(w, "boldlabel");
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (w), rigctl_debug);
-  gtk_grid_attach(GTK_GRID(grid), w, 0, row, 4, 1);
-  g_signal_connect(w, "toggled", G_CALLBACK(rigctl_debug_cb), NULL);
+  gtk_widget_set_halign(w, GTK_ALIGN_END);
+  gtk_grid_attach(GTK_GRID(grid), w, 0, row, 1, 1);
+  w = gtk_spin_button_new_with_range(35000, 55000, 1);
+  gtk_spin_button_set_value(GTK_SPIN_BUTTON(w), (double)tci_port);
+  gtk_grid_attach(GTK_GRID(grid), w, 1, row, 1, 1);
+  g_signal_connect(w, "value_changed", G_CALLBACK(tci_port_changed_cb), NULL);
+  w = gtk_check_button_new_with_label("Enable");
+  gtk_widget_set_name(w, "boldlabel");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (w), tci_enable);
+  gtk_widget_show(w);
+  gtk_grid_attach(GTK_GRID(grid), w, 4, row, 1, 1);
+  g_signal_connect(w, "toggled", G_CALLBACK(tci_enable_cb), NULL);
+  w = gtk_check_button_new_with_label("Report TX Frequency Only");
+  gtk_widget_set_name(w, "boldlabel");
+  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (w), tci_txonly);
+  gtk_widget_show(w);
+  gtk_grid_attach(GTK_GRID(grid), w, 5, row, 3, 1);
+  g_signal_connect(w, "toggled", G_CALLBACK(tci_txonly_changed_cb), NULL);
+#endif
+
   gtk_container_add(GTK_CONTAINER(content), grid);
   sub_menu = dialog;
   gtk_widget_show_all(dialog);

@@ -285,7 +285,7 @@ single encoders. This special case is not covered in this manual.}
 on a single shaft), or a clone thereof.
 This controller is denoted Controller2 in the rest of this manual.}
 \item[G2 Front Panel]{Choose this if you have an Anan G2 radio with a built-in controller.}
-\item[G2 Mk2 Panel]{Choose this if you have an Anan G2 Mk2 (also known as ,,G2 Ultra'') 
+\item[G2 Mk2 Panel]{Choose this if you have an Anan G2 Mk2 (also known as ,,G2 Ultra'')
 radio (with LEDs in the front panel).
 This not only tells \pH not to use any GPIO lines, but also to use a serial line to connect to the front panel.
 So this setting is needed for G2 Mk2 even if \pH is compiled without GPIO support.}
@@ -765,7 +765,7 @@ the indicator will show a  grey \rett{EQ} while receiving
 and a yellow \rett{TXEQ}  while  transmitting.
 
 The last indicator in the top row  is \rett{CAT} which indicates
-if the CAT module  (see the \bltt{RIGCTL}  menu) has accepted at least
+if the CAT module  (see the \bltt{CAT}  menu) has accepted at least
 one connection. In total, \pH can be CAT-controlled simultaneously
 by five different sources, two of them using a serial line and
 three of them a TCP connection.
@@ -3102,9 +3102,10 @@ you enable the \texttt{N2ADR} filter board in the \bltt{Radio} menu.
 
 In this chapter, the customisation of the toolbar (at the bottom of the \pH window),
 as well as how to configure GPIO and MIDI controllers, is described. Furthermore, in this
-chapter we discuss the RIGCTL menu which allows controlling \pH by some external program
+chapter we discuss the \bltt{CAT} menu which allows controlling \pH by some external program
 such as a logbook or contest program, via standardised CAT commands that can be sent to
-\pH either over a serial line or via TCP.
+\pH either over a serial line or via TCP. If TCI is enabled at compile  time, this menu
+is called \bltt{CAT/TCI} and also allows to control the built-in TCI server.
 
 \textbf{Note for Controller1 owners:} The eight switches (push-buttons) of the controller,
 that a positioned below the screen, are bound to the eight toolbar buttons on the screen.
@@ -3189,7 +3190,7 @@ it will always be assigned to \bltt{Function}, since if one has no access to thi
 function, one is stuck and can no longer cycle through the function layers.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The \texttt{RigCtl} (Rig control, or CAT) Menu}
+\section{The \texttt{CAT/TCI} Menu}
 
 \pH has a built-in rig control or CAT (computer aided transceiver) facility. This can be used to control
 \pH from other programs or even other computers. You can have up to three simultaneous CAT connections
@@ -3211,14 +3212,33 @@ the Kenwood TS-2000 as the radio model would do it, if the digi mode or laptop p
 interface with
 radios, either choose TS-2000 or (preferably) the ,,OpenHPSDR PiHPSDR'' radio model because this uses time-
 out values
-adapted to \pH. The \bltt{RigCtl} menu is shown in Fig. \ref{fig:RigCtlMenu}.
+adapted to \pH.
+
+If compiled  with TCI  support, \pH also offers a (substantially  stripped-down) TCI server, and in this
+case this menu is named \bltt{CAT/TCI}. \pH cannot
+be \textit{controlled} via TCI (all incoming TCI commands are  ignored) but it periodically (every 500 msec)
+reports operating frequencies  and modes, if they have changed. This is meant  to support  logbook programs
+and external PAs that use TCI  to get frequency and/or mode information.
+
+The \bltt{CAT/TCI} menu is shown in Fig. \ref{fig:CATmenu}. Note that if \pH  is  not compiled
+with TCI support,  this menu is simply called  \bltt{CAT} and lower part  of the menu is not shown.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{RigCtlMenu.png}
-\caption{The RigCtl (Rig Control) menu.}
-\label{fig:RigCtlMenu}
+\includegraphics[width=12cm]{CATmenu.png}
+\caption{The CAT/TCI  menu.}
+\label{fig:CATmenu}
 \end{figure}
+
+\rett{Enable CAT/TCI Debug Logging}. If enabled, the \pH CAT subsystem sends lots of debug messages to the standard output. If
+\pH is run
+from within a terminal window, these messages appear in the terminal window. If it is run from double-
+clicking a desktop icon,
+these messages can be found in a log file within the piHSPDR working directory (this is the directory where
+the preferences
+are stored. This checkbox is only of interest for software developers to analyse programming or connection
+errors, and should
+not be checked for normal use.
 
 \rett{TCP}. This sets the TCP port number for CAT connection to TCP. The default value (19090)
 is rather standard, using another one is only necessary if you are running more than one
@@ -3231,26 +3251,26 @@ Which names to use
 is highly operating system dependent. On a RaspPi,  USB-to-serial
 adapters (which are nowadays the standard way to add serial ports to a computer) have names such as
 \texttt{/dev/ttyACM0} or \texttt{/dev/USB0} (on RaspPi) or \texttt{/dev/tty.usbserial-....} (on MacOS).
-The serial port shown in the third line of Fig. \ref{fig:RigCtlMenu}, \texttt{/dev/ttyAMA3},
+The serial port shown in the third line of Fig. \ref{fig:CATmenu}, \texttt{/dev/ttyAMA3},
 is used on the Anan G2-Ultra radios for communicating with the front panel. If you chose
 \rett{G2 Mk2 Panel} in the discovery menu, this port will be assigned by default to the third
-slot and it is also enabled, this can be changed in the RigCtl menu and will then also be written to
+slot and it is also enabled, this can be changed in the CAT/TCI menu and will then also be written to
 the props file.
  It is important to know that \pH does not try to ,,detect'' serial
 ports, you must know the proper name (e.g. by looking at the contents of the \texttt{/dev} directory).
 Named pipes can be created everywhere in the file system hierarchy using the command
 ,,\texttt{mkdir -p <some\_arbitrary\_name>}''. Names pipes can be used for the communication between \pH
-and another program running on the same computer, and are only meaningful if that other program does not
-support CAT-over-TCP.
+and another program running on the same computer, and are only meaningful if that other program neither
+supports CAT-over-TCP nor TCI.
 
 To the right of the serial port text field, there is a pop-down menu for choosing the baud rate. Only 4800,
 9600, 19200, and 38400 baud are offered, but this should cover most cases.
 
 \rett{Enable}. This checkbox enables or disables the \pH CAT subsystem for that particular case.
-Enabling and disabling can be done separately for the TCP subsystem and each of the serial
-connections.
+Enabling and disabling can be done separately for the TCP CAT subsystem, for each of the serial
+CAT connections, and the TCI server.
 
-\rett{Andromeda}. This checkbox enables the connection for use with ANDROMEDA consoles
+\rett{Andromeda}. This checkbox enables the TCP or  serial CAT connection for use with ANDROMEDA consoles
 of the G2-MkII front panel. Serial lines are
 forced to 9600 baud if enabled for ANDROMEDA. Furthermore, status changes of \pH (e.g. RIT on/off) are
 automatically reported via ZZZI CAT commands (see Appendix \ref{sec:catcommands}). These messages are
@@ -3269,15 +3289,18 @@ The main use for auto reporting mode is, if a power amplifier or a logbook progr
 is connected via a serial line that needs frequency or mode  info via CAT. If you do not have hardware that depends
 on such unsolicited (without requesting them via ZZAI or AI commands) messages, this box should never be checked.
 
-\rett{Enable RigCtl Debug Logging}. If enabled, the \pH CAT subsystem sends lots of debug messages to the standard output. If
-\pH is run
-from within a terminal window, these messages appear in the terminal window. If it is run from double-
-clicking a desktop icon,
-these messages can be found in a log file within the piHSPDR working directory (this is the directory where
-the preferences
-are stored. This checkbox is only of interest for software developers to analyse programming or connection
-errors, and should
-not be checked for normal use.
+\rett{TCI}. To the right of this string, there is a spin button which selects the TCP port used by the
+TCI  server (the default value is 40001). The TCI server identifies itself as an ExpertsSDR3 program
+running TCI version 1.8 with a SunSDR2PRO radio, but in fact it ignores all incoming commands and only
+reports VFO-A/B frequencies and modes, if they have changed. It also reports the TX frequency if it has changed.
+This is necessary since the TX frequency can jump from the VFO-A to the VFO-B frequency and back e.g. when
+changing the split status or the actice receiver.
+
+\rett{Report TX  Frequency Only}. If power amplifiers connect to \pH, they usually only want to know the
+TX frequency to adjust the output low-pass filters. Checking this box restricts the TCI outgoing commands
+to the TX  frequency messages. It is important  to note that the TX frequency is only  checked every
+500 msec, so after a band change, the PA may  not be aware of  the changed TX frequency for half  a second.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The \texttt{MIDI} Menu}
@@ -4689,8 +4712,8 @@ somewhat to support the  ANDROMEDA open-source radio controller developed by Lau
 \texttt{https://github.com/laurencebarker/Andromeda\_front\_panel}
 
 and the additional commands have been implemented in
-the RIGCTL module of \pH by Rick Koch N1GP (thanks Rick).
- Furthermore, if "Andromeda" is selected in the RIGCTL menu,
+the CAT module of \pH by Rick Koch N1GP (thanks Rick).
+ Furthermore, if "Andromeda" is selected in the CAT/TCI menu,
 \pH will constantly
 \textit{send} status information to the ANDROMEDA controller using. Status information is
 sent if something
@@ -6203,7 +6226,7 @@ Unless you are using VOX, you also need a CAT command connection between the dig
 and \pH. Via CAT commands, the digi mode program can induce RX/TX transitions in \pH,
 change frequencies or modes, etc. If both computers are connected via ethernet,
 TCP is the method of choice for such a connection. \pH listens on port 19090 (TCP CAT
-connection must be enabled in the \bltt{RigCtl} menu, and the port number can also
+connection must be enabled in the \bltt{CAT/TCI} menu, and the port number can also
 be changed there). For standard digi mode operation, choose the
 Kenwood TS-2000 radio model. If your digi mode program can use the \texttt{hamlib} CAT connection
 library (for example, both FLdigi and WSJTX can), choose the ,,OpenHPSDR PiHPSDR'' radio
@@ -6211,7 +6234,7 @@ model.
 
 If there is no ethernet connection between the computer running \pH and the computer
 running the digi mode program, you need two USB-to-serial interfaces and must connect them
-via a null modem. Then enable CAT on the serial port both in \pH (\bltt{RigCtl} menu) and the
+via a null modem. Then enable CAT on the serial port both in \pH (\bltt{CAT/TCI} menu) and the
 digi mode program.
 
 \section[\pH and Digi on same computer]{Running \pH and Digi on the same computer}
@@ -6600,11 +6623,17 @@ Transceiver control (CAT connection) in MacOS is the same as described for Linux
 
 There is a number of compile-time options that are shown on the initial screen.
 When compiling from the sources, you can choose which options you want (or do not want).
-To have compile-time options different from the default ones, you have to create a text
+The reason for making a feature optional is usually that it depends on some external
+library which may or may not be available on the computer intended  to run \pH.
+
+In contrast to earlier version of \pH which required editing the \texttt{Makefile},
+compile-time options different from the default ones can be enforced by
+creating a text file
 file within the \pH directory which has the name \grtt{make.config.pihpdsr}.
 
-If this file does not exist, compilation proceeds with the default options.
-If you create this file, it should contain lines of the form
+If this file does not exist, compilation proceeds with the default options defined
+in the \texttt{Makefile}.  The file
+\grtt{make.config.pihpdsr} should contain lines of the form
 
 \texttt{OPTION=VALUE}
 
@@ -6631,16 +6660,20 @@ Here is a list of options with their default values.
 \item[\rett{GPIO}] {(default: \texttt{ON})
 This option is needed on a RaspberryPi if you want to use GPIO input/output lines from
 within \pH, for example since you have a controller (Controller1, Controller2, of G2 front panel)
-attached or want to use GPIO lines for CW or PTT. \textbf{It is important to deactivate this option
-if you compile for a Desktop PC running LINUX!}. This is so because Desktop PCs/Laptops do not
-have GPIO lines. For MacOS, this option is automatically disabled.
+attached or want to use GPIO lines for CW or PTT. This option needs both the \texttt{libgpiod} and
+\texttt{libi2c} libraries on your system, therefore it \textbf{is important to deactivate this option
+if you compile for a Desktop PC or Laptop running LINUX}. This is so because Desktop PCs/Laptops do not
+have GPIO lines and therefore no libgpiod is available.
+For MacOS (which also does not have GPIO lines),
+this option is automatically disabled.
 
 If you do not plan to let \pH control any of the GPIO I/O lines you better compile without this option.
 This is especially true if you plan to attach some third-party hardware (such as sound card ,,hats'')
 to the GPIO.
 
 {\bf G2 Ultra.} Second-generation ANAN G2 radios ,,G2 Ultra'' have a micro-controller inside that
-controls the front panel and communicates with \pH over a serial line. For these machines, it is
+controls the front panel and communicates with \pH over a serial line that uses two GPIO  lines.
+For these machines, it is
 recommended to compile with GPIO turned OFF.
 }
 
@@ -6652,11 +6685,12 @@ activated, unless you port \pH to some other operating system without MIDI suppo
 \item[\rett{SATURN}] {(default: \texttt{ON})
 This option is for \pH running on the CM4 module within a SATURN/G2 radio. It allows
 \pH to directly communicate with the FPGA via XDMA. While it does no harm to have this option activated
-on other systems, it also has no function there.
+on other systems, it also has no function there and therefore it is automatically disabled  on MacOS.
 }
 
 \item[\rett{USBOZY}] {(default: \texttt{OFF})
-This option includes support for legacy HPSDR hardware connected via USB.
+This option includes support for legacy HPSDR hardware connected via USB. Note this
+option needs the \texttt{libusb-1.0} library  be present on your system.
 }
 
 \item[\rett{SOAPYSDR}] {(default: \texttt{OFF})
@@ -6673,7 +6707,14 @@ option.
 If you have a RedPitaya and no autostart of the SDR application, and not compiled \pH
 with the STEMLAB option, you can open a web browser on your host computer, start the SDR application on the RedPitaya,
 and then start \pH. With the STEMLAB option, this can all be done by \pH.
+This option is not activated by default since it delays the startup a little bit  and  this should  be
+avoided if  there is no need for it, and it needs the \texttt{libcurl}  library to be installed on your system.
 }
+
+\item[\rett{TCI}] {(default: \texttt{ON})
+With this option,  \pH can start a TCI server that communicates operating frequencies
+and modes to logbook programs or PAs. The TCI code depends on the OpenSSL library, and the only reason to
+deactivate TCI is if  this library is  not available on your system.}
 
 \item[\rett{AUDIO}] {(default: empty)
 On Linux systems (including the Raspberry PI), if setting the value to \texttt{ALSA},
@@ -6683,7 +6724,7 @@ PulseAudio is used. On MacOS, the \texttt{AUDIO} choice has no effect since the 
 module is used no matter what the \texttt{AUDIO} setting is.
 }
 
-\item[\rett{EXTENDED\_NR}] {(default: \texttt{OFF})
+\item[\rett{EXTENDED\_NR}] {(\textbf{Deprecated}, default: \texttt{OFF})
 There is a special version of the WDSP library that contains additional noise
 reduction facilities which are based on  \texttt{rnnnoise} and \texttt{libspecbleach}, see
  \texttt{https://github.com/vu3rdd/wdsp}. If you have such a version of WDSP installed, these
@@ -6699,10 +6740,11 @@ reduction facilities which are based on  \texttt{rnnnoise} and \texttt{libspecbl
 WDSP version is outdated (version 1.23) so it cannot be used with \pH. Ask the maintainer
 of that repository to update their code if you want to use it. Note that since version 1.25, WDSP
 contains a new and highly effective ,,trained'' NR2 noise reduction which was very well
-received by the community.
+received by the community. Having said this, I consider EXTENDED\_NR as deprecated and may
+remove it from \pH in the future.
 }
 
-\item[\rett{SERVER}] {(default: \texttt{OFF})
+\item[\rett{SERVER}] {(\textbf{Unfinished/Experimental}, default: \texttt{OFF})
  This is not yet completed but is mentioned here anyway. There are plans to have
  a client/server model in \pH such that you can have a ,,distant'' radio with a computer
  running piHPDSR connected to that radio, and a ,,local'' computer running \pH, and an
