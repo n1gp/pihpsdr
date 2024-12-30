@@ -77,6 +77,7 @@ sudo apt-get --yes install libzstd-dev
 sudo apt-get --yes install libfftw3-dev
 sudo apt-get --yes install libgtk-3-dev
 sudo apt-get --yes install libasound2-dev
+sudo apt-get --yes install libssl-dev
 sudo apt-get --yes install libcurl4-openssl-dev
 sudo apt-get --yes install libusb-1.0-0-dev
 sudo apt-get --yes install libi2c-dev

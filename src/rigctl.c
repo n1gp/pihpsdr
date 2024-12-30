@@ -175,7 +175,6 @@ void shutdown_tcp_rigctl() {
     tcp_client[id].running = 0;
 
     if (tcp_client[id].fd != -1) {
-      t_print("%s: setting SO_LINGER to 0 for client_socket: %d\n", __FUNCTION__, tcp_client[id].fd);
 
       if (setsockopt(tcp_client[id].fd, SOL_SOCKET, SO_LINGER, (const char *)&linger, sizeof(linger)) == -1) {
         t_perror("setsockopt(...,SO_LINGER,...) failed for client:");
@@ -196,7 +195,6 @@ void shutdown_tcp_rigctl() {
   // Close server socket
   //
   if (server_socket >= 0) {
-    t_print("%s: setting SO_LINGER to 0 for server_socket: %d\n", __FUNCTION__, server_socket);
 
     if (setsockopt(server_socket, SOL_SOCKET, SO_LINGER, (const char *)&linger, sizeof(linger)) == -1) {
       t_perror("setsockopt(...,SO_LINGER,...) failed for server:");
@@ -206,6 +204,8 @@ void shutdown_tcp_rigctl() {
     close(server_socket);
     server_socket = -1;
   }
+  // TODO: join with the server thread, but this requires to make the accept() there
+  //       non-blocking (use select())
 }
 
 //
@@ -1258,7 +1258,6 @@ static gpointer rigctl_client (gpointer data) {
   // but even the we should decrement cat_control
   //
   if (client->fd != -1) {
-    t_print("%s: setting SO_LINGER to 0 for client_socket: %d\n", __FUNCTION__, client->fd);
     struct linger linger = { 0 };
     linger.l_onoff = 1;
     linger.l_linger = 0;
@@ -1285,9 +1284,6 @@ static gpointer rigctl_client (gpointer data) {
   // Decrement CAT_CONTROL
   g_mutex_lock(&mutex_numcat);
   cat_control--;
-
-  if (rigctl_debug) { t_print("RIGCTL: CTLA DEC - cat_control=%d\n", cat_control); }
-
   g_mutex_unlock(&mutex_numcat);
   g_idle_add(ext_vfo_update, NULL);
   return NULL;
@@ -6191,9 +6187,6 @@ static gpointer serial_server(gpointer data) {
   t_print("%s: Entering Thread\n", __FUNCTION__);
   g_mutex_lock(&mutex_numcat);
   cat_control++;
-
-  if (rigctl_debug) { t_print("RIGCTL: SER INC cat_control=%d\n", cat_control); }
-
   g_mutex_unlock(&mutex_numcat);
   g_idle_add(ext_vfo_update, NULL);
   client->running = TRUE;
@@ -6282,9 +6275,6 @@ static gpointer serial_server(gpointer data) {
   g_free(command);
   g_mutex_lock(&mutex_numcat);
   cat_control--;
-
-  if (rigctl_debug) { t_print("RIGCTL: SER DEC - cat_control=%d\n", cat_control); }
-
   g_mutex_unlock(&mutex_numcat);
   g_idle_add(ext_vfo_update, NULL);
   t_print("%s: Exiting Thread, running=%d\n", __FUNCTION__, client->running);
@@ -6412,7 +6402,7 @@ void disable_serial_rigctl (int id) {
 }
 
 void launch_tcp_rigctl () {
-  t_print( "---- LAUNCHING RIGCTL ----\n");
+  t_print( "---- LAUNCHING RIGCTL SERVER ----\n");
   tcp_running = 1;
 
   //

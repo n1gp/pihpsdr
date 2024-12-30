@@ -1,6 +1,11 @@
 LIST OF RECENT PIHPSDR CHANGES
 ==============================
 
+December 2024:
+--------------
+- Added a (stripped-down) TCI server for use with
+  logbook programs and/or PAs.
+
 October 2024:
 -------------
 - Added t2 parameter spin-button to the NR2 "trained"
