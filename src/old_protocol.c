@@ -1173,8 +1173,21 @@ static void process_control_bytes() {
   previous_ptt = radio_ptt;
   radio_ptt  = (control_in[0]     ) & 0x01;
 
-  if (previous_ptt != radio_ptt) {
-    g_idle_add(ext_mox_update, GINT_TO_POINTER(radio_ptt));
+  if (previous_ptt != radio_ptt) { 
+    int m = vfo_get_tx_mode();
+    if (radio_ptt || m == modeCWU || m == modeCWL) {
+      // 
+      // If "PTT on" comes from the radio, or we are doing CW: go TX without delay
+      //
+      g_idle_add(ext_mox_update, GINT_TO_POINTER(radio_ptt));
+    } else {
+      //
+      // If "PTT off" comes from the radio and no CW: 
+      // delay the TX/RX transistion a little bit to avoid
+      // clipping the last bits of the TX signal
+      //
+      g_timeout_add(50,ext_mox_update, GINT_TO_POINTER(radio_ptt));
+    }
   }
 
   if ((device == DEVICE_HERMES_LITE2) && (control_in[0] & 0x80)) {
