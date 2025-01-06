@@ -985,9 +985,10 @@ src/main.o: src/bandstack.h src/main.h src/discovered.h src/configure.h
 src/main.o: src/actions.h src/gpio.h src/new_menu.h src/radio.h src/adc.h
 src/main.o: src/dac.h src/transmitter.h src/version.h src/discovery.h
 src/main.o: src/new_protocol.h src/MacOS.h src/old_protocol.h
-src/main.o: src/soapy_protocol.h src/ext.h src/client_server.h src/vfo.h
-src/main.o: src/mode.h src/css.h src/exit_menu.h src/message.h src/mystring.h
-src/main.o: src/startup.h src/tts.h
+src/main.o: src/soapy_protocol.h src/saturnmain.h src/saturnregisters.h
+src/main.o: src/ext.h src/client_server.h src/vfo.h src/mode.h src/css.h
+src/main.o: src/exit_menu.h src/message.h src/mystring.h src/startup.h
+src/main.o: src/tts.h
 src/meter.o: src/appearance.h src/band.h src/bandstack.h src/receiver.h
 src/meter.o: src/meter.h src/radio.h src/adc.h src/dac.h src/discovered.h
 src/meter.o: src/transmitter.h src/version.h src/mode.h src/vox.h
