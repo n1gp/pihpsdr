@@ -82,7 +82,7 @@ including a Raspberry Pi (hence
 the name \pH), but equally well on Linux desktop or laptop computers, and on Apple Macintosh (Mac OSX)
 computers which have a Unix variant under the hood.
 It is possible to run
-piHPSDR under the Windows operating system, see e.g. \texttt{https://github.com/ew8bak/pihpsdr}.
+/pH under the Windows operating system, see e.g. \texttt{https://github.com/ew8bak/pihpsdr}.
 This page reports how to set up an ,,ecosystem'' under Windows which can then be used to compile
 \pH. The resource mentioned seems to come with an older version of \pH, but others have reported
 that using that ,,ecosystem'' it is possible to run the version of \pH described in this document
@@ -105,7 +105,7 @@ which
 have successfully been used with \pH. A third possibility to control \pH is via a serial interface
 through CAT (computer aided transceiver) commands. The CAT model used by \pH is based on the Kenwood
 TS-2000 command set with lots of PowerSDR extensions. The ANDROMEDA controller uses such CAT commands to
-communicate with piHPSDR, so using CAT is, in addition to MIDI, the second option to have buttons and knobs
+communicate with /pH, so using CAT is, in addition to MIDI, the second option to have buttons and knobs
 for general (non-GPIO) computers.
 
 Using a touch-screen instead of a mouse offers the possibility to put the actual radio hardware together
@@ -199,7 +199,7 @@ the network connection, you then see a screen with a discovery menu (Fig. \ref{f
 It is possible that the \rett{Start} button is deactivated and shows another text. \rett{In Use} at
 this point means that the radio is already in use (connected by another SDR application), while
 \rett{Incompatible} denotes that the radio is not compatible with this version of \pH. This
-is only the case if piHPDSR runs natively on the compute module inside the new Anan Saturn/G2
+is only the case if piHPDSR runs on the compute module inside the new Anan Saturn/G2
 radios and the FPGA firmware is known to be too old (or too new)
 for direct (XDMA) data transfer between the compute
 module and the FPGA. Updating both \pH and the FPGA firmware to the latest version
@@ -965,7 +965,7 @@ can be used to change AF volume or TX output power. \textbf{,,Switches''} are pu
 can be used to trigger a function such as transmitting a carrier for tuning, toggle
 between RX and TX, open a menu, and so forth.
 
-Whenever one of the sub-menus is closed, piHPSDR writes its settings to the props file. This is not done
+Whenever one of the sub-menus is closed, /pH writes its settings to the props file. This is not done
 automatically (that is, periodically) because on some systems I/O operations affect
 network traffic and may cause audio cracks. So restricting this action to situations
 where ,,much happens'' anyway in the GUI seems a good compromise.
@@ -1128,7 +1128,7 @@ signal that originates from the cross-talk at the T/R relay will lead to AGC pum
 making your receiver(s) essentially deaf for a short period after TX/RX switching.
 However, when using different and well-decoupled antennas for RX and TX (this is typical
 for some satellite operations), Duplex mode gives you important information, as you can
-see your own downlink signal. In contrast to what is often stated, Duplex mode does not
+see your own down-link signal. In contrast to what is often stated, Duplex mode does not
 affect the data stream between the computer and the radio, it \textit{only} determines
 whether the receivers (within the WDSP library) are shut down during transmit or not.
 
@@ -1892,7 +1892,7 @@ is selected (see the \bltt{Radio} menu). If checked, the filters in the RF front
 are by-passed during receive. This option will normally only be used for radios that
 have band-pass filters in the front end, and if one operates two receivers both running
 on ADC0 data on different bands. Without checking this option, only the signals for
-the band of the active receiver will pass the RF frontend filters.
+the band of the active receiver will pass the RF front-end filters.
 Older radios (up to Anan-100/200)  have a
 combination of a low-pass and a high-pass filter in the RX path to ADC0. If these
 radios run two receivers, the low-pass filter is selected based on the higher
@@ -3058,7 +3058,7 @@ there is no such update so the problem remains.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{The \texttt{OC} (OpenCollector) Menu}
+\section{The \texttt{OC} (Open Collector) Menu}
 
 \begin{figure}[ht]
 \center
@@ -3234,7 +3234,7 @@ with TCI support,  this menu is simply called  \bltt{CAT} and lower part  of the
 \pH is run
 from within a terminal window, these messages appear in the terminal window. If it is run from double-
 clicking a desktop icon,
-these messages can be found in a log file within the piHSPDR working directory (this is the directory where
+these messages can be found in a log file within the \pH working directory (this is the directory where
 the preferences
 are stored. This checkbox is only of interest for software developers to analyse programming or connection
 errors, and should
@@ -3294,7 +3294,7 @@ TCI  server (the default value is 40001). The TCI server identifies itself as an
 running TCI version 1.8 with a SunSDR2PRO radio, but in fact it ignores all incoming commands and only
 reports VFO-A/B frequencies and modes, if they have changed. It also reports the TX frequency if it has changed.
 This is necessary since the TX frequency can jump from the VFO-A to the VFO-B frequency and back e.g. when
-changing the split status or the actice receiver.
+changing the split status or the active receiver.
 
 \rett{Report TX  Frequency Only}. If power amplifiers connect to \pH, they usually only want to know the
 TX frequency to adjust the output low-pass filters. Checking this box restricts the TCI outgoing commands
@@ -3328,7 +3328,7 @@ was originally sent. To resolve possible conflicts, each MIDI message contains a
 number. There is some confusion about channel numbers: the MIDI says channel numbers
 go from 1 to 16. Because this is encoded in a 4-bit data field whose numerical value
 goes from 0 to 15, computer users normally refer to channel numbers from 0 to 15,
-and this convention is also followed by piHPDSR. Different channel numbers can be used
+and this convention is also followed by \pH. Different channel numbers can be used
 to discriminate MIDI events from different sources (devices). An example of such a setup
 is if you connect a DJ console as well as a micro controller to which a CW key is attached.
 
@@ -3653,7 +3653,7 @@ settings, equaliser settings, and TX compressor settings
  different VFO step sizes for different modes, and get the step size chosen for that
  mode automatically if one switches to that mode. The same applies to noise reduction
  settings which are very different for CW and SSB. For digital modes (DIGU/DIGL),
- one normally does not want neither noise reduction or equalizer being active on the RX
+ one normally does not want neither noise reduction or equaliser being active on the RX
  side, nor a speech processor for transmitting.
 
  On the other side, one often wants the same modes for USB and LSB, or for DIGU and DIGL.
@@ -3662,7 +3662,7 @@ settings, equaliser settings, and TX compressor settings
 
  Each mode now has an associated RX/TX profile containing lots of settings (see below).
  When switching a mode (either by an explicit request, or implicitly by a VFO swap/copy
- operation, a band or bandstack change, or by recalling a memory slot), the profile of
+ operation, a band or band stack change, or by recalling a memory slot), the profile of
  that mode overwrites the current settings.
 
  The RX/TX profile for a specific mode (group) is updated whenever one of the setting
@@ -3704,26 +3704,26 @@ $\bullet$ TX mic gain slider position \cr
 \label{sec:capture}
 Audio recording and replay is typically used in QSOs to let your QSO partner listen to its own transmission,
 and how it arrived at your site. It is not meant to do automatic SSB CQ calls etc., here a dedicated
-,,voice keyer'' software should be used. The main restriction of the record\&replay facility in piHPSDR is
+,,voice keyer'' software should be used. The main restriction of the record\&replay facility in \pH is
 that only a single piece of audio can be stored, and that the maximum length of this piece is about 10 seconds.
 
 Because the main purpose of this feature is to play back a recorded transmission of your QSO partner,
 the RX equaliser is not used while recording (but noise reduction etc. is still active!). Likewise,
-when replaying, the TX equalizer, the TX speech processor, the continouus frequency compressor (CFC),
+when replaying, the TX equaliser, the TX speech processor, the continuous frequency compressor (CFC),
 and the downward expander (DEXP)
-are temporarily deactivated. Furthermore, the recorded audio is normalized such that it peaks at full
+are temporarily deactivated. Furthermore, the recorded audio is normalised such that it peaks at full
 amplitude, and therefore, the TX mic gain is set to 0 dB while replaying.
 
 The \pH recording and replay feature requires a single button triggering the \bltt{Capture} action,
 so this action must either be mapped to a MIDI/GPIO push-button or to one of the toolbar buttons.
 To avoid blind flying, the status of the recording/playback is indicated in the top right corner of
-the panadapter in the main window, thus a pandapter is required (waterfall-only setups won't show the
+the pan adapter in the main window, thus a pan adapter is required (waterfall-only setups won't show the
 record/playback status).
 
-In the normal ,,idle'' situation, nothing is shown on the panadapter. This is the case if the \bltt{Capture}
+In the normal ,,idle'' situation, nothing is shown on the pan adapter. This is the case if the \bltt{Capture}
 button has not yet been used since the start of the \pH program, or if the last recording/playback is
 more then 30 seconds ago. If noting is on the screen, one has to push the \bltt{Capture} button once and
-a string \rett{Recorded} string in yellow color will appear in the top right corner of the panadapter,
+a string \rett{Recorded} string in yellow colour will appear in the top right corner of the pan adapter,
 and below a horizontal progress bar that indicates how long the actual recording is: a full bar corresponds
 to maximum filling which corresponds to 10 seconds, but this can easily be changed at compile time.
 Fig. \ref{fig:capture1} shows the status bar, as it has been brought up by hitting the \bltt{Capture} button.
@@ -3737,12 +3737,12 @@ Fig. \ref{fig:capture1} shows the status bar, as it has been brought up by hitti
 
 As can be seen, the length of the currently stored recording is about half of the maximum length. If hitting
 the \bltt{Capture} button for the very first time, the length of the stored recording is of course zero. If
-the \rett{Recorded} string is shown in the panadapter, hitting the \bltt{Capture} button again will either
+the \rett{Recorded} string is shown in the pan adapter, hitting the \bltt{Capture} button again will either
 start a new recording (while RXing) or start the replay (if hitting the button while TXing).
 If a new recording is done, the status string will change to \rett{Recording} and the yellow progress bar
 will fill from the left to the right. Recording will stop at the latest if the bar hits the right end
 (that is, if the audio buffer is full), but can also by stopped before that if hitting the \bltt{Capture}
-button. During replay, the status string changes to \rett{Replay} (written in red color), the progress bar
+button. During replay, the status string changes to \rett{Replay} (written in red colour), the progress bar
 turns read and starts from the left until (at the latest) all of the actual recording (marked by a small
 vertical yellow line) is completely replayed (Fig. \ref{fig:capture2}). Again, the replay can be stopped any time by hitting
 the \bltt{Capture} button.
@@ -3760,9 +3760,9 @@ hitting the \bltt{Capture} button.
 
 So the things to remember are:
 \begin{itemize}
-\item{If no recording/playback status is shown in the top left of the panadapter, hitthe  \bltt{Capture} button
+\item{If no recording/playback status is shown in the top left of the pan adapter, hit the  \bltt{Capture} button
 to show it.}
-\item{If the status line reads \rett{Recorded}, then the bar indicats how much audio data has been recorded. Hitting
+\item{If the status line reads \rett{Recorded}, then the bar indicates how much audio data has been recorded. Hitting
 \bltt{Capture} now deletes this audio and starts a new recording (if RXing) or replays the recorded audio
 (if TXing).}
 \item{If recording (status text = \rett{Recording}) or replaying (status text = \rett{Replay}, a moving progress
@@ -3861,7 +3861,7 @@ Cycle through the AGC modes (slow, medium, fast, $\ldots$) of the current receiv
 \action{AGC Gain}{AGCGain}{PE}{
 {\color{red} This action is connected to the \texttt{AGC} slider in the slider area.}
 Change AGC gain ($-20\ldots 120$ dB) of the active receiver. Changing the AGC gain moves the
-horizontal green line (doted by a green 'G') on the panadapter. Its optimal position is
+horizontal green line (doted by a green 'G') on the pan adapter. Its optimal position is
 at or slightly below the noise floor level.}
 
 \action{AGC Gain RX1}{AGCGain1}{PE}{Change AGC gain ($-20\ldots 120$ dB) of RX1.}
@@ -4350,7 +4350,7 @@ an RF gain control. If ADC overload occurs, one has to decrease the RF gain.}
 \action{RIT}{RIT}{E}{Change the RIT value of the active receiver in the range -9999 to 9999 Hz.
 Each tick of the encoder changes the value by the current RIT step size. If a zero
 value results, RIT is
-automatically disabled, if a non-zero value ist set, RIT is enabled.}
+automatically disabled, if a non-zero value is set, RIT is enabled.}
 
 \action{RIT Clear}{RITCL}{B}{Set the RIT value of the active receiver to zero. As a side effect, RIT is
 disabled for the active receiver}
@@ -4378,10 +4378,10 @@ every 250 msec until
 the RIT+ button is released.}
 
 \action{RIT RX1}{RIT1}{E}{Change the RIT value of VFO-A in the range -9999 to 9999 Hz. If a zero value is set,
-RIT is automatically disabled, if a non-zero value ist set, RIT is enabled.}
+RIT is automatically disabled, if a non-zero value is set, RIT is enabled.}
 
 \action{RIT RX2}{RIT2}{E}{Change the RIT value of VFO-B in the range -9999 to 9999 Hz. If a zero value is set,
-RIT is automatically disabled, if a non-zero value ist set, RIT is enabled.}
+RIT is automatically disabled, if a non-zero value is set, RIT is enabled.}
 
 \action{RIT Step}{RITST}{B}{Cycle through the possible values (1 Hz, 10 Hz, 100 Hz) of the RIT step.}
 
@@ -4392,9 +4392,9 @@ sign reversed.}
 
 \action{RX Menu}{RX}{B}{Opens the \texttt{RX} menu for the active receiver.}
 
-\action{RX1}{RX1}{B}{Make the first receiver the active one, if piHPDSR is running two receivers.}
+\action{RX1}{RX1}{B}{Make the first receiver the active one, if \pH is running two receivers.}
 
-\action{RX2}{RX2}{B}{Make the second receiver the active one, if piHPDSR is running two receivers.}
+\action{RX2}{RX2}{B}{Make the second receiver the active one, if \pH is running two receivers.}
 
 \action{SAT}{SAT}{B}{If the SAT mode is either Off or RSAT, change it to SAT. If the SAT mode  is SAT,
 change it to Off. In SAT mode
@@ -4497,7 +4497,7 @@ preferable.}
 
 \action{XIT}{XIT}{E}{Change the XIT value of the transceiver in the range -9999 to 9999 Hz. If a zero value
 is set, XIT is
-automatically disabled, if a non-zero value ist set, XIT is enabled. Each tick of the encoder changes
+automatically disabled, if a non-zero value is set, XIT is enabled. Each tick of the encoder changes
 the value by  the current RIT step size.}
 
 \action{XIT Clear}{XITCL}{B}{Set the XIT value of the transmitter to zero. As a side effect, XIT is
@@ -4542,7 +4542,7 @@ already 8, this is a no-op.}
 
 When using a controller (GPIO, MIDI or G2 front panel), one (and only one) of the encoders can be chosen as
 \textit{the} multi-function encoder by assigning the \bltt{Multi} action (For the G2 Mk2, the assignment
-is fixed, as for all other encoders an push-buttos there).
+is fixed, as for all other encoders an push-buttons there).
  This means that an action (say, changing the AF volume, the TX drive or
 the step attenuator of the RF front-end) can be dynamically assigned to that encoder, making it very
 facile to use a single ,,knob'' for various purposes. One has to sacrifice either another encoder
@@ -4894,7 +4894,7 @@ $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: AGC OFF, p
 $\phantom{\Big|}$\textbf{\large ID} & Get radio model ID \\\cline{1-2}
 $\phantom{\Big|}${\large Read} & {ID;} \\\hline
 $\phantom{\Big|}${\large Response} & {IDp$_1$p$_1$p$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{piHPSDR responds ID019; (so does the Kenwood TS-2000)} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{/pH responds ID019; (so does the Kenwood TS-2000)} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -6242,7 +6242,7 @@ In this case it is strongly recommended that the audio never goes analog, but is
 exchanged (transferred to and from)
 as digital data between \pH and the digi mode program. To this end, you need
 virtual audio devices known as {\color{red} virtual audio cables} or {\color{red}
-loopbacks}. A virtual audio cable is a pair of connected (virtual) audio devices,
+loop-backs}. A virtual audio cable is a pair of connected (virtual) audio devices,
 one input (,,microphone'') device and one output (,,headphone'') device. You can,
 for example, open the output device of such a virtual cable in program X at a place
 where you could also open a device driving a headphone. In another program Y, you can
@@ -6369,7 +6369,7 @@ takes care WSJTX switches \pH to DIGU mode, and using \rett{Fake It} for the Spl
 Operation method is just my personal preference.
 
 \subsection[PulseAudio: NullSink modules]{PulseAudio: Null-Sink modules as virtual audio cables}
-There are no explicit loopback devices with PulseAudio since they are not needed.
+There are no explicit loop-back devices with PulseAudio since they are not needed.
 For \textit{every} PulseAudio output device, there is a corresponding ,,Monitor'' device
 which can be used for sound input, and where the data sent to the primary (output) device
 can be red. This means, you can send the RX audio to the headphone device as you would do
@@ -7224,7 +7224,7 @@ in the Applications folder. It is suggested to drag this application into the ,,
 access.
 
 On a plain vanilla MacOS, even the most basic commands for doing programming are not installed
-by default. For example, the \grtt{git} command used below as the first step  to download piHPSDR is
+by default. For example, the \grtt{git} command used below as the first step  to download /pH is
 not present by default. But this is easily cured. Simply open a terminal window and type in the command
 
 \grtt{xcode-select --install}
