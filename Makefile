@@ -39,7 +39,7 @@ AUDIO=PULSE
 # AUDIO        | If AUDIO=ALSA, use ALSA rather than PulseAudio on Linux
 #
 # If you want to use a non-default compile time option, write them
-# into a file "make.pihpsdr.config". So, for example, if you want to
+# into a file "make.config.pihpsdr". So, for example, if you want to
 # disable GPIO and have AUDIO=ALSA, create a file make.config.pihpsdr in
 # the pihpsdr directory with two lines that read
 #
