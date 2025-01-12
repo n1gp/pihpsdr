@@ -119,7 +119,7 @@ cd $THISDIR/SoapySDR
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
-make -j 4
+make
 sudo make install
 sudo ldconfig
 
@@ -144,7 +144,7 @@ sudo ldconfig
 #mkdir build
 #cd build
 #cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
-#make -j 4
+#make
 #sudo make install
 #sudo ldconfig
 
@@ -168,7 +168,7 @@ cd $THISDIR/SoapyPlutoSDR
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
-make -j 4
+make
 sudo make install
 sudo ldconfig
 
@@ -192,7 +192,7 @@ cd $THISDIR/SoapyRTLSDR
 mkdir build
 cd build
 cmake -DCMAKE_INSTALL_PREFIX=/usr/local ..
-make -j 4
+make
 sudo make install
 sudo ldconfig
 

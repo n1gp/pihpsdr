@@ -4385,6 +4385,15 @@ RIT is automatically disabled, if a non-zero value is set, RIT is enabled.}
 
 \action{RIT Step}{RITST}{B}{Cycle through the possible values (1 Hz, 10 Hz, 100 Hz) of the RIT step.}
 
+\action{RIT/XIT}{RITXIT}{E}{This dual-purpose encoder changes the XIT value if (and only if) XIT is enabled
+and RIT is disabled for the active receiver, otherwise it changes the RIT value of the active receiver.}
+
+\action{RIT/XIT Cycle}{RITXTCYC}{B}{Cycle between RIT on, XIT on, and both off. This is meant to be used
+with the RIT/XIT dual-purpose encoder.}
+
+\action{RIT/XIT Clear}{RITXTCLR}{B}{Clear both the XIT value, and the RIT value of the active receiver.
+As a side effect, both RIT and XIT will be disabled.}
+
 \action{RSAT}{RSAT}{B}{If the SAT mode is either Off or SAT, change it to RSAT. If the SAT mode  is RSAT,
 change it to Off. In RSAT mode
 all VFO frequency \textit{changes} applied to one of the two VFOs will be applied to the other VFO with the
