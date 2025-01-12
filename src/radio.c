@@ -1057,8 +1057,8 @@ void radio_start_radio() {
     // (until changed in the RADIO menu)
     //
     atlas_penelope = 1;                 // TX present, do IQ scaling
-    atlas_clock_source_10mhz = 2;       // default: Mercury
-    atlas_clock_source_128mhz = 1;      // default: Mercury
+    atlas_clock_source_10mhz = 1;       // default: Penelope
+    atlas_clock_source_128mhz = 0;      // default: Penelope
     atlas_mic_source = 1;               // default: Mic source = Penelope
   }
 
@@ -1069,7 +1069,7 @@ void radio_start_radio() {
   case DEVICE_METIS:
   case DEVICE_OZY:
   case NEW_DEVICE_ATLAS:
-    pa_power = PA_1W;
+    pa_power = (filter_board == ALEX) ? PA_100W : PA_1W;
     break;
 
   case DEVICE_HERMES_LITE2:
@@ -2206,7 +2206,8 @@ void radio_calc_drive_level() {
     transmitter->do_scale = 1;
   }
 
-  if (device == DEVICE_HERMES_LITE2 || device == NEW_DEVICE_HERMES_LITE2) {
+  if (device == DEVICE_HERMES_LITE2 || device == NEW_DEVICE_HERMES_LITE2 ||
+    ((device == NEW_DEVICE_ATLAS) && (atlas_penelope == 1))) {
     //
     // Calculate a combination of TX attenuation (values from -7.5 to 0 dB are encoded as 0, 16, 32, ..., 240)
     // and a TX IQ scaling. If level is above 107, the scale factor will be between 0.94 and 1.00, but if

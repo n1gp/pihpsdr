@@ -562,11 +562,13 @@ void ps_menu(GtkWidget *parent) {
   gtk_grid_attach(GTK_GRID(grid), twotone_b, col, row, 1, 1);
   g_signal_connect(twotone_b, "toggled", G_CALLBACK(twotone_cb), NULL);
   col++;
+  if (device != NEW_DEVICE_ATLAS) {
   GtkWidget *auto_b = gtk_check_button_new_with_label("Auto Attenuate");
   gtk_widget_set_name(auto_b, "boldlabel");
   gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (auto_b), transmitter->auto_on);
   gtk_grid_attach(GTK_GRID(grid), auto_b, col, row, 1, 1);
   g_signal_connect(auto_b, "toggled", G_CALLBACK(auto_cb), NULL);
+  }
   col++;
   GtkWidget *reset_b = gtk_button_new_with_label("OFF");
   gtk_widget_show(reset_b);
@@ -737,6 +739,8 @@ void ps_menu(GtkWidget *parent) {
 
   if (device == DEVICE_HERMES_LITE2 || device == NEW_DEVICE_HERMES_LITE2) {
     tx_att_spin = gtk_spin_button_new_with_range(-29.0, 31.0, 1.0);
+  } else if (device == NEW_DEVICE_ATLAS) {
+    tx_att_spin = gtk_spin_button_new_with_range(  0.0, 30.0, 10.0);
   } else {
     tx_att_spin = gtk_spin_button_new_with_range(  0.0, 31.0, 1.0);
   }

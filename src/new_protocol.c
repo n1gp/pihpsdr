@@ -969,7 +969,16 @@ static void new_protocol_high_priority() {
     //
     // ANAN7000/8000 and SATURN do not have ALEX attenuators.
     //
-    switch (receiver[0]->alex_attenuation) {
+
+    // Use alex attenators for tx attenuation on atlas
+    int atlas_tx_attn;
+    if (device == NEW_DEVICE_ATLAS && radio_is_transmitting()) {
+      atlas_tx_attn = transmitter->attenuation / 10;
+    } else {
+      atlas_tx_attn = receiver[0]->alex_attenuation;
+    }
+
+    switch (atlas_tx_attn) {
     case 0:
       alex0 |= ALEX_ATTENUATION_0dB;
       break;
