@@ -971,14 +971,14 @@ static void new_protocol_high_priority() {
     //
 
     // Use alex attenators for tx attenuation on atlas
-    int atlas_tx_attn;
+    int alex_tx_attenuation;
     if (device == NEW_DEVICE_ATLAS && radio_is_transmitting()) {
-      atlas_tx_attn = transmitter->attenuation / 10;
+      alex_tx_attenuation = transmitter->attenuation / 10;
     } else {
-      atlas_tx_attn = receiver[0]->alex_attenuation;
+      alex_tx_attenuation = receiver[0]->alex_attenuation;
     }
 
-    switch (atlas_tx_attn) {
+    switch (alex_tx_attenuation) {
     case 0:
       alex0 |= ALEX_ATTENUATION_0dB;
       break;
