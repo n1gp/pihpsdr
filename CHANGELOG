@@ -1,10 +1,25 @@
 LIST OF RECENT PIHPSDR CHANGES
 ==============================
 
+January 2025:
+-------------
+
+- Better support for G2's with uC-controlled panels,
+- including automatic serial port detection
+
 December 2024:
 --------------
 - Added a (stripped-down) TCI server for use with
   logbook programs and/or PAs.
+
+  IMPORTANT: TCI needs the openssl library. This is handled
+  in libinstall.sh but for simple pihpsdr updates, it may
+  be necessary to install the library "by hand":
+
+  on Linux:  sudo apt-get install libssl-dev
+
+  on MacOS:  brew install openssl@3
+
 
 October 2024:
 -------------
