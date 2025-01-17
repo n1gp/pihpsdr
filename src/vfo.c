@@ -624,7 +624,9 @@ void vfo_apply_mode_settings(RECEIVER *rx) {
     tx_set_compressor(transmitter);
     tx_set_dexp(transmitter);
 
+    suppress_popup_sliders = 1;
     set_mic_gain(mode_settings[m].mic_gain);
+    suppress_popup_sliders = 0;
   }
 
   //

@@ -219,6 +219,14 @@ ACTION_TABLE ActionTable[] = {
   {SQUELCH_RX1,         "Squelch\nRX1",         "SQUELCH1",     MIDI_KNOB  | MIDI_WHEEL | CONTROLLER_ENCODER},
   {SQUELCH_RX2,         "Squelch\nRX2",         "SQUELCH2",     MIDI_KNOB  | MIDI_WHEEL | CONTROLLER_ENCODER},
   {SWAP_RX,             "Swap RX",              "SWAPRX",       MIDI_KEY   | CONTROLLER_SWITCH},
+  {TOOLBAR1,            "ToolBar1",             "TBAR1",        MIDI_KEY   | CONTROLLER_SWITCH},
+  {TOOLBAR2,            "ToolBar2",             "TBAR2",        MIDI_KEY   | CONTROLLER_SWITCH},
+  {TOOLBAR3,            "ToolBar3",             "TBAR3",        MIDI_KEY   | CONTROLLER_SWITCH},
+  {TOOLBAR4,            "ToolBar4",             "TBAR4",        MIDI_KEY   | CONTROLLER_SWITCH},
+  {TOOLBAR5,            "ToolBar5",             "TBAR5",        MIDI_KEY   | CONTROLLER_SWITCH},
+  {TOOLBAR6,            "ToolBar6",             "TBAR6",        MIDI_KEY   | CONTROLLER_SWITCH},
+  {TOOLBAR7,            "ToolBar7",             "TBAR7",        MIDI_KEY   | CONTROLLER_SWITCH},
+  {TOOLBAR8,            "ToolBar8",             "TBAR8",        MIDI_KEY   | CONTROLLER_SWITCH},
   {TUNE,                "Tune",                 "TUNE",         MIDI_KEY   | CONTROLLER_SWITCH},
   {TUNE_DRIVE,          "Tune\nDrv",            "TUNDRV",       MIDI_KNOB  | MIDI_WHEEL | CONTROLLER_ENCODER},
   {TUNE_FULL,           "Tune\nFull",           "TUNF",         MIDI_KEY   | CONTROLLER_SWITCH},
@@ -1661,6 +1669,42 @@ int process_action(void *data) {
     }
 
     break;
+
+  //
+  // The TOOLBARn actions simply schedule the action currently associated
+  // with the n-th toolbar button
+  //
+  case TOOLBAR1:
+     schedule_action(toolbar_switches[0].switch_function, a->mode, a->val);
+     break;
+
+  case TOOLBAR2:
+     schedule_action(toolbar_switches[1].switch_function, a->mode, a->val);
+     break;
+
+  case TOOLBAR3:
+     schedule_action(toolbar_switches[2].switch_function, a->mode, a->val);
+     break;
+
+  case TOOLBAR4:
+     schedule_action(toolbar_switches[3].switch_function, a->mode, a->val);
+     break;
+
+  case TOOLBAR5:
+     schedule_action(toolbar_switches[4].switch_function, a->mode, a->val);
+     break;
+
+  case TOOLBAR6:
+     schedule_action(toolbar_switches[5].switch_function, a->mode, a->val);
+     break;
+
+  case TOOLBAR7:
+     schedule_action(toolbar_switches[6].switch_function, a->mode, a->val);
+     break;
+
+  case TOOLBAR8:
+     schedule_action(toolbar_switches[7].switch_function, a->mode, a->val);
+     break;
 
   case TUNE:
     if (a->mode == PRESSED) {

@@ -101,6 +101,8 @@ int TOOLBAR_HEIGHT = 30;
 
 int rx_stack_horizontal = 0;
 
+int suppress_popup_sliders = 0;
+
 int controller = NO_CONTROLLER;
 
 GtkWidget *fixed;
