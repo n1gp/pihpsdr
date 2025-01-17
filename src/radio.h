@@ -293,6 +293,7 @@ extern int METER_HEIGHT;
 extern int MENU_WIDTH;
 extern int rx_stack_horizontal;
 
+extern int suppress_popup_sliders;
 //
 // All global functions declared here start with "radio_",
 // exception: my_combo_attach()

@@ -102,7 +102,7 @@ void DoTheMidi(int action, enum ACTIONtype type, int val) {
       break;
 
     default:
-      t_print("%s: action=%d val=%d\n", __FUNCTION__, action, val);
+      //t_print("%s: action=%d val=%d\n", __FUNCTION__, action, val);
       schedule_action(action, RELATIVE, val);
     }
 
