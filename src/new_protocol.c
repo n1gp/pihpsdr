@@ -656,10 +656,7 @@ static void new_protocol_general() {
 
   if (device == NEW_DEVICE_ATLAS) {
     general_buffer[57] |= atlas_clock_source_10mhz; // 0-Atlas, 1-Penny, 2-Mercury
-
-    if (atlas_clock_source_128mhz) {
-      general_buffer[58] |= 0x04;  // Mercury provides 122 Mhz
-    } // else Penelope provides 122 Mhz
+    general_buffer[58] |= atlas_clock_source_128mhz << 3; // 0-Penny, 1-Mercury
   }
 
   if (!pa_enabled || band->disablePA) {
@@ -908,14 +905,9 @@ static void new_protocol_high_priority() {
     high_priority_buffer_to_radio[1401] = rxband->OCrx << 1;
   }
 
+  // this actually controls a -20dB attenuator on Mercury
   if (device == NEW_DEVICE_ATLAS) {
-    int preamp_mask = !active_receiver->preamp;
-    // this actually controls a -20dB attenuator on Mercury
-    if (active_receiver->adc == 1) {
-      high_priority_buffer_to_radio[1403] = preamp_mask << 1;
-    } else {
-      high_priority_buffer_to_radio[1403] = preamp_mask;
-    }
+     high_priority_buffer_to_radio[1403] = active_receiver->preamp << active_receiver->adc;
 // TBD   high_priority_buffer_to_radio[1402] = User Outputs DB9 pins 1-4
   }
 
@@ -969,16 +961,7 @@ static void new_protocol_high_priority() {
     //
     // ANAN7000/8000 and SATURN do not have ALEX attenuators.
     //
-
-    // Use alex attenators for tx attenuation on atlas
-    int alex_tx_attenuation;
-    if (device == NEW_DEVICE_ATLAS && radio_is_transmitting()) {
-      alex_tx_attenuation = transmitter->attenuation / 10;
-    } else {
-      alex_tx_attenuation = receiver[0]->alex_attenuation;
-    }
-
-    switch (alex_tx_attenuation) {
+    switch (receiver[0]->alex_attenuation) {
     case 0:
       alex0 |= ALEX_ATTENUATION_0dB;
       break;
@@ -1400,6 +1383,7 @@ static void new_protocol_high_priority() {
 
   if (xmit && transmitter->puresignal) {
     high_priority_buffer_to_radio[1442] = transmitter->attenuation;
+    high_priority_buffer_to_radio[1443] = transmitter->attenuation;
   }
 
   //

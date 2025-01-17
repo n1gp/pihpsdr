@@ -66,7 +66,12 @@ static void random_cb(GtkWidget *widget, gpointer data) {
 }
 
 static void preamp_cb(GtkWidget *widget, gpointer data) {
-  active_receiver->preamp = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  // Mercury has an attenuator
+  if (device == NEW_DEVICE_ATLAS) {
+    active_receiver->preamp = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget)) ^ 1;
+  } else {
+    active_receiver->preamp = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  }
 }
 
 static void alex_att_cb(GtkWidget *widget, gpointer data) {
@@ -311,7 +316,12 @@ void rx_menu(GtkWidget *parent) {
     if (have_preamp) {
       GtkWidget *preamp_b = gtk_check_button_new_with_label("Preamp");
       gtk_widget_set_name(preamp_b, "boldlabel");
-      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (preamp_b), active_receiver->preamp);
+      // Mercury has an attenuator
+      if (device == NEW_DEVICE_ATLAS) {
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (preamp_b), !active_receiver->preamp);
+      } else {
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (preamp_b), active_receiver->preamp);
+      }
       gtk_grid_attach(GTK_GRID(grid), preamp_b, 0, row, 1, 1);
       g_signal_connect(preamp_b, "toggled", G_CALLBACK(preamp_cb), NULL);
       row++;
