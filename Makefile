@@ -368,6 +368,7 @@ TCI_LIBS=`$(PKG_CONFIG) --libs openssl`
 TCI_SOURCES=src/tci.c
 TCI_OBJS=src/tci.o
 endif
+CPP_INCLUDE += `$(PKG_CONFIG) --cflags openssl`
 CPP_DEFINES += -DTCI
 CPP_SOURCES += src/tci.c
 
@@ -416,7 +417,7 @@ OPTIONS=$(MIDI_OPTIONS) $(USBOZY_OPTIONS) \
 	$(AUDIO_OPTIONS) $(EXTNR_OPTIONS) $(TCI_OPTIONS) \
 	-D GIT_DATE='"$(GIT_DATE)"' -D GIT_VERSION='"$(GIT_VERSION)"' -D GIT_COMMIT='"$(GIT_COMMIT)"'
 
-INCLUDES=$(GTKINCLUDE) $(WDSP_INCLUDE) $(AUDIO_INCLUDE) $(STEMLAB_INCLUDE)
+INCLUDES=$(GTKINCLUDE) $(WDSP_INCLUDE) $(AUDIO_INCLUDE) $(STEMLAB_INCLUDE) $(TCI_INCLUDE)
 COMPILE=$(CC) $(CFLAGS) $(OPTIONS) $(INCLUDES)
 
 .c.o:
@@ -873,7 +874,8 @@ src/actions.o: src/new_menu.h src/new_protocol.h src/MacOS.h src/ps_menu.h
 src/actions.o: src/agc.h src/filter.h src/band.h src/bandstack.h
 src/actions.o: src/noise_menu.h src/client_server.h src/ext.h src/zoompan.h
 src/actions.o: src/gpio.h src/toolbar.h src/iambic.h src/store.h
-src/actions.o: src/equalizer_menu.h src/message.h src/mystring.h
+src/actions.o: src/equalizer_menu.h src/exit_menu.h src/message.h
+src/actions.o: src/mystring.h
 src/agc_menu.o: src/new_menu.h src/agc_menu.h src/agc.h src/band.h
 src/agc_menu.o: src/bandstack.h src/radio.h src/adc.h src/dac.h
 src/agc_menu.o: src/discovered.h src/receiver.h src/transmitter.h src/vfo.h
@@ -1107,8 +1109,7 @@ src/rigctl.o: src/filter.h src/mode.h src/band.h src/bandstack.h
 src/rigctl.o: src/filter_menu.h src/vfo.h src/agc.h src/store.h src/ext.h
 src/rigctl.o: src/client_server.h src/rigctl_menu.h src/noise_menu.h
 src/rigctl.o: src/new_protocol.h src/MacOS.h src/old_protocol.h src/iambic.h
-src/rigctl.o: src/new_menu.h src/zoompan.h src/exit_menu.h src/message.h
-src/rigctl.o: src/mystring.h
+src/rigctl.o: src/new_menu.h src/zoompan.h src/message.h src/mystring.h
 src/rigctl_menu.o: src/new_menu.h src/rigctl_menu.h src/rigctl.h src/band.h
 src/rigctl_menu.o: src/bandstack.h src/radio.h src/adc.h src/dac.h
 src/rigctl_menu.o: src/discovered.h src/receiver.h src/transmitter.h

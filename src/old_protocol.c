@@ -1389,6 +1389,8 @@ static void process_ozy_byte(int b) {
   case SYNC_1:
     if (b == SYNC) {
       state++;
+    } else {
+      state = SYNC_0;
     }
 
     break;
@@ -1396,6 +1398,8 @@ static void process_ozy_byte(int b) {
   case SYNC_2:
     if (b == SYNC) {
       state++;
+    } else {
+      state = SYNC_0;
     }
 
     break;

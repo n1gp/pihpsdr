@@ -3,9 +3,11 @@ GNUmakefile
 *.log
 *.toc
 *.o
+*.a
 *.diff
 *.orig
-pihpsdr
+make.config.pihpsdr
+/pihpsdr
 pihpsdr.app
 hpsdrsim
 wdspWisdom*
@@ -18,4 +20,3 @@ LINUX/SoapyPlutoSDR
 LINUX/SoapyRTLSDR
 release/LatexManual/piHPSDR-Manual.pdf
 wdsp/WDSP_Guide.pdf
-wdsp/libwdsp.a
