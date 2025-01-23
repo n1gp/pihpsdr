@@ -26,9 +26,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include "radio.h"
-#include "protocols.h"
+
 #include "property.h"
+#include "protocols.h"
+#include "radio.h"
 
 static GtkWidget *dialog;
 

@@ -21,54 +21,55 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "audio.h"
-#include "new_menu.h"
 #include "about_menu.h"
-#include "exit_menu.h"
-#include "radio_menu.h"
-#include "rx_menu.h"
+#include "actions.h"
+#include "agc_menu.h"
 #include "ant_menu.h"
-#include "display_menu.h"
-#include "pa_menu.h"
-#include "rigctl_menu.h"
-#include "oc_menu.h"
-#include "cw_menu.h"
-#include "store_menu.h"
-#include "xvtr_menu.h"
-#include "equalizer_menu.h"
-#include "radio.h"
-#include "meter_menu.h"
+#include "audio.h"
 #include "band_menu.h"
 #include "bandstack_menu.h"
-#include "mode_menu.h"
-#include "filter_menu.h"
-#include "noise_menu.h"
-#include "agc_menu.h"
-#include "vox_menu.h"
+#include "cw_menu.h"
+#include "display_menu.h"
 #include "diversity_menu.h"
-#include "tx_menu.h"
-#include "ps_menu.h"
 #include "encoder_menu.h"
-#include "switch_menu.h"
-#include "toolbar_menu.h"
-#include "vfo_menu.h"
+#include "equalizer_menu.h"
+#include "exit_menu.h"
 #include "fft_menu.h"
-#include "main.h"
-#include "actions.h"
+#include "filter_menu.h"
+#include "g2panel_menu.h"
 #include "gpio.h"
-#include "old_protocol.h"
-#include "new_protocol.h"
-#ifdef CLIENT_SERVER
-  #include "server_menu.h"
-#endif
+#include "main.h"
+#include "meter_menu.h"
 #ifdef MIDI
-  #include "midi.h"
   #include "midi_menu.h"
+  #include "midi.h"
 #endif
-#include "screen_menu.h"
+#include "mode_menu.h"
+#include "new_menu.h"
+#include "new_protocol.h"
+#include "noise_menu.h"
+#include "oc_menu.h"
+#include "old_protocol.h"
+#include "pa_menu.h"
+#include "ps_menu.h"
+#include "radio_menu.h"
+#include "radio.h"
+#include "rigctl_menu.h"
+#include "rx_menu.h"
 #ifdef SATURN
   #include "saturn_menu.h"
 #endif
+#ifdef CLIENT_SERVER
+  #include "server_menu.h"
+#endif
+#include "screen_menu.h"
+#include "store_menu.h"
+#include "switch_menu.h"
+#include "toolbar_menu.h"
+#include "tx_menu.h"
+#include "xvtr_menu.h"
+#include "vfo_menu.h"
+#include "vox_menu.h"
 
 GtkWidget *main_menu = NULL;
 GtkWidget *sub_menu = NULL;
@@ -197,6 +198,12 @@ static gboolean switch_cb (GtkWidget *widget, GdkEventButton *event, gpointer da
 }
 
 #endif
+
+static gboolean g2panel_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
+  cleanup();
+  g2panel_menu(top_window);
+  return TRUE;
+}
 
 static gboolean toolbar_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   cleanup();
@@ -720,6 +727,14 @@ void new_menu() {
     }
 
 #endif
+
+    if (controller == G2_V2) {
+      GtkWidget *g2panel_b = gtk_button_new_with_label("G2 Panel");
+      g_signal_connect (g2panel_b, "button-press-event", G_CALLBACK(g2panel_cb), NULL);
+      gtk_grid_attach(GTK_GRID(grid), g2panel_b, col, row, 1, 1);
+      row++;
+    }
+
     // cppcheck-suppress redundantAssignment
     row = maxrow;
     //

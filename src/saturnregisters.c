@@ -30,14 +30,14 @@
 //
 //////////////////////////////////////////////////////////////
 
-#include "saturnregisters.h"
-#include "saturndrivers.h"
-#include "message.h"
 #include <stdlib.h>                     // for function min()
 #include <math.h>
 #include <unistd.h>
 #include <semaphore.h>
 
+#include "saturndrivers.h"
+#include "saturnregisters.h"
+#include "message.h"
 //
 // semaphores to protect registers that are accessed from several threads
 //

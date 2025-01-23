@@ -22,15 +22,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "new_menu.h"
-#include "radio.h"
-#include "toolbar.h"
-#include "transmitter.h"
-#include "new_protocol.h"
-#include "vfo.h"
 #include "ext.h"
 #include "message.h"
 #include "mystring.h"
+#include "new_menu.h"
+#include "new_protocol.h"
+#include "radio.h"
+#include "toolbar.h"
+#include "transmitter.h"
+#include "vfo.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *feedback_l;

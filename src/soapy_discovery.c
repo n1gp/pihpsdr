@@ -22,10 +22,12 @@
 #include <string.h>
 #include <SoapySDR/Device.h>
 #include <SoapySDR/Formats.h>
+
+
 #include "discovered.h"
-#include "soapy_discovery.h"
 #include "message.h"
 #include "mystring.h"
+#include "soapy_discovery.h"
 
 static int rtlsdr_count = 0;
 static int sdrplay_count = 0;

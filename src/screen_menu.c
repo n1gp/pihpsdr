@@ -19,11 +19,11 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 
-#include "radio.h"
-#include "new_menu.h"
-#include "main.h"
 #include "appearance.h"
+#include "main.h"
 #include "message.h"
+#include "new_menu.h"
+#include "radio.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *wide_b = NULL;

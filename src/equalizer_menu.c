@@ -23,14 +23,14 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "main.h"
-#include "new_menu.h"
 #include "equalizer_menu.h"
-#include "radio.h"
 #include "ext.h"
-#include "vfo.h"
-#include "transmitter.h"
+#include "main.h"
 #include "message.h"
+#include "new_menu.h"
+#include "radio.h"
+#include "transmitter.h"
+#include "vfo.h"
 
 static GtkWidget *dialog = NULL;
 

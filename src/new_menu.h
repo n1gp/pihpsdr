@@ -16,6 +16,11 @@
 *
 */
 
+#ifndef _NEW_MENU_H_
+#define _NEW_MENU_H_
+
+#include <gtk/gtk.h>
+
 extern GtkWidget *sub_menu;
 extern GtkWidget *main_menu;
 
@@ -57,3 +62,5 @@ enum _active_menu {
 };
 
 extern int active_menu;
+
+#endif

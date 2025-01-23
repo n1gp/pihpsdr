@@ -16,13 +16,11 @@
 *
 */
 
-#ifndef _TOOLBAR_H
-#define _TOOLBAR_H
+#include <gtk/gtk.h>
 
 #include "gpio.h"
 
 extern int function;
-
 extern SWITCH *toolbar_switches;
 
 void update_toolbar_labels(void);
@@ -43,5 +41,3 @@ void sim_s6_released_cb(GtkWidget *widget, gpointer data);
 void sim_function_cb(GtkWidget *widget, gpointer data);
 
 GtkWidget *toolbar_init(int my_width, int my_height);
-
-#endif

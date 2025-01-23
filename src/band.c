@@ -20,8 +20,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bandstack.h"
 #include "band.h"
+#include "bandstack.h"
 #include "filter.h"
 #include "mode.h"
 #include "property.h"

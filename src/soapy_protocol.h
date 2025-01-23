@@ -16,8 +16,11 @@
 *
 */
 
-#ifndef _SOAPY_PROTOCOL_H
-#define _SOAPY_PROTOCOL_H
+#include <gtk/gtk.h>
+#include <SoapySDR/Device.h>
+
+#include "receiver.h"
+#include "transmitter.h"
 
 SoapySDRDevice *get_soapy_device(void);
 
@@ -46,4 +49,3 @@ void soapy_protocol_set_tx_gain_element(TRANSMITTER *tx, char *name, int gain);
 int soapy_protocol_get_tx_gain_element(TRANSMITTER *tx, char *name);
 void soapy_protocol_iq_samples(float isample, float qsample);
 void soapy_protocol_set_mic_sample_rate(int rate);
-#endif

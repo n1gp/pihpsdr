@@ -16,6 +16,33 @@
 *
 */
 
+#include <gtk/gtk.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <fcntl.h>
+#include <poll.h>
+#include <sched.h>
+#include <pthread.h>
+#include <semaphore.h>
+#include <time.h>
+#include <sys/mman.h>
+
+#include "ext.h"
+#include "gpio.h"
+#include "iambic.h"
+#include "main.h"
+#include "message.h"
+#include "mode.h"
+#include "new_protocol.h"
+#include "radio.h"
+#include "transmitter.h"
+#include "vfo.h"
+
 /*
 *
 * 10/12/2016, Rick Koch / N1GP adapted Phil's verilog code from
@@ -169,32 +196,6 @@
  *
  **************************************************************************************************************
  */
-
-#include <gtk/gtk.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <fcntl.h>
-#include <poll.h>
-#include <sched.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <time.h>
-#include <sys/mman.h>
-
-#include "main.h"
-#include "gpio.h"
-#include "radio.h"
-#include "new_protocol.h"
-#include "iambic.h"
-#include "transmitter.h"
-#include "ext.h"
-#include "mode.h"
-#include "vfo.h"
-#include "message.h"
 
 static void* keyer_thread(void *arg);
 static pthread_t keyer_thread_id;

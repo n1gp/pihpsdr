@@ -16,6 +16,7 @@
 *
 */
 
-void equalizer_menu(GtkWidget *parent);
+#include <gtk/gtk.h>
 
+void equalizer_menu(GtkWidget *parent);
 void update_eq(void);

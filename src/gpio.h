@@ -16,8 +16,10 @@
 *
 */
 
-#ifndef _GPIO_H
-#define _GPIO_H
+#ifndef _GPIO_H_
+#define _GPIO_H_
+
+#include <gtk/gtk.h>
 
 #define MAX_ENCODERS 5
 #define MAX_SWITCHES 16

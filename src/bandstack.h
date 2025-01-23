@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _BANDSTACK_H
-#define _BANDSTACK_H
+#ifndef _BANDSTACK_H_
+#define _BANDSTACK_H_
 
 /* --------------------------------------------------------------------------*/
 /**

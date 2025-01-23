@@ -23,39 +23,37 @@
 
 #include <wdsp.h>
 
+#include "audio.h"
 #include "band.h"
 #include "bandstack.h"
 #include "channel.h"
-#include "main.h"
-#include "receiver.h"
-#include "meter.h"
+#include "ext.h"
 #include "filter.h"
-#include "mode.h"
-#include "property.h"
-#include "radio.h"
-#include "vfo.h"
-#include "vox.h"
+#include "main.h"
 #include "meter.h"
-#include "toolbar.h"
-#include "tx_panadapter.h"
-#include "waterfall.h"
-#include "receiver.h"
-#include "transmitter.h"
+#include "message.h"
+#include "mystring.h"
+#include "mode.h"
 #include "new_protocol.h"
 #include "old_protocol.h"
-#include "ps_menu.h"
-#ifdef SOAPYSDR
-  #include "soapy_protocol.h"
-#endif
-#include "audio.h"
-#include "ext.h"
-#include "sliders.h"
 #ifdef USBOZY
   #include "ozyio.h"
 #endif
+#include "property.h"
+#include "ps_menu.h"
+#include "radio.h"
+#include "receiver.h"
 #include "sintab.h"
-#include "message.h"
-#include "mystring.h"
+#include "sliders.h"
+#ifdef SOAPYSDR
+  #include "soapy_protocol.h"
+#endif
+#include "toolbar.h"
+#include "transmitter.h"
+#include "tx_panadapter.h"
+#include "vfo.h"
+#include "vox.h"
+#include "waterfall.h"
 
 #define min(x,y) (x<y?x:y)
 #define max(x,y) (x<y?y:x)

@@ -23,30 +23,28 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "main.h"
-#include "discovered.h"
-#include "new_menu.h"
-#include "radio_menu.h"
+#include "actions.h"
 #include "adc.h"
 #include "band.h"
-#include "filter.h"
-#include "radio.h"
-#include "receiver.h"
-#include "sliders.h"
-#include "new_protocol.h"
-#include "old_protocol.h"
-#ifdef SOAPYSDR
-  #include "soapy_protocol.h"
-#endif
-#include "actions.h"
-#ifdef GPIO
-  #include "gpio.h"
-#endif
-#include "vfo.h"
-#include "ext.h"
 #ifdef CLIENT_SERVER
   #include "client_server.h"
 #endif
+#include "discovered.h"
+#include "ext.h"
+#include "filter.h"
+#include "gpio.h"
+#include "main.h"
+#include "new_menu.h"
+#include "new_protocol.h"
+#include "old_protocol.h"
+#include "radio_menu.h"
+#include "radio.h"
+#include "receiver.h"
+#include "sliders.h"
+#ifdef SOAPYSDR
+  #include "soapy_protocol.h"
+#endif
+#include "vfo.h"
 
 static GtkWidget *dialog = NULL;
 

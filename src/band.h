@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _BAND_H
-#define _BAND_H
+#ifndef _BAND_H_
+#define _BAND_H_
 
 #include <gtk/gtk.h>
 #include "bandstack.h"

@@ -37,20 +37,20 @@
 #include <signal.h>
 
 #include "MacOS.h"
-#include "main.h"
 #include "audio.h"
 #include "band.h"
 #include "discovered.h"
-#include "mode.h"
+#include "ext.h"
 #include "filter.h"
+#include "iambic.h"
+#include "main.h"
+#include "message.h"
+#include "mode.h"
 #include "old_protocol.h"
 #include "radio.h"
 #include "receiver.h"
 #include "transmitter.h"
 #include "vfo.h"
-#include "ext.h"
-#include "iambic.h"
-#include "message.h"
 
 #define min(x,y) (x<y?x:y)
 

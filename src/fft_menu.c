@@ -23,10 +23,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "new_menu.h"
 #include "fft_menu.h"
-#include "radio.h"
 #include "message.h"
+#include "new_menu.h"
+#include "radio.h"
 
 static GtkWidget *dialog = NULL;
 

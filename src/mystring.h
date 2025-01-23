@@ -22,13 +22,8 @@
 // Therefore we include them with the name capitalized in this program.
 //
 
-#ifndef _MYSTRING_H_
-#define _MYSTRING_H_
-
 #include <sys/types.h>
-#include <string.h>
 
-size_t STRLCAT(char *dst, const char *src, size_t dsize);
-size_t STRLCPY(char *dst, const char *src, size_t dsize);
+extern size_t STRLCAT(char *dst, const char *src, size_t dsize);
+extern size_t STRLCPY(char *dst, const char *src, size_t dsize);
 
-#endif

@@ -28,33 +28,33 @@
 #include <arpa/inet.h>
 #include <sys/stat.h>
 
-#include "discovered.h"
-#include "old_discovery.h"
-#include "new_discovery.h"
-#ifdef SOAPYSDR
-  #include "soapy_discovery.h"
+#include "actions.h"
+#ifdef CLIENT_SERVER
+  #include "client_server.h"
 #endif
+#ifdef GPIO
+  #include "configure.h"
+#endif
+#include "discovered.h"
+#include "ext.h"
+#include "gpio.h"
 #include "main.h"
-#include "radio.h"
+#include "message.h"
+#include "mystring.h"
+#include "new_discovery.h"
+#include "old_discovery.h"
 #ifdef USBOZY
   #include "ozyio.h"
+#endif
+#include "property.h"
+#include "protocols.h"
+#include "radio.h"
+#ifdef SOAPYSDR
+  #include "soapy_discovery.h"
 #endif
 #ifdef STEMLAB_DISCOVERY
   #include "stemlab_discovery.h"
 #endif
-#include "ext.h"
-#include "gpio.h"
-#ifdef GPIO
-  #include "actions.h"
-  #include "configure.h"
-#endif
-#include "protocols.h"
-#ifdef CLIENT_SERVER
-  #include "client_server.h"
-#endif
-#include "property.h"
-#include "message.h"
-#include "mystring.h"
 
 static GtkWidget *discovery_dialog;
 static DISCOVERED *d;

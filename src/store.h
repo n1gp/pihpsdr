@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _STORE_H
-#define _STORE_H
+#ifndef _STORE_H_
+#define _STORE_H_
 
 #include <gtk/gtk.h>
 #include "bandstack.h"

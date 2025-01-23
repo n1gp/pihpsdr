@@ -16,10 +16,7 @@
 *
 */
 
-#ifndef _ZOOMPAN_H
-#define _ZOOMPAN_H
-
-#define MAX_ZOOM 8
+#include <gtk/gtk.h>
 
 extern GtkWidget *zoompan_init(int my_width, int my_height);
 extern int zoompan_active_receiver_changed(void *data);
@@ -29,4 +26,3 @@ extern void set_zoom(int rx, double value);
 
 extern void remote_set_pan(int rx, double value);
 extern void remote_set_zoom(int rx, double value);
-#endif

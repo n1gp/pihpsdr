@@ -15,8 +15,8 @@
 *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 *
 */
-#ifndef _RECEIVER_H
-#define _RECEIVER_H
+#ifndef _RECEIVER_H_
+#define _RECEIVER_H_
 
 #include <gtk/gtk.h>
 #ifdef PORTAUDIO

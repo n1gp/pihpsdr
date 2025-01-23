@@ -16,6 +16,28 @@
 *
 */
 
+#include <gtk/gtk.h>
+#include <stdint.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <sched.h>
+#include <semaphore.h>
+
+#include <alsa/asoundlib.h>
+
+#include "audio.h"
+#include "message.h"
+#include "mode.h"
+#include "radio.h"
+#include "receiver.h"
+#include "transmitter.h"
+#include "vfo.h"
+
 //
 // Some important parameters
 // Note that we keep the playback buffers at half-filling so
@@ -36,28 +58,6 @@ static const int out_cw_border = 1536;                // separates CW-TX from ot
 static const int cw_mid_water  = 1024;                // target buffer filling for CW
 static const int cw_low_water  =  896;                // low water mark for CW
 static const int cw_high_water = 1152;                // high water mark for CW
-
-#include <gtk/gtk.h>
-#include <stdint.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sched.h>
-#include <semaphore.h>
-
-#include <alsa/asoundlib.h>
-
-#include "radio.h"
-#include "receiver.h"
-#include "transmitter.h"
-#include "audio.h"
-#include "mode.h"
-#include "vfo.h"
-#include "message.h"
 
 int audio = 0;
 GMutex audio_mutex;

@@ -16,10 +16,7 @@
 *
 */
 
-#ifndef _SWITCH_MENU_H
-#define _SWITCH_MENU_H
+#include <gtk/gtk.h>
 
 extern void switch_menu(GtkWidget *parent);
-
 extern void switch_select(int pos);
-#endif

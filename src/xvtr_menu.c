@@ -22,15 +22,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "new_menu.h"
 #include "band.h"
 #include "filter.h"
-#include "mode.h"
-#include "xvtr_menu.h"
-#include "radio.h"
-#include "vfo.h"
 #include "message.h"
 #include "mystring.h"
+#include "mode.h"
+#include "new_menu.h"
+#include "radio.h"
+#include "vfo.h"
+#include "xvtr_menu.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *title[BANDS + XVTRS];

@@ -16,4 +16,8 @@
 *
 */
 
+#include <gtk/gtk.h>
+
+#include "actions.h"
+
 extern int action_dialog(GtkWidget *parent, int filter, enum ACTION current);

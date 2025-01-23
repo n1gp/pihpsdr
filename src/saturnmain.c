@@ -51,15 +51,14 @@
 #include <semaphore.h>
 #include <sys/stat.h>
 
-#include "saturnregisters.h"              // register I/O for Saturn
-#include "saturndrivers.h"                      // version I/O for Saturn
-#include "saturnmain.h"
-#include "saturnserver.h"
-
 #include "discovered.h"
-#include "new_protocol.h"
 #include "message.h"
 #include "mystring.h"
+#include "new_protocol.h"
+#include "saturndrivers.h"                      // version I/O for Saturn
+#include "saturnmain.h"
+#include "saturnregisters.h"              // register I/O for Saturn
+#include "saturnserver.h"
 
 extern sem_t DDCInSelMutex;                 // protect access to shared DDC input select register
 extern sem_t DDCResetFIFOMutex;             // protect access to FIFO reset register

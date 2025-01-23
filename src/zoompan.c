@@ -22,19 +22,19 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "actions.h"
 #include "appearance.h"
-#include "main.h"
-#include "receiver.h"
-#include "radio.h"
-#include "vfo.h"
-#include "sliders.h"
-#include "zoompan.h"
 #ifdef CLIENT_SERVER
   #include "client_server.h"
 #endif
-#include "actions.h"
 #include "ext.h"
+#include "main.h"
 #include "message.h"
+#include "receiver.h"
+#include "radio.h"
+#include "sliders.h"
+#include "vfo.h"
+#include "zoompan.h"
 
 static int width;
 static int height;
@@ -47,6 +47,8 @@ static GtkWidget *pan_label;
 static GtkWidget *pan_scale;
 static gulong pan_signal_id;
 static GMutex pan_zoom_mutex;
+
+#define MAX_ZOOM 8
 
 int zoompan_active_receiver_changed(void *data) {
   if (display_zoompan) {

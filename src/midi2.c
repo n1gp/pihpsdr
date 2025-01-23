@@ -33,17 +33,8 @@
   #include "MacOS.h"  // emulate clock_gettime on old MacOS systems
 #endif
 
-#include "receiver.h"
-#include "discovered.h"
-#include "adc.h"
-#include "dac.h"
-#include "transmitter.h"
-#include "radio.h"
-#include "main.h"
-#include "actions.h"
-#include "midi.h"
-#include "alsa_midi.h"
 #include "message.h"
+#include "midi.h"
 
 struct desc *MidiCommandsTable[129];
 

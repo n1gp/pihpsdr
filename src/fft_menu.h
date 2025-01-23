@@ -16,4 +16,6 @@
 *
 */
 
+#include <gtk/gtk.h>
+
 void fft_menu(GtkWidget *parent);

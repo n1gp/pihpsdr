@@ -24,10 +24,10 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "new_menu.h"
-#include "server_menu.h"
-#include "radio.h"
 #include "client_server.h"
+#include "new_menu.h"
+#include "radio.h"
+#include "server_menu.h"
 
 static GtkWidget *dialog = NULL;
 

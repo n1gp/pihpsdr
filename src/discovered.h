@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _DISCOVERED_H
-#define _DISCOVERED_H
+#ifndef _DISCOVERED_H_
+#define _DISCOVERED_H_
 
 #include <netinet/in.h>
 #ifdef SOAPYSDR

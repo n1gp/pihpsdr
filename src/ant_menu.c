@@ -23,15 +23,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "new_menu.h"
 #include "ant_menu.h"
 #include "band.h"
-#include "radio.h"
+#include "message.h"
+#include "new_menu.h"
 #include "new_protocol.h"
+#include "radio.h"
 #ifdef SOAPYSDR
   #include "soapy_protocol.h"
 #endif
-#include "message.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *grid = NULL;

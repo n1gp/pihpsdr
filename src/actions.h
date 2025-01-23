@@ -19,6 +19,8 @@
 #ifndef _ACTION_H_
 #define _ACTION_H_
 
+#include <sys/types.h>
+
 enum ACTION {
   NO_ACTION = 0,
   A_SWAP_B,

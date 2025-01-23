@@ -23,26 +23,14 @@
 #include <unistd.h>
 #include <termios.h>
 
-#include "main.h"
-#include "discovered.h"
-#include "mode.h"
-#include "filter.h"
-#include "band.h"
-#include "receiver.h"
-#include "transmitter.h"
-#include "receiver.h"
-#include "adc.h"
-#include "dac.h"
-#include "radio.h"
-#include "actions.h"
 #include "action_dialog.h"
-#include "midi.h"
-#include "alsa_midi.h"
-#include "new_menu.h"
-#include "midi_menu.h"
-#include "property.h"
+#include "actions.h"
+#include "main.h"
 #include "message.h"
-#include "mystring.h"
+#include "midi.h"
+#include "new_menu.h"
+#include "property.h"
+#include "radio.h"
 
 int midiIgnoreCtrlPairs = 0;
 

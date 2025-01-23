@@ -20,17 +20,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "bandstack.h"
 #include "band.h"
+#include "bandstack.h"
+#include "ext.h"
 #include "filter.h"
+#include "message.h"
 #include "mode.h"
 #include "property.h"
+#include "radio.h"
 #include "store.h"
 #include "store_menu.h"
-#include "radio.h"
-#include "ext.h"
 #include "vfo.h"
-#include "message.h"
 
 MEM mem[NUM_OF_MEMORYS];  // This makes it a compile time option
 

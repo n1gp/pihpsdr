@@ -16,24 +16,25 @@
 *
 */
 
+#include <gtk/gtk.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <gtk/gtk.h>
-#include "main.h"
+
 #include "discovery.h"
+#include "equalizer_menu.h"
+#include "ext.h"
+#include "main.h"
+#include "new_menu.h"
+#include "noise_menu.h"
+#include "radio.h"
+#include "radio_menu.h"
 #include "receiver.h"
 #include "sliders.h"
 #include "toolbar.h"
 #include "vfo.h"
-#include "radio.h"
-#include "radio_menu.h"
-#include "new_menu.h"
-#include "noise_menu.h"
-#include "ext.h"
 #include "zoompan.h"
-#include "equalizer_menu.h"
 
 //
 // The following calls functions can be called usig g_idle_add

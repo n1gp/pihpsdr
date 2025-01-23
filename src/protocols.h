@@ -16,6 +16,8 @@
 *
 */
 
+#include <gtk/gtk.h>
+
 extern gboolean enable_protocol_1;
 extern gboolean enable_protocol_2;
 extern gboolean enable_saturn_xdma;

@@ -15,5 +15,13 @@
 *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
 *
 */
+
+#ifndef _STORE_MENU_H_
+#define _STORE_MENU_H_
+
+#include <gtk/gtk.h>
+
 #define NUM_OF_MEMORYS 10
 extern void store_menu(GtkWidget *parent);
+
+#endif

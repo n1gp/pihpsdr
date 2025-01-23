@@ -22,31 +22,31 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include "actions.h"
+#include "agc.h"
 #include "appearance.h"
+#include "band.h"
+#include "bandstack.h"
+#include "channel.h"
+#ifdef CLIENT_SERVER
+  #include "client_server.h"
+#endif
+#include "discovered.h"
+#include "ext.h"
+#include "filter.h"
+#include "main.h"
+#include "message.h"
+#include "mode.h"
+#include "new_protocol.h"
+#include "property.h"
+#include "radio.h"
 #include "receiver.h"
 #include "sliders.h"
-#include "mode.h"
-#include "filter.h"
-#include "bandstack.h"
-#include "band.h"
-#include "discovered.h"
-#include "new_protocol.h"
+#include "transmitter.h"
 #ifdef SOAPYSDR
   #include "soapy_protocol.h"
 #endif
 #include "vfo.h"
-#include "agc.h"
-#include "channel.h"
-#include "radio.h"
-#include "transmitter.h"
-#include "property.h"
-#include "main.h"
-#include "ext.h"
-#ifdef CLIENT_SERVER
-  #include "client_server.h"
-#endif
-#include "actions.h"
-#include "message.h"
 
 static int width;
 static int height;

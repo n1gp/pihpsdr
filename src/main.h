@@ -16,11 +16,10 @@
 *
 */
 
-#ifndef _MAIN_H
-#define _MAIN_H
+#ifndef _MAIN_H_
+#define _MAIN_H_
 
-#include <sys/utsname.h>
-extern struct utsname unameData;
+#include <gtk/gtk.h>
 
 enum _controller_enum {
   NO_CONTROLLER = 0,

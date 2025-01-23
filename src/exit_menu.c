@@ -21,23 +21,23 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "main.h"
-#include "new_menu.h"
-#include "exit_menu.h"
-#include "discovery.h"
-#include "radio.h"
-#include "new_protocol.h"
-#include "old_protocol.h"
-#ifdef SOAPYSDR
-  #include "soapy_protocol.h"
-#endif
 #include "actions.h"
+#include "discovery.h"
+#include "exit_menu.h"
 #ifdef GPIO
   #include "gpio.h"
 #endif
+#include "main.h"
 #include "message.h"
+#include "new_menu.h"
+#include "new_protocol.h"
+#include "old_protocol.h"
+#include "radio.h"
 #ifdef SATURN
   #include "saturnmain.h"
+#endif
+#ifdef SOAPYSDR
+  #include "soapy_protocol.h"
 #endif
 
 static GtkWidget *dialog = NULL;

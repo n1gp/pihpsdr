@@ -25,26 +25,24 @@
 #include <semaphore.h>
 #include <arpa/inet.h>
 
-#include "appearance.h"
-#include "agc.h"
-#include "band.h"
-#include "discovered.h"
-#include "radio.h"
-#include "receiver.h"
-#include "transmitter.h"
-#include "rx_panadapter.h"
-#include "vfo.h"
-#include "mode.h"
 #include "actions.h"
-#ifdef GPIO
-  #include "gpio.h"
-#endif
+#include "agc.h"
+#include "appearance.h"
+#include "band.h"
 #ifdef CLIENT_SERVER
   #include "client_server.h"
 #endif
+#include "discovered.h"
+#include "gpio.h"
+#include "mode.h"
+#include "radio.h"
 #ifdef USBOZY
   #include "ozyio.h"
 #endif
+#include "receiver.h"
+#include "rx_panadapter.h"
+#include "transmitter.h"
+#include "vfo.h"
 
 /* Create a new surface of the appropriate size to store our scribbles */
 static gboolean

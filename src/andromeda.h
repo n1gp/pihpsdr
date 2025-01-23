@@ -1,5 +1,5 @@
 /* Copyright (C)
-* 2015 - John Melton, G0ORX/N6LYT
+* 2025 - Christoph van W"ullen, DL1YCF
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -16,24 +16,5 @@
 *
 */
 
-//
-// WDSP channel numbers
-//
-#ifndef _CHANNEL_H_
-#define _CHANNEL_H_
-
-#define CHANNEL_RX0 0
-#define CHANNEL_RX1 1
-#define CHANNEL_RX2 2
-#define CHANNEL_RX3 3
-#define CHANNEL_RX4 4
-#define CHANNEL_RX5 5
-#define CHANNEL_RX6 6
-#define CHANNEL_RX7 7
-#define CHANNEL_TX 8
-#define CHANNEL_BS 9
-#define CHANNEL_SUBRX 10
-#define CHANNEL_AUDIO 11
-
-#endif
-
+int andromeda_execute_button(int p, int v);
+void andromeda_execute_encoder(int p, int v);

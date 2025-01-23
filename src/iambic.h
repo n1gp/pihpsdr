@@ -16,8 +16,8 @@
 * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#ifndef _IAMBIC_H
-#define _IAMBIC_H
+#ifndef _IAMBIC_H_
+#define _IAMBIC_H_
 
 enum {
   CHECK = 0,

@@ -17,6 +17,7 @@
 */
 
 #include <gtk/gtk.h>
+
 #include "css.h"
 #include "message.h"
 

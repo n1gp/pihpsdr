@@ -25,16 +25,15 @@
 
 #include "appearance.h"
 #include "band.h"
-#include "receiver.h"
 #include "meter.h"
-#include "radio.h"
-#include "radio.h"
-#include "version.h"
-#include "mode.h"
-#include "vox.h"
-#include "new_menu.h"
-#include "vfo.h"
 #include "message.h"
+#include "mode.h"
+#include "new_menu.h"
+#include "radio.h"
+#include "receiver.h"
+#include "version.h"
+#include "vfo.h"
+#include "vox.h"
 
 static GtkWidget *meter;
 static cairo_surface_t *meter_surface = NULL;

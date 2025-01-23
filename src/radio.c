@@ -30,60 +30,60 @@
 #include <netdb.h>
 #include <termios.h>
 
-#include "appearance.h"
+#include "actions.h"
 #include "adc.h"
-#include "dac.h"
-#include "audio.h"
-#include "discovered.h"
-#include "filter.h"
-#include "main.h"
-#include "mode.h"
-#include "radio.h"
-#include "receiver.h"
-#include "transmitter.h"
 #include "agc.h"
+#include "appearance.h"
+#include "audio.h"
 #include "band.h"
 #include "channel.h"
-#include "property.h"
-#include "new_menu.h"
-#include "new_protocol.h"
-#include "old_protocol.h"
-#include "store.h"
-#ifdef SOAPYSDR
-  #include "soapy_protocol.h"
-#endif
-#include "actions.h"
-#include "gpio.h"
-#include "vfo.h"
-#include "vox.h"
-#include "meter.h"
-#include "rx_panadapter.h"
-#include "tx_panadapter.h"
-#include "waterfall.h"
-#include "zoompan.h"
-#include "sliders.h"
-#include "toolbar.h"
-#include "rigctl.h"
-#include "tci.h"
-#include "ext.h"
-#include "radio_menu.h"
-#include "iambic.h"
-#include "rigctl_menu.h"
-#include "screen_menu.h"
-#ifdef MIDI
-  #include "midi.h"
-  #include "alsa_midi.h"
-  #include "midi_menu.h"
-#endif
 #ifdef CLIENT_SERVER
   #include "client_server.h"
 #endif
+#include "dac.h"
+#include "discovered.h"
+#include "ext.h"
+#include "filter.h"
+#include "g2panel.h"
+#include "gpio.h"
+#include "iambic.h"
+#include "main.h"
+#include "meter.h"
 #include "message.h"
+#ifdef MIDI
+  #include "midi_menu.h"
+  #include "midi.h"
+#endif
+#include "mode.h"
+#include "mystring.h"
+#include "new_menu.h"
+#include "new_protocol.h"
+#include "old_protocol.h"
+#include "property.h"
+#include "radio_menu.h"
+#include "radio.h"
+#include "receiver.h"
+#include "rigctl_menu.h"
+#include "rigctl.h"
+#include "rx_panadapter.h"
+#include "screen_menu.h"
+#include "sliders.h"
+#include "tci.h"
+#include "toolbar.h"
+#include "transmitter.h"
+#include "tx_panadapter.h"
 #ifdef SATURN
   #include "saturnmain.h"
   #include "saturnserver.h"
 #endif
-#include "mystring.h"
+#ifdef SOAPYSDR
+  #include "soapy_protocol.h"
+#endif
+#include "store.h"
+#include "vfo.h"
+#include "vox.h"
+#include "waterfall.h"
+#include "zoompan.h"
 
 #define min(x,y) (x<y?x:y)
 #define max(x,y) (x<y?y:x)
@@ -2517,10 +2517,6 @@ static void radio_restore_state() {
   GetPropI0("tci_port",                                      tci_port);
   GetPropI0("tci_txonly",                                    tci_txonly);
 #endif
-  GetPropI0("rigctl_tcp_enable",                             rigctl_tcp_enable);
-  GetPropI0("rigctl_tcp_andromeda",                          rigctl_tcp_andromeda);
-  GetPropI0("rigctl_tcp_autoreporting",                      rigctl_tcp_autoreporting);
-  GetPropI0("rigctl_port_base",                              rigctl_tcp_port);
   GetPropI0("mute_spkr_amp",                                 mute_spkr_amp);
   GetPropI0("adc0_filter_bypass",                            adc0_filter_bypass);
   GetPropI0("adc1_filter_bypass",                            adc1_filter_bypass);
@@ -2531,24 +2527,6 @@ static void radio_restore_state() {
 
   for (int i = 0; i < 11; i++) {
     GetPropF1("pa_trim[%d]", i,                              pa_trim[i]);
-  }
-
-  for (int id = 0; id < MAX_SERIAL; id++) {
-
-    //
-    // Do not overwrite a "detected" port
-    //
-    if (!SerialPorts[id].g2) {
-      GetPropS1("rigctl_serial_port[%d]", id,                  SerialPorts[id].port);
-      GetPropI1("rigctl_serial_enable[%d]", id,                SerialPorts[id].enable);
-      GetPropI1("rigctl_serial_andromeda[%d]", id,             SerialPorts[id].andromeda);
-      GetPropI1("rigctl_serial_baud_rate[%i]", id,             SerialPorts[id].baud);
-      GetPropI1("rigctl_serial_autoreporting[%d]", id,         SerialPorts[id].autoreporting);
-
-      if (SerialPorts[id].andromeda) {
-        SerialPorts[id].baud = B9600;
-      }
-    }
   }
 
   for (int i = 0; i < n_adc; i++) {
@@ -2584,6 +2562,7 @@ static void radio_restore_state() {
   memRestoreState();
   vfo_restore_state();
   gpioRestoreActions();
+  rigctlRestoreState();
 #ifdef MIDI
   midiRestoreState();
 #endif
@@ -2735,10 +2714,6 @@ void radio_save_state() {
   SetPropI0("tci_port",                                      tci_port);
   SetPropI0("tci_txonly",                                    tci_txonly);
 #endif
-  SetPropI0("rigctl_tcp_enable",                             rigctl_tcp_enable);
-  SetPropI0("rigctl_tcp_andromeda",                          rigctl_tcp_andromeda);
-  SetPropI0("rigctl_tcp_autoreporting",                      rigctl_tcp_autoreporting);
-  SetPropI0("rigctl_port_base",                              rigctl_tcp_port);
   SetPropI0("mute_spkr_amp",                                 mute_spkr_amp);
   SetPropI0("adc0_filter_bypass",                            adc0_filter_bypass);
   SetPropI0("adc1_filter_bypass",                            adc1_filter_bypass);
@@ -2749,14 +2724,6 @@ void radio_save_state() {
 
   for (int i = 0; i < 11; i++) {
     SetPropF1("pa_trim[%d]", i,                              pa_trim[i]);
-  }
-
-  for (int id = 0; id < MAX_SERIAL; id++) {
-    SetPropI1("rigctl_serial_enable[%d]", id,                SerialPorts[id].enable);
-    SetPropI1("rigctl_serial_andromeda[%d]", id,             SerialPorts[id].andromeda);
-    SetPropI1("rigctl_serial_baud_rate[%i]", id,             SerialPorts[id].baud);
-    SetPropS1("rigctl_serial_port[%d]", id,                  SerialPorts[id].port);
-    SetPropI1("rigctl_serial_autoreporting[%d]", id,         SerialPorts[id].autoreporting);
   }
 
   for (int i = 0; i < n_adc; i++) {
@@ -2792,6 +2759,7 @@ void radio_save_state() {
   memSaveState();
   vfo_save_state();
   gpioSaveActions();
+  rigctlSaveState();
 #ifdef MIDI
   midiSaveState();
 #endif

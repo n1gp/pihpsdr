@@ -26,9 +26,9 @@
 #include <stdbool.h>
 
 #include "new_menu.h"
+#include "radio.h"
 #include "saturn_menu.h"
 #include "saturnserver.h"
-#include "radio.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *client_enable_tx_b;

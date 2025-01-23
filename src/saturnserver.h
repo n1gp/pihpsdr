@@ -33,6 +33,7 @@
 #define __saturnserver_h
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <netinet/in.h>
 
 // START threaddata.h

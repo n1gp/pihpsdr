@@ -1,5 +1,5 @@
 /* Copyright (C)
-* 2019 - Christoph van Wüllen, DL1YCF
+* 2025 - Christoph van W"ullen, DL1YCF
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -16,14 +16,9 @@
 *
 */
 
-typedef struct _midi_device {
-  char *name;
-  int  active;
-} MIDI_DEVICE;
+#include <gtk/gtk.h>
 
-#define MAX_MIDI_DEVICES 10
+extern void g2panel_menu(GtkWidget *parent);
+extern void g2panel_change_command(int andromeda_type, int type, int *buttonvec, int *encodervec, int pos);
 
-extern MIDI_DEVICE midi_devices[MAX_MIDI_DEVICES];
-extern int n_midi_devices;
-
-extern void get_midi_devices(void);
+extern int g2panel_menu_is_open;

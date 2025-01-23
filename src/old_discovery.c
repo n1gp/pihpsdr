@@ -35,10 +35,10 @@
 
 #include "discovered.h"
 #include "discovery.h"
-#include "old_discovery.h"
-#include "stemlab_discovery.h"
 #include "message.h"
 #include "mystring.h"
+#include "old_discovery.h"
+#include "stemlab_discovery.h"
 
 static char interface_name[64];
 static struct sockaddr_in interface_addr = {0};
