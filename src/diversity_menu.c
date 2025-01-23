@@ -22,16 +22,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <math.h>
 
-#include "new_menu.h"
 #include "diversity_menu.h"
-#include "radio.h"
+#include "ext.h"
+#include "new_menu.h"
 #include "new_protocol.h"
 #include "old_protocol.h"
+#include "radio.h"
 #include "sliders.h"
-#include "ext.h"
-
-#include <math.h>
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *gain_coarse_scale = NULL;

@@ -26,12 +26,12 @@
 #include <arpa/inet.h>
 #include <wdsp.h>             // only needed for GetWDSPVersion
 
-#include "new_menu.h"
 #include "about_menu.h"
 #include "discovered.h"
+#include "mystring.h"
+#include "new_menu.h"
 #include "radio.h"
 #include "version.h"
-#include "mystring.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *label;

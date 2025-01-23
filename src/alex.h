@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _ALEX_H
-#define _ALEX_H
+#ifndef _ALEX_H_
+#define _ALEX_H_
 
 //
 // Used in new_protocol.c only.

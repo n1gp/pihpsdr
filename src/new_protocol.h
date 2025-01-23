@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _NEW_PROTOCOL_H
-#define _NEW_PROTOCOL_H
+#ifndef _NEW_PROTOCOL_H_
+#define _NEW_PROTOCOL_H_
 
 #include "MacOS.h"   // for semaphores
 #include "receiver.h"

@@ -16,6 +16,8 @@
 *
 */
 
+#include <gtk/gtk.h>
+
 extern void band_menu(GtkWidget *parent);
-extern gboolean band_select_cb (GtkWidget *widget, gpointer        data);
+extern gboolean band_select_cb (GtkWidget *widget, gpointer data);
 

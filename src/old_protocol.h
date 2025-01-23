@@ -16,9 +16,6 @@
 *
 */
 
-#ifndef _OLD_PROTOCOL_H
-#define _OLD_PROTOCOL_H
-
 extern void old_protocol_stop(void);
 extern void old_protocol_run(void);
 
@@ -27,4 +24,3 @@ extern void old_protocol_set_mic_sample_rate(int rate);
 
 extern void old_protocol_audio_samples(short left_audio_sample, short right_audio_sample);
 extern void old_protocol_iq_samples(int isample, int qsample, int side);
-#endif

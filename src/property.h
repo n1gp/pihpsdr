@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _PROPERTY_H
-#define _PROPERTY_H
+#ifndef _PROPERTY_H_
+#define _PROPERTY_H_
 
 #define PROPERTY_VERSION 3.0
 

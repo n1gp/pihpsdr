@@ -16,6 +16,13 @@
 *
 */
 
+#ifndef _MIDI_H_
+#define _MIDI_H_
+
+#include <gtk/gtk.h>
+
+#include "actions.h"
+
 /*
  * MIDI support for pihpsdr
  *
@@ -58,8 +65,17 @@
  * must generate MIDI events on different channels
  */
 
-#ifndef _MIDI_H
-#define _MIDI_H
+typedef struct _midi_device {
+  char *name;
+  int  active;
+} MIDI_DEVICE;
+
+#define MAX_MIDI_DEVICES 10
+
+extern MIDI_DEVICE midi_devices[MAX_MIDI_DEVICES];
+extern int n_midi_devices;
+
+extern void get_midi_devices(void);
 
 //
 // MIDIevent encodes the actual MIDI event "seen" in Layer-1 and

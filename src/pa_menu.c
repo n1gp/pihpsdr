@@ -21,12 +21,12 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "band.h"
+#include "message.h"
 #include "new_menu.h"
 #include "pa_menu.h"
-#include "band.h"
 #include "radio.h"
 #include "vfo.h"
-#include "message.h"
 
 static GtkWidget *dialog = NULL;
 

@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _FILTER_H
-#define _FILTER_H
+#ifndef _FILTER_H_
+#define _FILTER_H_
 
 #include "mode.h"
 

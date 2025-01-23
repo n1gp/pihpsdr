@@ -16,6 +16,7 @@
 *
 */
 
-extern void noise_menu(GtkWidget *parent);
+#include <gtk/gtk.h>
 
+extern void noise_menu(GtkWidget *parent);
 extern void update_noise(void);

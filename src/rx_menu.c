@@ -23,17 +23,17 @@
 #include <string.h>
 
 #include "audio.h"
-#include "new_menu.h"
-#include "rx_menu.h"
 #include "band.h"
 #include "discovered.h"
 #include "filter.h"
-#include "radio.h"
-#include "receiver.h"
-#include "sliders.h"
-#include "new_protocol.h"
 #include "message.h"
 #include "mystring.h"
+#include "new_menu.h"
+#include "new_protocol.h"
+#include "radio.h"
+#include "receiver.h"
+#include "rx_menu.h"
+#include "sliders.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *local_audio_b = NULL;

@@ -23,9 +23,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "display_menu.h"
 #include "main.h"
 #include "new_menu.h"
-#include "display_menu.h"
 #include "radio.h"
 
 static GtkWidget *dialog = NULL;

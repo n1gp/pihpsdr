@@ -21,19 +21,19 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "main.h"
-#include "new_menu.h"
-#include "agc_menu.h"
+#include "action_dialog.h"
+#include "actions.h"
 #include "agc.h"
+#include "agc_menu.h"
 #include "band.h"
 #include "channel.h"
+#include "gpio.h"
+#include "i2c.h"
+#include "main.h"
+#include "new_menu.h"
 #include "radio.h"
 #include "receiver.h"
 #include "vfo.h"
-#include "actions.h"
-#include "action_dialog.h"
-#include "gpio.h"
-#include "i2c.h"
 
 void encoder_menu(GtkWidget *parent);
 

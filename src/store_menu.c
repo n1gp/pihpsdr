@@ -22,13 +22,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "radio.h"
-#include "new_menu.h"
-#include "store_menu.h"
-#include "store.h"
-#include "mode.h"
 #include "filter.h"
 #include "message.h"
+#include "mode.h"
+#include "new_menu.h"
+#include "radio.h"
+#include "store_menu.h"
+#include "store.h"
 
 static GtkWidget *dialog = NULL;
 

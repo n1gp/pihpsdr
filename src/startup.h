@@ -16,9 +16,4 @@
 *
 */
 
-#ifndef _STARTUP_H_
-#define _STARTUP_H_
-
-void startup(const char* path);
-
-#endif
+extern void startup(const char* path);

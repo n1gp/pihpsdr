@@ -33,8 +33,6 @@
 #define _XOPEN_SOURCE 500
 #include <stdlib.h>                     // for function min()
 #include <math.h>
-#include "saturndrivers.h"
-//#include "saturnregisters.h"
 #include <semaphore.h>
 #include <assert.h>
 #include <fcntl.h>
@@ -51,6 +49,7 @@
 #include <unistd.h>
 
 #include "message.h"
+#include "saturndrivers.h"
 
 #define VMEMBUFFERSIZE 32768                    // memory buffer to reserve
 #define AXIBaseAddress 0x10000                  // address of StreamRead/Writer IP

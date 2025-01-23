@@ -24,17 +24,17 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "band.h"
+#include "message.h"
+#include "mystring.h"
 #include "new_menu.h"
+#include "radio.h"
 #include "rigctl_menu.h"
 #include "rigctl.h"
-#include "band.h"
-#include "radio.h"
-#include "vfo.h"
 #ifdef TCI
 #include "tci.h"
 #endif
-#include "message.h"
-#include "mystring.h"
+#include "vfo.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *serial_baud[MAX_SERIAL];

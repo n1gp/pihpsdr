@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _RADIO_H
-#define _RADIO_H
+#ifndef _RADIO_H_
+#define _RADIO_H_
 
 #include "adc.h"
 #include "dac.h"

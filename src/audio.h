@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _AUDIO_H
-#define _AUDIO_H
+#ifndef _AUDIO_H_
+#define _AUDIO_H_
 
 #include "receiver.h"
 

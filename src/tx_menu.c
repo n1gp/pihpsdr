@@ -21,17 +21,17 @@
 #include <string.h>
 
 #include "audio.h"
+#include "ext.h"
+#include "filter.h"
+#include "message.h"
+#include "mystring.h"
+#include "mode.h"
 #include "new_menu.h"
+#include "new_protocol.h"
 #include "radio.h"
 #include "sliders.h"
 #include "transmitter.h"
-#include "ext.h"
-#include "filter.h"
-#include "mode.h"
 #include "vfo.h"
-#include "new_protocol.h"
-#include "message.h"
-#include "mystring.h"
 
 static GtkWidget *dialog = NULL;
 static GtkWidget *input;

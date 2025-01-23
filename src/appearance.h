@@ -16,6 +16,8 @@
 *
 */
 
+#ifndef _APPEARANCE_H_
+#define _APPEARANCE_H_
 //
 // This *only* defines Fonts and sizes for VFO, meter, and the panadapters,
 // since fonts used for GTK buttons, texts, etc. are defined via CSS in css.c
@@ -168,3 +170,5 @@ struct _VFO_BAR_LAYOUT {
 typedef struct _VFO_BAR_LAYOUT VFO_BAR_LAYOUT;
 extern const VFO_BAR_LAYOUT vfo_layout_list[];
 extern int vfo_layout;
+
+#endif

@@ -16,9 +16,4 @@
 *
 */
 
-#ifndef _NEW_DISCOVERY_H
-#define _NEW_DISCOVERY_H
-
 void new_discovery(void);
-
-#endif

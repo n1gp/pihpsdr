@@ -16,6 +16,8 @@
 *
 */
 
+#include <gtk/gtk.h>
+
 extern void radio_menu(GtkWidget *parent);
 extern void setDuplex(void);
 extern void load_filters(void);

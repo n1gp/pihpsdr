@@ -25,42 +25,41 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/resource.h>
+#include <sys/utsname.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
 #include <wdsp.h>    // only needed for WDSPwisdom() and wisdom_get_status()
 
+#include "actions.h"
 #include "appearance.h"
 #include "audio.h"
 #include "band.h"
 #include "bandstack.h"
-#include "main.h"
-#include "discovered.h"
 #include "configure.h"
-#include "actions.h"
-#ifdef GPIO
-  #include "gpio.h"
-#endif
-#include "new_menu.h"
-#include "radio.h"
-#include "version.h"
+#include "css.h"
 #include "discovery.h"
+#include "discovered.h"
+#include "exit_menu.h"
+#include "ext.h"
+#include "gpio.h"
+#include "main.h"
+#include "message.h"
+#include "mystring.h"
+#include "new_menu.h"
 #include "new_protocol.h"
 #include "old_protocol.h"
-#ifdef SOAPYSDR
-  #include "soapy_protocol.h"
-#endif
+#include "radio.h"
 #ifdef SATURN
   #include "saturnmain.h"
 #endif
-#include "ext.h"
-#include "vfo.h"
-#include "css.h"
-#include "exit_menu.h"
-#include "message.h"
-#include "mystring.h"
+#ifdef SOAPYSDR
+  #include "soapy_protocol.h"
+#endif
 #include "startup.h"
 #include "tts.h"
+#include "version.h"
+#include "vfo.h"
 
 struct utsname unameData;
 

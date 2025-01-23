@@ -22,11 +22,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "new_menu.h"
-#include "bandstack_menu.h"
 #include "band.h"
 #include "bandstack.h"
+#include "bandstack_menu.h"
 #include "filter.h"
+#include "new_menu.h"
 #include "radio.h"
 #include "receiver.h"
 #include "vfo.h"

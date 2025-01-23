@@ -16,4 +16,6 @@
 *
 */
 
+#include <gtk/gtk.h>
+
 extern void saturn_menu(GtkWidget *parent);

@@ -20,11 +20,11 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "radio.h"
-#include "new_menu.h"
-#include "actions.h"
 #include "action_dialog.h"
+#include "actions.h"
 #include "gpio.h"
+#include "new_menu.h"
+#include "radio.h"
 #include "toolbar.h"
 
 static GtkWidget *dialog = NULL;

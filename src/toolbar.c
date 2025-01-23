@@ -22,26 +22,27 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "actions.h"
-#include "gpio.h"
-#include "toolbar.h"
-#include "mode.h"
-#include "filter.h"
-#include "bandstack.h"
+#include "agc.h"
 #include "band.h"
+#include "bandstack.h"
+#include "channel.h"
 #include "discovered.h"
+#include "ext.h"
+#include "filter.h"
+#include "gpio.h"
+#include "message.h"
+#include "mode.h"
+#include "new_menu.h"
 #include "new_protocol.h"
 #include "old_protocol.h"
-#include "vfo.h"
-#include "agc.h"
-#include "channel.h"
+#include "property.h"
 #include "radio.h"
 #include "receiver.h"
+#include "toolbar.h"
 #include "transmitter.h"
-#include "property.h"
-#include "new_menu.h"
-#include "ext.h"
-#include "message.h"
+#include "vfo.h"
 
 int function = 0;
 

@@ -16,10 +16,9 @@
 *
 */
 
-#ifndef _SLIDERS_H
-#define _SLIDERS_H
+#include <gtk/gtk.h>
 
-// include these since we are using RECEIVER and TRANSMITTER
+#include "actions.h"
 #include "receiver.h"
 #include "transmitter.h"
 #include "actions.h"
@@ -55,4 +54,3 @@ extern void show_diversity_phase(void);
 void show_popup_slider(enum ACTION action, int rx, double min, double max, double delta, double value,
                        const char *title);
 
-#endif

@@ -40,8 +40,8 @@
 
 #include <libusb-1.0/libusb.h>
 
-#include "ozyio.h"
 #include "message.h"
+#include "ozyio.h"
 
 //
 // Constants for USB

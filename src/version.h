@@ -16,13 +16,8 @@
 *
 */
 
-#ifndef _VERSION_H
-#define _VERSION_H
-
 extern char build_version[];
 extern char build_date[];
 extern char build_commit[];
 extern char build_options[];
 extern char build_audio[];
-
-#endif

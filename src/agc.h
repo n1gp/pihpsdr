@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _AGC_H
-#define _AGC_H
+#ifndef _AGC_H_
+#define _AGC_H_
 
 enum _agc_enum {
   AGC_OFF = 0,

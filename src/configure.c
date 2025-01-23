@@ -28,14 +28,14 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "radio.h"
-#include "main.h"
+#include "actions.h"
 #include "channel.h"
 #include "discovered.h"
-#include "actions.h"
 #include "gpio.h"
 #include "i2c.h"
+#include "main.h"
 #include "message.h"
+#include "radio.h"
 
 #ifdef GPIO
 #ifdef GPIO_CONFIGURE_LINES

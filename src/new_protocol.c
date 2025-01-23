@@ -39,28 +39,27 @@
 #include <sys/select.h>
 #include <signal.h>
 
-#include "main.h"
 #include "alex.h"
 #include "audio.h"
 #include "band.h"
-#include "new_protocol.h"
 #include "discovered.h"
-#include "mode.h"
+#include "ext.h"
 #include "filter.h"
+#include "iambic.h"
+#include "main.h"
+#include "message.h"
+#include "mode.h"
+#include "new_protocol.h"
 #include "radio.h"
 #include "receiver.h"
-#include "transmitter.h"
-#include "vfo.h"
-#include "toolbar.h"
-#include "vox.h"
-#include "ext.h"
-#include "iambic.h"
 #include "rigctl.h"
-#include "message.h"
 #ifdef SATURN
   #include "saturnmain.h"
 #endif
-
+#include "toolbar.h"
+#include "transmitter.h"
+#include "vfo.h"
+#include "vox.h"
 
 #ifdef DUMP_TX_DATA
   long rxiqi[1000000];

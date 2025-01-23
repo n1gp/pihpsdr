@@ -16,6 +16,19 @@
 *
 */
 
+#ifdef __APPLE__
+
+#include <gtk/gtk.h>
+
+#include <Carbon/Carbon.h>
+#include <CoreMIDI/MIDIServices.h>
+#include <CoreAudio/HostTime.h>
+#include <CoreAudio/CoreAudio.h>
+
+#include "message.h"
+#include "midi_menu.h"
+#include "midi.h"
+
 /*
  * MIDI support for pihpsdr
  *
@@ -39,34 +52,6 @@
  * they are silently dropped but must be processed.
  *
  */
-
-#include <gtk/gtk.h>
-#include "discovered.h"
-#include "receiver.h"
-#include "transmitter.h"
-#include "receiver.h"
-#include "adc.h"
-#include "dac.h"
-#include "radio.h"
-#include "actions.h"
-#include "midi.h"
-#include "midi_menu.h"
-#include "alsa_midi.h"
-#include "message.h"
-
-#ifdef __APPLE__
-
-/*
- * For MacOS, things are easy:
- * The OS takes care of everything, we only have to register a callback
- * routine.
- */
-
-#include <Carbon/Carbon.h>
-
-#include <CoreMIDI/MIDIServices.h>
-#include <CoreAudio/HostTime.h>
-#include <CoreAudio/CoreAudio.h>
 
 MIDI_DEVICE midi_devices[MAX_MIDI_DEVICES];
 int n_midi_devices;

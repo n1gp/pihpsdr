@@ -16,10 +16,14 @@
 *
 */
 
-#ifndef HPSDR_SERVER_H
-#define HPSDR_SERVER_H
+#ifndef _CLIENT_SERVER_H_
+#define _CLIENT_SERVER_H_
 
+#include <gtk/gtk.h>
 #include <stdint.h>
+#include <netinet/in.h>
+
+#include "receiver.h"
 
 #ifndef __APPLE__
   #define htonll htobe64

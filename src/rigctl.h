@@ -16,8 +16,10 @@
 *
 */
 
-#ifndef RIGCTL_H
-#define RIGCTL_H
+#ifndef _RIGCTL_H_
+#define _RIGCTL_H_
+
+#include <gtk/gtk.h>
 
 struct _SERIALPORT {
   //
@@ -43,6 +45,8 @@ extern int launch_serial_rigctl (int id);
 extern void disable_serial_rigctl (int id);
 extern int rigctl_tcp_running();
 extern void  shutdown_tcp_rigctl(void);
+extern void rigctlSaveState(void);
+extern void rigctlRestoreState(void);
 
 extern int cat_control;
 extern unsigned int rigctl_tcp_port;

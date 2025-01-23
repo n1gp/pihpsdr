@@ -16,10 +16,12 @@
 *
 */
 
-#ifndef _METER_H
-#define _METER_H
+#ifndef _METER_H_
+#define _METER_H_
 
 #include <gtk/gtk.h>
+
+#include "receiver.h"
 
 enum _meter_type_enum {
   SMETER = 0,

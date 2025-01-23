@@ -82,25 +82,25 @@
 #endif
 #include <semaphore.h>
 
-#include "discovered.h"
 #include "adc.h"
-#include "dac.h"
-#include "receiver.h"
-#include "transmitter.h"
-#include "radio.h"
-#include "main.h"
-#include "vfo.h"
+#include "audio.h"
 #ifdef CLIENT_SERVER
   #include "client_server.h"
 #endif
+#include "dac.h"
+#include "discovered.h"
 #include "ext.h"
-#include "audio.h"
-#include "zoompan.h"
-#include "noise_menu.h"
-#include "radio_menu.h"
-#include "sliders.h"
+#include "main.h"
 #include "message.h"
 #include "mystring.h"
+#include "noise_menu.h"
+#include "radio.h"
+#include "radio_menu.h"
+#include "receiver.h"
+#include "sliders.h"
+#include "transmitter.h"
+#include "vfo.h"
+#include "zoompan.h"
 
 #define DISCOVERY_PORT 4992
 #define LISTEN_PORT 50000

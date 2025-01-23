@@ -16,9 +16,12 @@
 *
 */
 
-#ifndef _VFO_H
-#define _VFO_H
+#ifndef _VFO_H_
+#define _VFO_H_
 
+#include <gtk/gtk.h>
+
+#include "receiver.h"
 #include "mode.h"
 
 enum _vfo_enum {

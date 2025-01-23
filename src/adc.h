@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef ADC_H
-#define ADC_H
+#ifndef _ADC_H_
+#define _ADC_H_
 
 #include <gtk/gtk.h>
 

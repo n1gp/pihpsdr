@@ -21,9 +21,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "message.h"
 #include "property.h"
 #include "radio.h"
-#include "message.h"
 
 PROPERTY* properties = NULL;
 

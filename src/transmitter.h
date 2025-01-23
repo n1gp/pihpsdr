@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _TRANSMITTER_H
-#define _TRANSMITTER_H
+#ifndef _TRANSMITTER_H_
+#define _TRANSMITTER_H_
 
 #include <gtk/gtk.h>
 

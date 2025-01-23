@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef _MODE_H
-#define _MODE_H
+#ifndef _MODE_H_
+#define _MODE_H_
 
 enum _mode_enum {
   modeLSB = 0,

@@ -19,16 +19,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "sliders.h"
-#include "filter.h"
-#include "receiver.h"
-#include "vfo.h"
-#include "radio.h"
-#include "property.h"
 #include "actions.h"
-#include "mode.h"
-#include "message.h"
 #include "ext.h"
+#include "filter.h"
+#include "message.h"
+#include "mode.h"
+#include "property.h"
+#include "radio.h"
+#include "receiver.h"
+#include "sliders.h"
+#include "vfo.h"
 
 //
 // mode-specific defaults for the Var1 and Var2 filters

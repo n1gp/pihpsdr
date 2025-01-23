@@ -21,13 +21,13 @@
 #include <pulse/glib-mainloop.h>
 #include <pulse/simple.h>
 
+#include "audio.h"
+#include "message.h"
+#include "mode.h"
 #include "radio.h"
 #include "receiver.h"
 #include "transmitter.h"
-#include "audio.h"
-#include "mode.h"
 #include "vfo.h"
-#include "message.h"
 
 //
 // Used fixed buffer sizes.

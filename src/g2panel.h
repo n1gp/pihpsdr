@@ -1,5 +1,5 @@
 /* Copyright (C)
-* 2015 - John Melton, G0ORX/N6LYT
+* 2025 - Christoph van W"ullen, DL1YCF
 *
 *   This program is free software: you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -16,24 +16,9 @@
 *
 */
 
-//
-// WDSP channel numbers
-//
-#ifndef _CHANNEL_H_
-#define _CHANNEL_H_
-
-#define CHANNEL_RX0 0
-#define CHANNEL_RX1 1
-#define CHANNEL_RX2 2
-#define CHANNEL_RX3 3
-#define CHANNEL_RX4 4
-#define CHANNEL_RX5 5
-#define CHANNEL_RX6 6
-#define CHANNEL_RX7 7
-#define CHANNEL_TX 8
-#define CHANNEL_BS 9
-#define CHANNEL_SUBRX 10
-#define CHANNEL_AUDIO 11
-
-#endif
-
+void g2panelSaveState(int andromeda_type, int *buttonvec, int *encodervec);
+void g2panelRestoreState(int andromeda_type, int *buttonvec, int *encodervec);
+void g2panel_execute_encoder(int andromeda_type, int *vec, int p, int v);
+void g2panel_execute_button(int andromeda_type, int *vec, int p, int tr01, int tr10, int tr12, int tr20);
+int * g2panel_default_buttons(int andromeda_type);
+int * g2panel_default_encoders(int andromeda_type);

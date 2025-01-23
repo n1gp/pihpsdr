@@ -22,49 +22,54 @@
  * With a kindly assist from Jae, K5JAE who has helped
  * greatly with hamlib integration!
  */
+
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <fcntl.h>
+#include <math.h>
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include "receiver.h"
-#include "toolbar.h"
-#include "band_menu.h"
-#include "sliders.h"
-#include "rigctl.h"
-#include "radio.h"
-#include "channel.h"
-#include "filter.h"
-#include "mode.h"
-#include "filter.h"
-#include "band.h"
-#include "bandstack.h"
-#include "filter_menu.h"
-#include "vfo.h"
-#include "transmitter.h"
-#include "agc.h"
-#include "store.h"
-#include "ext.h"
-#include "rigctl_menu.h"
-#include "noise_menu.h"
-#include "new_protocol.h"
-#include "old_protocol.h"
-#include "iambic.h"
-#include "actions.h"
-#include "new_menu.h"
-#include "zoompan.h"
-#include "message.h"
-#include "mystring.h"
-
-#include <math.h>
-
 #include <sys/socket.h>
 #include <arpa/inet.h> //inet_addr
 #include <netinet/tcp.h>
+
+#include "actions.h"
+#include "agc.h"
+#include "andromeda.h"
+#include "band.h"
+#include "band_menu.h"
+#include "bandstack.h"
+#include "channel.h"
+#include "ext.h"
+#include "filter.h"
+#include "filter_menu.h"
+#include "g2panel.h"
+#include "g2panel_menu.h"
+#include "iambic.h"
+#include "main.h"
+#include "message.h"
+#include "mystring.h"
+#include "mode.h"
+#include "new_menu.h"
+#include "new_protocol.h"
+#include "noise_menu.h"
+#include "old_protocol.h"
+#include "property.h"
+#include "radio.h"
+#include "receiver.h"
+#include "rigctl.h"
+#include "rigctl_menu.h"
+#include "sliders.h"
+#include "store.h"
+#include "toolbar.h"
+#include "transmitter.h"
+#include "vfo.h"
+#include "zoompan.h"
+
 
 unsigned int rigctl_tcp_port = 19090;
 int rigctl_tcp_enable = 0;
@@ -108,6 +113,9 @@ typedef struct _client {
   int last_v;                       // Last push-button state received
   int last_fa, last_fb, last_md;    // last VFO-A/B frequency and VFO-A mode reported
   int last_led[MAX_ANDROMEDA_LEDS]; // last status of ANDROMEDA LEDs
+  int shift;                        // shift state for original ANDROMEDA console
+  int *buttonvec;                   // For G2 ANDROMEDA: button action map
+  int *encodervec;                  // For G2 ANDROMEDA: encoder action map
 } CLIENT;
 
 //
@@ -907,7 +915,8 @@ static gboolean autoreport_handler(gpointer data) {
     //
     // return and remove timer
     //
-    return FALSE;
+    client->auto_timer = 0;
+    return G_SOURCE_REMOVE;
   }
 
   if (client->auto_reporting > 0) {
@@ -957,6 +966,7 @@ static gboolean andromeda_handler(gpointer data) {
     // The same applies for ANDROMEDA type-4 clients since there
     // are no LEDs on a G2MkI panel
     //
+    client->andromeda_timer = 0;
     return G_SOURCE_REMOVE;
   }
 
@@ -1006,7 +1016,7 @@ static gboolean andromeda_handler(gpointer data) {
         break;
 
       case 6:
-        // shift LED handled by Rick's code
+        new = client->shift;
         break;
 
       case 7:
@@ -1207,6 +1217,9 @@ static gpointer rigctl_server(gpointer data) {
     tcp_client[spare].last_fb         = -1;
     tcp_client[spare].last_md         = -1;
     tcp_client[spare].last_v          = 0;
+    tcp_client[spare].shift           = 0;
+    tcp_client[spare].buttonvec       = NULL;
+    tcp_client[spare].encodervec      = NULL;
 
     for (int i = 0; i < MAX_ANDROMEDA_LEDS; i++) {
       tcp_client[spare].last_led[i] = -1;
@@ -3410,160 +3423,15 @@ gboolean parse_extended_cmd (const char *command, CLIENT *client) {
         //
 
         if (client->andromeda_type == 1) {
-          //
-          // ANDROMEDA console with six double-encoders
-          // Enc1/2, ..., Enc11/12. The silk print given
-          // below comes from the ApacheLabs document
-          // 1022_Andromeda-manual-v1.pdf.
-          // Note that Enc11 is here implemented as MICgain
-          // but the silk print reads MULTI.
-          //
-          if (!locked) switch (p) {
-            // Enc1/2: "RX1 AF/RF"
-            case 1:
-              schedule_action(AF_GAIN_RX1, RELATIVE, v);
-              break;
-
-            case 2:
-              schedule_action(AGC_GAIN_RX1, RELATIVE, v);
-              break;
-
-            // Enc3/4: "RX2 AF/RF"
-            case 3:
-              schedule_action(AF_GAIN_RX2, RELATIVE, v);
-              break;
-
-            case 4:
-              schedule_action(AGC_GAIN_RX2, RELATIVE, v);
-              break;
-
-            // Enc5/6: "IF FILTER HIGH/LOW CUT"
-            case 5:
-              schedule_action(FILTER_CUT_HIGH, RELATIVE, v);
-              break;
-
-            case 6:
-              schedule_action(FILTER_CUT_LOW, RELATIVE, v);
-              break;
-
-            // Enc7/8: "DIVERSITY GAIN/PHASE"
-            case 7:
-              schedule_action(DIV_GAIN, RELATIVE, v);
-              break;
-
-            case 8:
-              schedule_action(DIV_PHASE, RELATIVE, v);
-              break;
-
-            // Enc9/10: "RIT/XIT"
-            case 9: // RIT of the VFO of the active receiver
-              schedule_action(RIT, RELATIVE, v);
-
-              break;
-
-            case 10:
-              schedule_action(XIT, RELATIVE, v);
-
-              break;
-
-            //Enc11/12: "MULTI/DRIVE", but here implemented as "MIC/DRIVE"
-            case 11:
-              schedule_action(MIC_GAIN, RELATIVE, v);
-              break;
-
-            case 12:
-              schedule_action(DRIVE, RELATIVE, v);
-              break;
-            }
-        }
-
-        if (client->andromeda_type == 4) {
-          //
-          // upgraded G2Mk1 panel encoders
-          //
-          switch (p) {
-          case 1:  // left edge lower encoder inner knob, silk print: "RX AF/AGC", default: AF_GAIN
-            schedule_action(AF_GAIN, RELATIVE, v);
-            break;
-          case 2:  // left edge lower encoder outer knob, silk print: "RX AF/AGC", default: AGC_GAIN
-            schedule_action(AGC_GAIN, RELATIVE, v);
-            break;
-          case 5:  // right edge upper encoder inner knob, silk print: "Multi 1" (?), default: FILTER_CUT_HIGH
-            schedule_action(FILTER_CUT_HIGH, RELATIVE, v);
-            break;
-          case 6:  // right edge upper encoder outer knob, silk print: "Multi 1" (?), default: FILTER_CUT_LOW
-            schedule_action(FILTER_CUT_LOW, RELATIVE, v);
-            break;
-          case 9:  // right edge lower encoder inner knob, silk print: "Multi 2" (?), default: RIT
-            schedule_action(RIT, RELATIVE, v);
-            break;
-          case 10:  // right edge lower encoder outer knob, silk print: "Multi 2" (?), default: XIT
-            schedule_action(XIT, RELATIVE, v);
-            break;
-          case 11:  // left edge upper encoder inner knob, silk print: "MIC/DRIVE", default: MULTI_ENC
-            schedule_action(MULTI_ENC, RELATIVE, v);
-            break;
-          case 12:  // left edge upper encoder outer knob, silk print: "MIC/DRIVE", default: TX_DRIVE
-            schedule_action(DRIVE, RELATIVE, v);
-            break;
+          andromeda_execute_encoder(p, v);
+        } else {
+          if (g2panel_menu_is_open) {
+            g2panel_change_command(client->andromeda_type, CONTROLLER_ENCODER,
+                                   client->buttonvec, client->encodervec, p);
+          } else {
+            g2panel_execute_encoder(client->andromeda_type, client->encodervec, p, v);
           }
         }
-
-        if (client->andromeda_type == 5) {
-          //
-          // G2 Ultra panel encoders
-          //
-          switch (p) {
-          case 1:  // left edge lower encoder, inner knob, silk print: "RX2 AF/AGC", default: AF_GAIN_RX2
-            schedule_action(AF_GAIN_RX2, RELATIVE, v);
-            break;
-
-          case 2:  // left edge lower encoder, outer knob, silk print: "RX2 AF/AGC", default: AGC_GAIN_RX2
-            schedule_action(AGC_GAIN_RX2, RELATIVE, v);
-            break;
-
-          case 3: // left edge upper encoder (directly below power button), inner knob, silk print: "RX1 AF/AGC", default: AF_GAIN_RX1
-            schedule_action(AF_GAIN_RX1, RELATIVE, v);
-            break;
-
-          case 4:  // left edge upper encoder (directly below power button), outer knob, silk print: "RX1 AF/AGC", default: AGC_GAIN_RX1
-            schedule_action(AGC_GAIN_RX1, RELATIVE, v);
-            break;
-
-          case 5:  // encoder between power button and screen, inner knob, silk print: "DRIVE/MULTI", default: MULTI_ENC
-            schedule_action(MULTI_ENC, RELATIVE, v);
-            break;
-
-          case 6:  // encoder between power button and screen, outer knob, silk print: "DRIVE/MULTI", default: DRIVE
-            schedule_action(DRIVE, RELATIVE, v);
-            break;
-
-          case 7:  // right edge lower encoder inner knob, silk print: "RIT/ATTN", default: RIXXIT
-            schedule_action(RITXIT, RELATIVE, v);
-            break;
-
-          case 8:  // right edge lower encoder outer knob, silk print: "RIT/ATTN", default: ATTENUATION
-            schedule_action(ATTENUATION, RELATIVE, v);
-            break;
-
-          case 9:  // right edge upper encoder inner knob, (shift OFF), silk print:" MULTI 2" (?), default: FILTER_CUT_HIGH
-            schedule_action(FILTER_CUT_HIGH, RELATIVE, v);
-            break;
-
-          case 10:  // right edge upper encoder outer knob (shift OFF), silk print:" MULTI 2" (?), default: FILTER_CUT_LOW
-            schedule_action(FILTER_CUT_LOW, RELATIVE, v);
-            break;
-
-          case 11:  // right edge upper encoder inner knob, (shift ON), silk print:" MULTI 2" (?), default: DIVERSITY_GAIN
-            schedule_action(DIV_GAIN, RELATIVE, v);
-            break;
-
-          case 12:  // right edge upper encoder outer knob, (shift ON), silk print:" MULTI 2" (?), default: DIVERSITY_PHASE
-            schedule_action(DIV_PHASE, RELATIVE, v);
-            break;
-          }
-        } // end of G2Mk2 console
-
       } else {
         // unexpected command format
         implemented = FALSE;
@@ -3614,613 +3482,48 @@ gboolean parse_extended_cmd (const char *command, CLIENT *client) {
         //            to the "function keys" F1-F8 on the original ANDROMEDA console.
         //            In all other cases, there is no need to bother the system with RELEASE events.
         //
-        // NOTE: Rick's code for the original ANDROMEDA console remains unchanged.
+        // NOTE: Rick's code for the original ANDROMEDA console went to andromeda.c
         //
         //
 
         if (client->andromeda_type == 1) {
+          client->shift = andromeda_execute_button(v, p);
+        } else {
+
           //
-          // Rick's original ANDROMEDA console, ending with a "break"
+          // "generic" ANDROMDA push-button section
           //
-          static int numpad_active = 0;
-          static int longpress = 0;
 
-          if (!numpad_active) switch (p) {
-            case 21: // Function Switches
-            case 22:
-            case 23:
-            case 24:
-            case 25:
-            case 26:
-            case 27:
-            case 28:
-              schedule_action(toolbar_switches[p - 21].switch_function, (v == 0) ? PRESSED : RELEASED, 0);
-              snprintf(reply, 256, "ZZZI11%d;", locked);
-              send_resp(client->fd, reply);
-              break;
+          int tr01, tr10, tr12, tr20;
 
-            case 46: // SDR On
-              if (v == 0) {
-                if (longpress) {
-                  longpress = 0;
-                } else {
-                  static int startstop = 1;
-                  startstop ^= 1;
-                  startstop ? radio_protocol_run() : radio_protocol_stop();
-                }
-              } else if (v == 2) {
-                new_menu();
-                longpress = 1;
-              }
+          tr01 = 0;  // indicates a v=0 --> v=1 transision
+          tr12 = 0;  // indicates a v=1 --> v=2 transision
+          tr10 = 0;  // indicates a v=1 --> v=0 transision
+          tr20 = 0;  // indicates a v=2 --> v=0 transision
 
-              break;
+          if (client->last_v == 0 && v == 1) { tr01 = 1; }
+          if (client->last_v == 1 && v == 2) { tr12 = 1; }
+          if (client->last_v == 1 && v == 0) { tr10 = 1; }
+          if (client->last_v == 2 && v == 0) { tr20 = 1; }
+
+          client->last_v = v;
+
+          if (g2panel_menu_is_open) {
+            //
+            // It is enough to "fire" this upon initial press
+            //
+            if (tr01) {
+              g2panel_change_command(client->andromeda_type, CONTROLLER_SWITCH,
+                                     client->buttonvec, client->encodervec, p);
             }
-
-          if (numpad_active && v == 0) switch (p) {
-            case 30: // Band Buttons
-              schedule_action(NUMPAD_1, PRESSED, 0);
-              break;
-
-            case 31:
-              schedule_action(NUMPAD_2, PRESSED, 0);
-              break;
-
-            case 32:
-              schedule_action(NUMPAD_3, PRESSED, 0);
-              break;
-
-            case 33:
-              schedule_action(NUMPAD_4, PRESSED, 0);
-              break;
-
-            case 34:
-              schedule_action(NUMPAD_5, PRESSED, 0);
-              break;
-
-            case 35:
-              schedule_action(NUMPAD_6, PRESSED, 0);
-              break;
-
-            case 36:
-              schedule_action(NUMPAD_7, PRESSED, 0);
-              break;
-
-            case 37:
-              schedule_action(NUMPAD_8, PRESSED, 0);
-              break;
-
-            case 38:
-              schedule_action(NUMPAD_9, PRESSED, 0);
-              break;
-
-            case 39:
-              schedule_action(NUMPAD_DEC, PRESSED, 0);
-              break;
-
-            case 40:
-              schedule_action(NUMPAD_0, PRESSED, 0);
-              break;
-
-            case 41: {
-              schedule_action(NUMPAD_ENTER, PRESSED, 0);
-              numpad_active = 0;
-              locked = 0;
-            }
-            break;
-
-            case 45: {
-              schedule_action(NUMPAD_MHZ, PRESSED, 0);
-              numpad_active = 0;
-              locked = 0;
-            }
-            } else if (!locked) switch (p) {
-              static int shift = 0;
-
-            case 1: // Rx1 AF Mute
-              if (v == 0) { receiver[0]->mute_radio ^= 1; }
-
-              break;
-
-            case 3: // Rx2 AF Mute
-              if (v == 0) { receiver[1]->mute_radio ^= 1; }
-
-              break;
-
-            case 5: // Filter Cut Defaults
-              schedule_action(FILTER_CUT_DEFAULT, (v == 0) ? PRESSED : RELEASED, 0);
-              break;
-
-            case 7: // Diversity Enable
-              if (RECEIVERS == 2 && n_adc > 1) {
-                schedule_action(DIV, (v == 0) ? PRESSED : RELEASED, 0);
-
-                if (v == 0) {
-                  snprintf(reply, 256, "ZZZI05%d;", diversity_enabled ^ 1);
-                  send_resp(client->fd, reply);
-                }
-              }
-
-              break;
-
-            case 9: // RIT/XIT Clear
-              schedule_action(RIT_CLEAR, (v == 0) ? PRESSED : RELEASED, 0);
-              schedule_action(XIT_CLEAR, (v == 0) ? PRESSED : RELEASED, 0);
-              snprintf(reply, 256, "ZZZI080;");
-              send_resp(client->fd, reply);
-              snprintf(reply, 256, "ZZZI090;");
-              send_resp(client->fd, reply);
-              break;
-
-            case 29: // Shift
-              if (v == 0) {
-                shift ^= 1;
-                snprintf(reply, 256, "ZZZI06%d;", shift);
-                send_resp(client->fd, reply);
-              }
-
-              break;
-
-            case 30: // Band Buttons
-            case 31:
-            case 32:
-            case 33:
-            case 34:
-            case 35:
-            case 36:
-            case 37:
-            case 38:
-            case 39:
-            case 40:
-            case 41:
-              if (shift && v == 0) {
-                int band = band20;
-
-                if (p == 30) { band = band160; }
-                else if (p == 31) { band = band80; }
-                else if (p == 32) { band = band60; }
-                else if (p == 33) { band = band40; }
-                else if (p == 34) { band = band30; }
-                else if (p == 35) { band = band20; }
-                else if (p == 36) { band = band17; }
-                else if (p == 37) { band = band15; }
-                else if (p == 38) { band = band12; }
-                else if (p == 39) { band = band10; }
-                else if (p == 40) { band = band6; }
-                else if (p == 41) { band = bandGen; }
-
-                vfo_band_changed(active_receiver->id ? VFO_B : VFO_A, band);
-                shift = 0;
-                snprintf(reply, 256, "ZZZI060;");
-                send_resp(client->fd, reply);
-              } else if (!shift && v == 1) {
-                if (p == 30) { start_tx(); }                                  // MODE DATA
-                else if (p == 31) { schedule_action(MODE_PLUS, PRESSED, 0); } // MODE+
-                else if (p == 32) { schedule_action(FILTER_PLUS, PRESSED, 0); } // FILTER+
-                else if (p == 33) { radio_change_receivers(receivers == 1 ? 2 : 1); } // RX2
-                else if (p == 34) { schedule_action(MODE_MINUS, PRESSED, 0); } // MODE-
-                else if (p == 35) { schedule_action(FILTER_MINUS, PRESSED, 0); } // FILTER-
-                else if (p == 36) { schedule_action(A_TO_B, PRESSED, 0); }    // A>B
-                else if (p == 37) { schedule_action(B_TO_A, PRESSED, 0); }    // B>A
-                else if (p == 38) { schedule_action(SPLIT, PRESSED, 0); }     // SPLIT
-                else if (p == 39) { schedule_action(NB, PRESSED, 0); }        // U1 (use NB)
-                else if (p == 40) { schedule_action(NR, PRESSED, 0); }        // U2 (use NR)
-              } else if (p == 41) {
-                if (v == 0 || v == 2) {
-                  numpad_active = 1;
-                  locked = 1;
-                  g_idle_add(ext_vfo_update, NULL);
-                  schedule_action(NUMPAD_CL, PRESSED, 0);               // U3 start Freq entry
-                }
-              }
-
-              break;
-
-            case 42: // RIT/XIT
-              if (v == 0) {
-                if (!vfo[active_receiver->id].rit_enabled && !vfo[vfo_get_tx_vfo()].xit_enabled) {
-                  // neither RIT nor XIT: ==> activate RIT
-                  vfo_rit_onoff(active_receiver->id, 1);
-                  snprintf(reply, 256, "ZZZI081;");
-                  send_resp(client->fd, reply);
-                } else if (vfo[active_receiver->id].rit_enabled && !vfo[vfo_get_tx_vfo()].xit_enabled) {
-                  // RIT but no XIT: ==> de-activate RIT and activate XIT
-                  vfo_rit_onoff(active_receiver->id, 0);
-                  vfo_xit_onoff(1);
-                  snprintf(reply, 256, "ZZZI080;");
-                  send_resp(client->fd, reply);
-                  snprintf(reply, 256, "ZZZI091;");
-                  send_resp(client->fd, reply);
-                } else {
-                  // else deactivate both.
-                  vfo_rit_onoff(active_receiver->id, 0);
-                  vfo_xit_onoff(0);
-                  snprintf(reply, 256, "ZZZI080;");
-                  send_resp(client->fd, reply);
-                  snprintf(reply, 256, "ZZZI090;");
-                  send_resp(client->fd, reply);
-                }
-
-                g_idle_add(ext_vfo_update, NULL);
-              }
-
-              break;
-
-            case 43: // switch receivers
-              if (receivers == 2) {
-                if (v == 0) {
-                  if (active_receiver->id == 0) {
-                    schedule_action(RX2, PRESSED, 0);
-                    snprintf(reply, 256, "ZZZI07%d;", vfo[VFO_B].ctun);
-                    send_resp(client->fd, reply);
-                    snprintf(reply, 256, "ZZZI08%d;", vfo[VFO_B].rit_enabled);
-                    send_resp(client->fd, reply);
-                    snprintf(reply, 256, "ZZZI100;");
-                  } else {
-                    schedule_action(RX1, PRESSED, 0);
-                    snprintf(reply, 256, "ZZZI07%d;", vfo[VFO_A].ctun);
-                    send_resp(client->fd, reply);
-                    snprintf(reply, 256, "ZZZI08%d;", vfo[VFO_A].rit_enabled);
-                    send_resp(client->fd, reply);
-                    snprintf(reply, 256, "ZZZI101;");
-                  }
-
-                  send_resp(client->fd, reply);
-                  g_idle_add(ext_vfo_update, NULL);
-                }
-              }
-
-              break;
-
-            case 45: // ctune
-              if (v == 1) {
-                schedule_action(CTUN, PRESSED, 0);
-                snprintf(reply, 256, "ZZZI07%d;", vfo[active_receiver->id].ctun ^ 1);
-                send_resp(client->fd, reply);
-                g_idle_add(ext_vfo_update, NULL);
-              }
-
-              break;
-
-            case 47: // MOX
-              if (v == 0) {
-                snprintf(reply, 256, "ZZZI01%d;", mox);
-                send_resp(client->fd, reply);
-              } else {
-                radio_mox_update(mox ^ 1);
-              }
-
-              break;
-
-            case 48: // TUNE
-              if (v == 0) {
-                snprintf(reply, 256, "ZZZI03%d;", tune);
-                send_resp(client->fd, reply);
-              } else {
-                radio_tune_update(tune ^ 1);
-              }
-
-              break;
-
-            case 50: // TWO TONE
-              schedule_action(TWO_TONE, (v == 0) ? PRESSED : RELEASED, 0);
-              break;
-
-            case 49: // PS ON
-              if (v == 0) {
-                if (longpress) {
-                  longpress = 0;
-                } else {
-                  if (can_transmit) {
-                    tx_ps_onoff(transmitter, NOT(transmitter->puresignal));
-                    snprintf(reply, 256, "ZZZI04%d;", transmitter->puresignal);
-                    send_resp(client->fd, reply);
-                  }
-                }
-              } else if (v == 2) {
-                start_ps();
-                longpress = 1;
-              }
-
-              break;
-            }
-
-          if (p == 44) { // VFO lock
-            if (v == 0) {
-              if (numpad_active) {
-                schedule_action(NUMPAD_KHZ, PRESSED, 0);
-                numpad_active = 0;
-                locked = 0;
-              } else {
-                locked ^= 1;
-                g_idle_add(ext_vfo_update, NULL);
-                snprintf(reply, 256, "ZZZI11%d;", locked);
-                send_resp(client->fd, reply);
-              }
-            }
-          }
-          break;
-        } // end of the "type=1" section
-
-        int tr01, tr10, tr12, tr20;
-
-        tr01 = 0;  // indicates a v=0 --> v=1 transision
-        tr12 = 0;  // indicates a v=1 --> v=2 transision
-        tr10 = 0;  // indicates a v=1 --> v=0 transision
-        tr20 = 0;  // indicates a v=2 --> v=0 transision
-
-        if (client->last_v == 0 && v == 1) { tr01 = 1; }
-        if (client->last_v == 1 && v == 2) { tr12 = 1; }
-        if (client->last_v == 1 && v == 0) { tr10 = 1; }
-        if (client->last_v == 2 && v == 0) { tr20 = 1; }
-
-        client->last_v = v;
-
-        if (client->andromeda_type == 4) {
-          //
-          // upgraded G2Mk1 panel push-buttons (including those of the encoders)
-          //
-          switch (p) {
-          case 1:  // left edge lower encoder push-button, silk print: "RX AF/AGC", default: MUTE
-            if (tr01) { schedule_action(MUTE, PRESSED, 0); }
-            break;
-
-          case 5:  // right edge upper encoder push-button, silk print: "Multi 1", default: FILTER_CUT_DEFAULT
-            if (tr01) { schedule_action(FILTER_CUT_DEFAULT, PRESSED, 0); }
-            break;
-
-          case 9:  // right edge lower encoder push-button, silk print: "Multi 2", default: RITXIT_CLEAR
-            if (tr01) { schedule_action(RITXIT_CLEAR, PRESSED, 0); }
-            break;
-
-          case 11:  // left edge upper encoder push-button, silk print: "MIC/DRIVE", default: MULTI_BUTTON
-            if (tr01) { schedule_action(MULTI_BUTTON, PRESSED, 0); }
-            break;
-
-          case 21:  // 4x3 pad, row 4, column 1, silk print: "FCN", default: FUNCTION
-            if (tr01) { schedule_action(FUNCTION, PRESSED, 0); }
-            break;
-
-          case 30:  // 4x3 pad, row 1, column 3, silk print: "Band+", default: BAND_PLUS
-            if (tr01) { schedule_action(BAND_PLUS, PRESSED, 0); }
-            break;
-
-          case 31:  // 4x3 pad, row 1, column 1, silk print: "Mode+", default: MODE_PLUS
-            if (tr01) { schedule_action(MODE_PLUS, PRESSED, 0); }
-            break;
-
-          case 32:  // 4x3 pad, row 1, column 2, silk print: "Fil+", default: FILTER_PLUS
-            if (tr01) { schedule_action(FILTER_PLUS, PRESSED, 0); }
-            break;
-
-          case 33:  // 4x3 pad, row 2, column 3, silk print: "Band-", default: BAND_MINUS
-            if (tr01) { schedule_action(BAND_MINUS, PRESSED, 0); }
-            break;
-
-          case 34:  // 4x3 pad, row 2, column 1, silk print: "Mode-", default: MODE_MINUX
-            if (tr01) { schedule_action(MODE_MINUS, PRESSED, 0); }
-            break;
-
-          case 35:  // 4x3 pad, row 2, column 3, silk print: "Fil-", default: FILTER_MINUS
-            if (tr01) { schedule_action(FILTER_MINUS, PRESSED, 0); }
-            break;
-
-          case 36:  // 4x3 pad, row 3, column 1, silk print: "A>B", default: A_TO_B
-            if (tr01) { schedule_action(A_TO_B, PRESSED, 0); }
-            break;
-
-          case 37:  // 4x3 pad, row 3, column 2, silk print: "B>A", default: B_TO_A
-            if (tr01) { schedule_action(B_TO_A, PRESSED, 0); }
-            break;
-
-          case 38: // 4x3 pad, row 3, column 3, silk print: "Split", default: SPLIT
-            if (tr01) { schedule_action(SPLIT, PRESSED, 0); }
-            break;
-
-          case 42:  // 4x3 pad, row 4, column 2, silk print: "RIT", default: RIT_ENABLE
-            if (tr01) { schedule_action(RIT_ENABLE, PRESSED, 0); }
-            break;
-
-          case 43:  // 4x3 pad, row 4, column 3, silk print: "XIT", default: XIT_ENABLE
-            if (tr01) { schedule_action(XIT_ENABLE, PRESSED, 0); }
-            break;
-
-          case 44:  // right button below VFO knob, silk print: "LOCK", default: LOCK
-            if (tr01) { schedule_action(LOCK, PRESSED, 0); }
-            break;
-
-          case 45:  // left button below VFO knob, silk print: "CTUNE", default: CTUN
-            if (tr01) { schedule_action(CTUN, PRESSED, 0); }
-            break;
-
-          case 47:  // upper button left of the screen, silk print: "MOX", default: MOX
-            if (tr01) { schedule_action(MOX, PRESSED, 0); }
-            break;
-
-          case 50:  // lower button left of screen, silk print: "2TONE/TUNE", default: TUNE
-            if (tr01) { schedule_action(TUNE, PRESSED, 0); }
-            break;
+          } else {
+            g2panel_execute_button(client->andromeda_type, client->buttonvec, p, tr01, tr10, tr12, tr20);
           }
         }
-
-        if (client->andromeda_type == 5) {
-          //
-          // G2 Ultra panel push-buttons, including encoder buttons
-          //
-          switch (p) {
-          case 1:  // left edge lower encoder, push-button, silk print: "RX2 AF/AGC", default: MUTE_RX2
-            if (tr01) { schedule_action(MUTE_RX2, PRESSED, 0); }
-            break;
-
-          case 2:  // left edge upper encoder (directly below power button), push-button, silk print: "RX1 AF/AGC", default: MUTE_RX1
-            if (tr01) { schedule_action(MUTE_RX1, PRESSED, 0); }
-            break;
-
-          case 3: // encoder between power button and screen, push-button, silk print: "DRIVE/MULTI", default: MULTI_BUTTON
-            if (tr01) { schedule_action(MULTI_BUTTON, PRESSED, 0); }
-            break;
-
-          case 4:  // lowest of the four buttons left of the screen, silk print: "ATU", not yet used
-            break;
-
-          case 5:  // second-lowest of the four buttons left of the screen, silk print: "2TONE", default: TWO_TONE
-            if (tr01) { schedule_action(TWO_TONE, PRESSED, 0); }
-            break;
-
-          case 6:  // second-highest of the four buttons left of the screen, silk print: "TUNE", default: TUNE
-            if (tr01) { schedule_action(TUNE, PRESSED, 0); }
-            break;
-
-          case 7:  // highest of the four buttons left of the screen, silk print: "MOX", default: MOX
-            if (tr01) { schedule_action(MOX, PRESSED, 0); }
-            break;
-
-          case 8: // lower left of the VFO knob, silk print: "CTUNE", default: CTUN
-            if (tr01) { schedule_action(CTUN, PRESSED, 0); }
-            break;
-
-          case 9: // lower right of the VFO knob, silk print: "LOCK", default: LOCK
-            if (tr01) { schedule_action(LOCK, PRESSED, 0); }
-            break;
-
-          case 10: // button with silk print "A/B", default: SWAP_RX
-            if (tr01) { schedule_action(SWAP_RX, PRESSED, 0); }
-            break;
-
-          case 11: // button with silk print "RIT/XIT", default: RITSELECT
-            if (tr01) { schedule_action(RITSELECT, PRESSED, 0); }
-            break;
-
-          case 12: // right edge lower encoder, push-button, silk print: "RIT/XIT", default: RITCIT_CLEAR
-            if (tr01) { schedule_action(RITXIT_CLEAR, PRESSED, 0); }
-            break;
-
-          case 13:  // right edge upper encoder, push-button, SHIFT OFF, silk print: "MULTI 2", default: FILTER_CUT_DEFAULT
-            if (tr01) { schedule_action(FILTER_CUT_DEFAULT, PRESSED, 0); }
-            break;
-
-          case 14:  // 4x3 pad row 1 col 1, silk print: "160/MODE+", "no Band", default: MODE_PLUS, long: MENU_MODE
-            if (tr10) { schedule_action(MODE_PLUS, PRESSED, 0); }
-            if (tr12) { schedule_action(MENU_MODE, PRESSED, 0); }
-            break;
-
-          case 15:  // 4x3 pad row 1 col 2, silk print: "80/FIL+", "no Band", default: FILTER_PLUS, long: MENU_FILTER
-            if (tr10) { schedule_action(FILTER_PLUS, PRESSED, 0); }
-            if (tr12) { schedule_action(MENU_FILTER, PRESSED, 0); }
-            break;
-
-          case 16:  // 4x3 pad row 1 col 3, silk print: "60/BAND+", "no Band", default: BAND_PLUS, long: MENU_BAND
-            if (tr01) { schedule_action(BAND_PLUS, PRESSED, 0); }
-            if (tr12) { schedule_action(MENU_BAND, PRESSED, 0); }
-            break;
-
-          case 17:  // 4x3 pad row 2 col 1, silk print: "40/MODE-", "no Band", default: MODE_MINUS
-            if (tr01) { schedule_action(MODE_MINUS, PRESSED, 0); }
-            break;
-
-          case 18:  // 4x3 pad row 2 col 2, silk print: "30/FIL-", "no Band", default: FILTER_MINUS
-            if (tr01) { schedule_action(FILTER_MINUS, PRESSED, 0); }
-            break;
-
-          case 19:  // 4x3 pad row 2 col 3, silk print: "20/BAND-", "no Band", default: BAND_MINUS
-            if (tr01) { schedule_action(BAND_MINUS, PRESSED, 0); }
-            break;
-
-          case 20:  // 4x3 pad row 3 col 1, silk print: "17/A>B", "no Band", default: A_TO_B
-            if (tr01) { schedule_action(A_TO_B, PRESSED, 0); }
-            break;
-
-          case 21:  // 4x3 pad row 3 col 2, silk print: "15/B>A", "no Band", default: B_TO_A
-            if (tr01) { schedule_action(B_TO_A, PRESSED, 0); }
-            break;
-
-          case 22:  // 4x3 pad row 3 col 3, silk print: "12/SPLIT", "no Band", default: SPLIT
-            if (tr01) { schedule_action(SPLIT, PRESSED, 0); }
-            break;
-
-          case 23:  // 4x3 pad row 4 col 1, silk print: "10/F1", "no Band", default: SNB, long: MENU_NOISE
-            if (tr10) { schedule_action(SNB, PRESSED, 0); }
-            if (tr12) { schedule_action(MENU_NOISE, PRESSED, 0); }
-            break;
-
-          case 24:  // 4x3 pad row 4 col 2, silk print: "6/F2", "no Band", default: NB, long: MENU_NOISE
-            if (tr10) { schedule_action(NB, PRESSED, 0); }
-            if (tr12) { schedule_action(MENU_NOISE, PRESSED, 0); }
-            break;
-
-          case 25:  // 4x3 pad row 4 col 3, silk print: "LF/HF/F3", "no Band", default: NR, long: MENU_NOISE
-            if (tr10) { schedule_action(NR, PRESSED, 0); }
-            if (tr12) { schedule_action(MENU_NOISE, PRESSED, 0); }
-            break;
-
-          case 26:  // unused
-            break;
-
-          case 27:  // 4x3 pad row 1 col 1, silk print: "160/MODE+", "Band", default: BAND_160
-            if (tr01) { schedule_action(BAND_160, PRESSED, 0); }
-            break;
-
-          case 28:  // 4x3 pad row 1 col 2, silk print: "80/FIL+", "Band", default: BAND_80
-            if (tr01) { schedule_action(BAND_80, PRESSED, 0); }
-            break;
-
-          case 29:  // 4x3 pad row 1 col 3, silk print: "60/BAND+", "Band", default: BAND_60
-            if (tr01) { schedule_action(BAND_60, PRESSED, 0); }
-            break;
-
-          case 30:  // 4x3 pad row 2 col 1, silk print: "40/MODE-", "Band", default: BAND_40
-            if (tr01) { schedule_action(BAND_40, PRESSED, 0); }
-            break;
-
-          case 31:  // 4x3 pad row 2 col 2, silk print: "30/FIL-", "Band", default: BAND_30
-            if (tr01) { schedule_action(BAND_30, PRESSED, 0); }
-            break;
-
-          case 32:  // 4x3 pad row 2 col 3, silk print: "20/BAND-", "Band", default: BAND_20
-            if (tr01) { schedule_action(BAND_20, PRESSED, 0); }
-            break;
-
-          case 33:  // 4x3 pad row 3 col 1, silk print: "17/A>B", "Band", default: BAND_17
-            if (tr01) { schedule_action(BAND_17, PRESSED, 0); }
-            break;
-
-          case 34:  // 4x3 pad row 3 col 2, silk print: "15/B>A", "Band", default: BAND_15
-            if (tr01) { schedule_action(BAND_15, PRESSED, 0); }
-            break;
-
-          case 35:  // 4x3 pad row 3 col 3, silk print: "12/SPLIT", "Band", default: BAND_12
-            if (tr01) { schedule_action(BAND_12, PRESSED, 0); }
-            break;
-
-          case 36:  // 4x3 pad row 4 col 1, silk print: "10/F1", "Band", default: BAND_10
-            if (tr01) { schedule_action(BAND_10, PRESSED, 0); }
-            break;
-
-          case 37:  // 4x3 pad row 4 col 2, silk print: "6/F2", "Band", default: BAND_6
-            if (tr01) { schedule_action(BAND_6, PRESSED, 0); }
-            break;
-
-          case 38:  // 4x3 pad row 4 col 3, silk print: "LF/HF/F3", "Band", default: BAND_136
-            if (tr01) { schedule_action(BAND_136, PRESSED, 0); }
-            break;
-
-          case 39:  // Reserved
-            break;
-
-          case 40:  // Reserved
-            break;
-
-          case 41:  // right edge upper encoder, push-button, SHIFT ON, silk print: "MULTI 2", default: DIV
-            if (tr01) { schedule_action(DIV, PRESSED, 0); }
-            break;
-          }
-
-        }    // end of G2Mk2 ZZZP code
-
         //
-        // Schedule LED update
+        // Schedule LED update, in case the state has changed
         //
         g_idle_add(andromeda_oneshot_handler, (gpointer) client);
-
       } else {
         // all ANDROMEDA types, unexpected command format
         implemented = FALSE;
@@ -4249,6 +3552,21 @@ gboolean parse_extended_cmd (const char *command, CLIENT *client) {
         t_print("RIGCTL:INFO: Andromeda Client: Type:%c%c h/w:%c%c s/w:%c%c%c\n",
                 command[4], command[5],
                 command[6], command[7], command[8], command[9], command[10]);
+
+        if (client->andromeda_type == 4 || client->andromeda_type == 5) {
+          //
+          // Initialize commands.
+          //
+          if (client->buttonvec) { g_free(client->buttonvec); }
+          if (client->encodervec) { g_free(client->encodervec); }
+          client->buttonvec  = g2panel_default_buttons(client->andromeda_type);
+          client->encodervec = g2panel_default_encoders(client->andromeda_type);
+          g2panelRestoreState(client->andromeda_type, client->buttonvec, client->encodervec);
+          //
+          // This takes care the G2panel menu is shown in the main menu
+          //
+          if (controller == NO_CONTROLLER) { controller = G2_V2; }
+        }
       }
 
       break;
@@ -5329,8 +4647,8 @@ int parse_cmd(void *data) {
       //SET       PSx;
       //READ      PS;
       //RESP      PSx;
-      //NOTE      x = 0: Power on, x=1: off
-      //NOTE      When setting, x=0 is ignored and x=1 leads to shutdown
+      //NOTE      x = 1: Power on, x=0: off
+      //NOTE      When setting, x=1 is ignored and x=0 leads to shutdown
       //NOTE      Reading always reports x=1
       //ENDDEF
       if (command[2] == ';') {
@@ -6429,15 +5747,22 @@ int launch_serial_rigctl (int id) {
 
   //
   // Initialize the rest of the CLIENT data structure
+  // (except fd and fifo)
   //
-  serial_client[id].busy = 0;
-  serial_client[id].done = 0;
-  serial_client[id].running = 1;
-  serial_client[id].andromeda_timer = 0;
-  serial_client[id].auto_reporting = SET(SerialPorts[id].autoreporting);
-  serial_client[id].andromeda_type = 0;
-  serial_client[id].last_fa = 0;
-  serial_client[id].last_fb = 0;
+  serial_client[id].busy               = 0;
+  serial_client[id].done               = 0;
+  serial_client[id].running            = 1;
+  serial_client[id].andromeda_timer    = 0;
+  serial_client[id].auto_reporting     = SET(SerialPorts[id].autoreporting);
+  serial_client[id].andromeda_type     = 0;
+  serial_client[id].last_fa            = -1;
+  serial_client[id].last_fb            = -1;
+  serial_client[id].last_md            = -1;
+  serial_client[id].last_v             = 0;
+  serial_client[id].shift              = 0;
+  serial_client[id].buttonvec          = NULL;
+  serial_client[id].encodervec         = NULL;
+
 
   for (int i = 0; i < MAX_ANDROMEDA_LEDS; i++) {
     serial_client[id].last_led[i] = -1;
@@ -6521,4 +5846,77 @@ void launch_tcp_rigctl () {
   // Start TCP thread
   //
   rigctl_server_thread_id = g_thread_new( "rigctl server", rigctl_server, GINT_TO_POINTER(rigctl_tcp_port));
+}
+void rigctlRestoreState() {
+  GetPropI0("rigctl_tcp_enable",                             rigctl_tcp_enable);
+  GetPropI0("rigctl_tcp_andromeda",                          rigctl_tcp_andromeda);
+  GetPropI0("rigctl_tcp_autoreporting",                      rigctl_tcp_autoreporting);
+  GetPropI0("rigctl_port_base",                              rigctl_tcp_port);
+
+  for (int id = 0; id < MAX_SERIAL; id++) {
+
+    //
+    // Do not overwrite a "detected" port
+    //
+    if (!SerialPorts[id].g2) {
+      GetPropS1("rigctl_serial_port[%d]", id,                  SerialPorts[id].port);
+      GetPropI1("rigctl_serial_enable[%d]", id,                SerialPorts[id].enable);
+      GetPropI1("rigctl_serial_andromeda[%d]", id,             SerialPorts[id].andromeda);
+      GetPropI1("rigctl_serial_baud_rate[%i]", id,             SerialPorts[id].baud);
+      GetPropI1("rigctl_serial_autoreporting[%d]", id,         SerialPorts[id].autoreporting);
+
+      if (SerialPorts[id].andromeda) {
+        SerialPorts[id].baud = B9600;
+      }
+    }
+  }
+
+  //
+  // G2 panel settings are restored when the panel is detected
+  //
+}
+
+void rigctlSaveState() {
+  SetPropI0("rigctl_tcp_enable",                             rigctl_tcp_enable);
+  SetPropI0("rigctl_tcp_andromeda",                          rigctl_tcp_andromeda);
+  SetPropI0("rigctl_tcp_autoreporting",                      rigctl_tcp_autoreporting);
+  SetPropI0("rigctl_port_base",                              rigctl_tcp_port);
+
+  for (int id = 0; id < MAX_SERIAL; id++) {
+    SetPropI1("rigctl_serial_enable[%d]", id,                SerialPorts[id].enable);
+    SetPropI1("rigctl_serial_andromeda[%d]", id,             SerialPorts[id].andromeda);
+    SetPropI1("rigctl_serial_baud_rate[%i]", id,             SerialPorts[id].baud);
+    SetPropS1("rigctl_serial_port[%d]", id,                  SerialPorts[id].port);
+    SetPropI1("rigctl_serial_autoreporting[%d]", id,         SerialPorts[id].autoreporting);
+  }
+
+  //
+  // Save Andromeda controller settings. Only types 4 and 5 are saved.
+  // Only the first controller found is saved, and the search order is:
+  // a) serial clients from the last to the first
+  // b) tcp clients from the first to the last
+  //
+  for (int id = MAX_SERIAL-1; id >= 0; id--) {
+    if (serial_client[id].running &&
+            (serial_client[id].andromeda_type == 4 || serial_client[id].andromeda_type == 5) &&
+            serial_client[id].buttonvec != NULL &&
+            serial_client[id].encodervec != NULL) {
+      g2panelSaveState(serial_client[id].andromeda_type,
+                       serial_client[id].buttonvec,
+                       serial_client[id].encodervec);
+      return;
+    }
+  }
+
+  for (int id = 0; id < MAX_TCP_CLIENTS; id++) {
+    if (tcp_client[id].running &&
+            (tcp_client[id].andromeda_type == 4 || tcp_client[id].andromeda_type == 5) &&
+            tcp_client[id].buttonvec != NULL &&
+            tcp_client[id].encodervec != NULL) {
+      g2panelSaveState(tcp_client[id].andromeda_type,
+                       tcp_client[id].buttonvec,
+                       tcp_client[id].encodervec);
+      return;
+    }
+  }
 }

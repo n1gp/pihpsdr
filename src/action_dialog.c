@@ -17,8 +17,9 @@
 */
 
 #include <gtk/gtk.h>
-#include "main.h"
+
 #include "actions.h"
+#include "main.h"
 
 #define GRID_WIDTH 6
 

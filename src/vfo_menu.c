@@ -24,16 +24,16 @@
 #include <stdint.h>
 #include <locale.h>
 
-#include "new_menu.h"
 #include "band.h"
+#include "ext.h"
 #include "filter.h"
 #include "mode.h"
+#include "new_menu.h"
 #include "radio.h"
+#include "radio_menu.h"
 #include "receiver.h"
 #include "transmitter.h"
 #include "vfo.h"
-#include "ext.h"
-#include "radio_menu.h"
 
 static int myvfo;  //  VFO the menu is referring to
 static GtkWidget *dialog = NULL;

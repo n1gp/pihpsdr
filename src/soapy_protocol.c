@@ -21,28 +21,28 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include <wdsp.h>   // only needed for the resampler
-
 #include <SoapySDR/Constants.h>
 #include <SoapySDR/Device.h>
 #include <SoapySDR/Formats.h>
 #include <SoapySDR/Version.h>
 #include <SoapySDR/Logger.h>
 
+#include <wdsp.h>   // only needed for the resampler
+
+#include "audio.h"
 #include "band.h"
 #include "channel.h"
 #include "discovered.h"
-#include "mode.h"
-#include "filter.h"
-#include "receiver.h"
-#include "transmitter.h"
-#include "radio.h"
-#include "main.h"
-#include "soapy_protocol.h"
-#include "audio.h"
-#include "vfo.h"
 #include "ext.h"
+#include "filter.h"
+#include "main.h"
 #include "message.h"
+#include "mode.h"
+#include "radio.h"
+#include "receiver.h"
+#include "soapy_protocol.h"
+#include "transmitter.h"
+#include "vfo.h"
 
 #define MAX_CHANNELS 2
 static SoapySDRStream *rx_stream[MAX_CHANNELS];

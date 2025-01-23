@@ -37,9 +37,9 @@
 
 #include "discovered.h"
 #include "discovery.h"
-#include "radio.h"
 #include "message.h"
 #include "mystring.h"
+#include "radio.h"
 
 // As we only run in the GTK+ main event loop, which is single-threaded and
 // non-preemptive, we shouldn't need any additional synchronisation mechanisms.

@@ -21,15 +21,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "new_menu.h"
-#include "noise_menu.h"
 #include "band.h"
 #include "bandstack.h"
+#include "ext.h"
 #include "filter.h"
 #include "mode.h"
+#include "new_menu.h"
+#include "noise_menu.h"
 #include "radio.h"
 #include "vfo.h"
-#include "ext.h"
 
 static GtkWidget *dialog = NULL;
 

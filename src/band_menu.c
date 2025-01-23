@@ -22,17 +22,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "new_menu.h"
-#include "band_menu.h"
 #include "band.h"
 #include "bandstack.h"
-#include "filter.h"
-#include "radio.h"
-#include "receiver.h"
-#include "vfo.h"
+#include "band_menu.h"
 #ifdef CLIENT_SERVER
   #include "client_server.h"
 #endif
+#include "filter.h"
+#include "new_menu.h"
+#include "radio.h"
+#include "receiver.h"
+#include "vfo.h"
 
 static GtkWidget *dialog = NULL;
 

@@ -52,11 +52,11 @@
 #include <net/if.h>
 #include <semaphore.h>
 
-#include "saturnregisters.h"              // register I/O for Saturn
-#include "saturnserver.h"
+#include "message.h"
 #include "saturndrivers.h"
 #include "saturnmain.h"
-#include "message.h"
+#include "saturnregisters.h"              // register I/O for Saturn
+#include "saturnserver.h"
 
 struct sockaddr_in reply_addr;              // destination address for outgoing data
 

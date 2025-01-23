@@ -17,6 +17,8 @@
 */
 
 #ifdef GPIO
+#include <gtk/gtk.h>
+
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
@@ -27,18 +29,18 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 
-#include <gtk/gtk.h>
-#include "i2c.h"
+
 #include "actions.h"
-#include "gpio.h"
 #include "band.h"
 #include "band_menu.h"
 #include "bandstack.h"
+#include "ext.h"
+#include "gpio.h"
+#include "i2c.h"
+#include "message.h"
 #include "radio.h"
 #include "toolbar.h"
 #include "vfo.h"
-#include "ext.h"
-#include "message.h"
 
 char *i2c_device = "/dev/i2c-1";
 unsigned int i2c_address_1 = 0X20;

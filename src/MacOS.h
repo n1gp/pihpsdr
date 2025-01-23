@@ -16,6 +16,9 @@
 *
 */
 
+#ifndef _MACOS_H_
+#define _MACOS_H_
+
 /*
  *  Some functions are possibly missing on MacOS and in this case
  *  are replaced with "static inline" functions:
@@ -118,3 +121,5 @@ static inline int clock_nanosleep(clockid_t clock_id, int flags,
 #include <semaphore.h>
 sem_t *apple_sem(int init);
 #endif // __APPLE__
+
+#endif

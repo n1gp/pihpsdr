@@ -16,8 +16,8 @@
 *
 */
 
-#ifndef DAC_H
-#define DAC_H
+#ifndef _DAC_H_
+#define _DAC_H_
 
 typedef struct _dac {
   int antenna;

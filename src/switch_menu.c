@@ -21,20 +21,20 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "main.h"
-#include "new_menu.h"
+#include "action_dialog.h"
+#include "actions.h"
 #include "agc_menu.h"
 #include "agc.h"
 #include "band.h"
 #include "channel.h"
-#include "radio.h"
-#include "receiver.h"
-#include "vfo.h"
-#include "toolbar.h"
-#include "actions.h"
-#include "action_dialog.h"
 #include "gpio.h"
 #include "i2c.h"
+#include "main.h"
+#include "new_menu.h"
+#include "radio.h"
+#include "receiver.h"
+#include "toolbar.h"
+#include "vfo.h"
 
 void switch_menu(GtkWidget *parent);
 

@@ -16,11 +16,8 @@
 *
 */
 
-#ifndef _PANADAPTER_H
-#define _PANADAPTER_H
+#include "receiver.h"
 
 void rx_panadapter_update(RECEIVER* rx);
 void rx_panadapter_init(RECEIVER *rx, int width, int height);
 void display_panadapter_messages(cairo_t *cr, int width, unsigned int fps);
-
-#endif

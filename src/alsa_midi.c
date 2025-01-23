@@ -35,15 +35,14 @@
  *       program amidi.c in alsautils.
  */
 
+#ifndef __APPLE__
+
 #include <gtk/gtk.h>
 
 #include "actions.h"
+#include "message.h"
 #include "midi.h"
 #include "midi_menu.h"
-#include "alsa_midi.h"
-#include "message.h"
-
-#ifndef __APPLE__
 
 #include <pthread.h>
 #include <alsa/asoundlib.h>

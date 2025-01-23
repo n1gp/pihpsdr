@@ -24,24 +24,22 @@
 #include <string.h>
 #include <semaphore.h>
 
-#include "appearance.h"
+#include "actions.h"
 #include "agc.h"
+#include "appearance.h"
 #include "band.h"
+#include "ext.h"
 #include "discovered.h"
+#include "gpio.h"
+#include "message.h"
+#include "mode.h"
+#include "new_menu.h"
 #include "radio.h"
 #include "receiver.h"
-#include "transmitter.h"
 #include "rx_panadapter.h"
+#include "transmitter.h"
 #include "tx_panadapter.h"
 #include "vfo.h"
-#include "mode.h"
-#include "actions.h"
-#ifdef GPIO
-  #include "gpio.h"
-#endif
-#include "ext.h"
-#include "new_menu.h"
-#include "message.h"
 
 /* Create a new surface of the appropriate size to store our scribbles */
 static gboolean
