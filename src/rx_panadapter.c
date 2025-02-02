@@ -196,7 +196,7 @@ void rx_panadapter_update(RECEIVER *rx) {
 
   double dbm_per_line = (double)myheight / ((double)rx->panadapter_high - (double)rx->panadapter_low);
   cairo_set_line_width(cr, PAN_LINE_THIN);
-  cairo_select_font_face(cr, DISPLAY_FONT_BOLD, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+  cairo_select_font_face(cr, DISPLAY_FONT_FACE, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
   cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
   char v[32];
 
@@ -240,7 +240,7 @@ void rx_panadapter_update(RECEIVER *rx) {
   //
   int marker_distance = (rx->pixels * divisor) / rx->sample_rate;
   f = ((min_display / divisor) * divisor) + divisor;
-  cairo_select_font_face(cr, DISPLAY_FONT_BOLD, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+  cairo_select_font_face(cr, DISPLAY_FONT_FACE, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
   //
   // If space is available, increase font size of freq. labels a bit
   //
@@ -309,7 +309,7 @@ void rx_panadapter_update(RECEIVER *rx) {
 
   if (remoteclients != NULL) {
     char text[64];
-    cairo_select_font_face(cr, DISPLAY_FONT_NORMAL, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_select_font_face(cr, DISPLAY_FONT_FACE, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_source_rgba(cr, COLOUR_SHADE);
     cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
     inet_ntop(AF_INET, &(((struct sockaddr_in *)&remoteclients->address)->sin_addr), text, 64);

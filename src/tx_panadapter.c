@@ -128,7 +128,7 @@ void tx_panadapter_update(TRANSMITTER *tx) {
     double dbm_per_line = (double)myheight / ((double)tx->panadapter_high - (double)tx->panadapter_low);
     cairo_set_source_rgba(cr, COLOUR_PAN_LINE);
     cairo_set_line_width(cr, PAN_LINE_THICK);
-    cairo_select_font_face(cr, DISPLAY_FONT_BOLD, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_select_font_face(cr, DISPLAY_FONT_FACE, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
     cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
 
     for (int i = tx->panadapter_high; i >= tx->panadapter_low; i--) {
@@ -175,7 +175,7 @@ void tx_panadapter_update(TRANSMITTER *tx) {
       // that we cannot print the frequencies
       //
       cairo_set_source_rgba(cr, COLOUR_PAN_LINE);
-      cairo_select_font_face(cr, DISPLAY_FONT_BOLD, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+      cairo_select_font_face(cr, DISPLAY_FONT_FACE, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
       cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
       cairo_set_line_width(cr, PAN_LINE_THIN);
       cairo_text_extents_t extents;

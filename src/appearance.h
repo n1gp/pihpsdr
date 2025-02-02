@@ -22,26 +22,13 @@
 // This *only* defines Fonts and sizes for VFO, meter, and the panadapters,
 // since fonts used for GTK buttons, texts, etc. are defined via CSS in css.c
 //
-// NOTE MacOS versus RaspPi:
-// - on RaspPi, there is the font "FreeSans" which can be requested with a normal
-//   and a bold font weight.
-// - on MacOS, there is "FreeSans" but here *only* a normal weight is available,
-//   and there is "FreeSansBold" which *only* has a bold weight.
-//
-// Therefore we define DISPLAY_FONT_NORMAL and DISPLAY_FONT_BOLD here, which shall then
-// exclusively be combined with a normal and bold font weight.
-// These two names are the usually same on RaspPi but should be different on MacOS.
-//
 // Note both the digital and analog RX meter "dBm" reading is printed in a font size
 // that is calculated based on available space.
 //
 //
-#define DISPLAY_FONT_NORMAL     "FreeSans"
-#ifdef __APPLE__
-  #define DISPLAY_FONT_BOLD       "FreeSansBold"
-#else
-  #define DISPLAY_FONT_BOLD       "FreeSans"
-#endif
+#include "css.h"
+
+#define DISPLAY_FONT_FACE  cssfont[which_css_font]
 #define DISPLAY_FONT_SIZE1 10                       // no longer used, this is too small for elder hams
 #define DISPLAY_FONT_SIZE2 12                       // used for SWR, FWD in Tx meter, S-meter ticks, and panadapter labels
 #define DISPLAY_FONT_SIZE3 16                       // used for warning/info in panadapters

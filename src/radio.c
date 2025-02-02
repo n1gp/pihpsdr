@@ -40,6 +40,7 @@
 #ifdef CLIENT_SERVER
   #include "client_server.h"
 #endif
+#include "css.h"
 #include "dac.h"
 #include "discovered.h"
 #include "ext.h"
@@ -330,16 +331,17 @@ int rx_height;
 
 typedef struct {
   char *port;
-  int baud;
+  speed_t speed;
+  int baud_as_integer;
 } SaturnSerialPort;
 
 static SaturnSerialPort SaturnSerialPortsList[] = {
-   {"/dev/serial/by-id/g2-front-9600", B9600},
-   {"/dev/serial/by-id/g2-front-115200", B115200},
-   {"/dev/ttyAMA1", B9600},
-   {"/dev/ttyS3", B9600},
-   {"/dev/ttyS7", B115200},
-   {NULL, 0}
+  {"/dev/serial/by-id/g2-front-9600", B9600, 9600},
+  {"/dev/serial/by-id/g2-front-115200", B115200, 115200},
+  {"/dev/ttyAMA1", B9600, 9600},
+  {"/dev/ttyS3", B9600, 9600},
+  {"/dev/ttyS7", B115200, 115200},
+  {NULL, 0, 0}
 };
 
 static void radio_restore_state();
@@ -1030,7 +1032,7 @@ void radio_start_radio() {
     //
     SerialPorts[id].enable = 0;
     SerialPorts[id].andromeda = 0;
-    SerialPorts[id].baud = 0;
+    SerialPorts[id].speed = 0;
     SerialPorts[id].autoreporting = 0;
     SerialPorts[id].g2 = 0;
     snprintf(SerialPorts[id].port, sizeof(SerialPorts[id].port), "/dev/ttyACM%d", id);
@@ -1050,11 +1052,12 @@ void radio_start_radio() {
       if (cp != NULL) {
         SerialPorts[MAX_SERIAL - 1].enable = 1;
         SerialPorts[MAX_SERIAL - 1].andromeda = 1;
-        SerialPorts[MAX_SERIAL - 1].baud = ChkSerial->baud;
+        SerialPorts[MAX_SERIAL - 1].speed = ChkSerial->speed;
         SerialPorts[MAX_SERIAL - 1].autoreporting = 0;
         SerialPorts[MAX_SERIAL - 1].g2 = 1;
         snprintf(SerialPorts[MAX_SERIAL - 1].port, sizeof(SerialPorts[MAX_SERIAL - 1].port), "%s", cp);
-        t_print("Serial port %s used for G2 panel with %d baud\n", cp, ChkSerial->baud);
+        t_print("Serial port %s ==> %s used for G2 panel with %d baud\n",
+                ChkSerial->port, cp, ChkSerial->baud_as_integer);
         break;
       } else {
         t_print("Serial port %s not found.\n", ChkSerial->port);
@@ -1561,7 +1564,7 @@ void radio_start_radio() {
     soapy_protocol_set_rx_antenna(rx, adc[0].antenna);
     soapy_protocol_set_rx_frequency(rx, VFO_A);
     soapy_protocol_set_automatic_gain(rx, adc[0].agc);
-    soapy_protocol_set_gain(rx);
+    if (!adc[0].agc) { soapy_protocol_set_gain(rx); }
 
     if (vfo[0].ctun) {
       rx_set_frequency(rx, vfo[0].ctun_frequency);
@@ -2137,8 +2140,8 @@ void radio_set_tune(int state) {
         //
         tx_ps_resume(transmitter);
       }
-      tx_set_compressor(transmitter);
 
+      tx_set_compressor(transmitter);
       tune = state;
       radio_calc_drive_level();
     }
@@ -2433,6 +2436,7 @@ static void radio_restore_state() {
   GetPropI0("rx_stack_horizontal",                           rx_stack_horizontal);
   GetPropI0("vfo_layout",                                    vfo_layout);
   GetPropI0("optimize_touchscreen",                          optimize_for_touchscreen);
+  GetPropI0("which_css_font",                                which_css_font);
 
   //
   // TODO: I think some further options related to the GUI
@@ -2553,22 +2557,12 @@ static void radio_restore_state() {
     GetPropI1("radio.adc[%d].dither", i,                     adc[i].dither);
     GetPropI1("radio.adc[%d].random", i,                     adc[i].random);
     GetPropI1("radio.adc[%d].preamp", i,                     adc[i].preamp);
-
-    if (have_rx_att) {
-      GetPropI1("radio.adc[%d].attenuation", i,              adc[i].attenuation);
-      GetPropI1("radio.adc[%d].enable_step_attenuation", i,  adc[i].enable_step_attenuation);
-    }
-
-    if (have_rx_gain) {
-      GetPropF1("radio.adc[%d].gain", i,                     adc[i].gain);
-      GetPropF1("radio.adc[%d].min_gain", i,                 adc[i].min_gain);
-      GetPropF1("radio.adc[%d].max_gain", i,                 adc[i].max_gain);
-    }
-
-    if (device == SOAPYSDR_USB_DEVICE) {
-      GetPropI1("radio.adc[%d].agc", i,                      adc[i].agc);
-    }
-
+    GetPropI1("radio.adc[%d].attenuation", i,                adc[i].attenuation);
+    GetPropI1("radio.adc[%d].enable_step_attenuation", i,    adc[i].enable_step_attenuation);
+    GetPropF1("radio.adc[%d].gain", i,                       adc[i].gain);
+    GetPropF1("radio.adc[%d].min_gain", i,                   adc[i].min_gain);
+    GetPropF1("radio.adc[%d].max_gain", i,                   adc[i].max_gain);
+    GetPropI1("radio.adc[%d].agc", i,                        adc[i].agc);
     GetPropI1("radio.dac[%d].antenna", i,                    dac[i].antenna);
     GetPropF1("radio.dac[%d].gain", i,                       dac[i].gain);
   }
@@ -2600,6 +2594,10 @@ static void radio_restore_state() {
     n2adr_oc_settings(); // Apply default OC settings for N2ADR board
   }
 
+  //
+  // 3.) select font
+  //
+  load_font(which_css_font);
   g_mutex_unlock(&property_mutex);
 }
 
@@ -2648,6 +2646,7 @@ void radio_save_state() {
   SetPropI0("rx_stack_horizontal",                           rx_stack_horizontal);
   SetPropI0("vfo_layout",                                    vfo_layout);
   SetPropI0("optimize_touchscreen",                          optimize_for_touchscreen);
+  SetPropI0("which_css_font",                                which_css_font);
   //
   // TODO: I think some further options related to the GUI
   // have to be moved up here for Client-Server operation
@@ -2750,22 +2749,12 @@ void radio_save_state() {
     SetPropI1("radio.adc[%d].dither", i,                     adc[i].dither);
     SetPropI1("radio.adc[%d].random", i,                     adc[i].random);
     SetPropI1("radio.adc[%d].preamp", i,                     adc[i].preamp);
-
-    if (have_rx_att) {
-      SetPropI1("radio.adc[%d].attenuation", i,              adc[i].attenuation);
-      SetPropI1("radio.adc[%d].enable_step_attenuation", i,  adc[i].enable_step_attenuation);
-    }
-
-    if (have_rx_gain) {
-      SetPropF1("radio.adc[%d].gain", i,                     adc[i].gain);
-      SetPropF1("radio.adc[%d].min_gain", i,                 adc[i].min_gain);
-      SetPropF1("radio.adc[%d].max_gain", i,                 adc[i].max_gain);
-    }
-
-    if (device == SOAPYSDR_USB_DEVICE) {
-      SetPropI1("radio.adc[%d].agc", i,                      adc[i].agc);
-    }
-
+    SetPropI1("radio.adc[%d].attenuation", i,                adc[i].attenuation);
+    SetPropI1("radio.adc[%d].enable_step_attenuation", i,    adc[i].enable_step_attenuation);
+    SetPropF1("radio.adc[%d].gain", i,                       adc[i].gain);
+    SetPropF1("radio.adc[%d].min_gain", i,                   adc[i].min_gain);
+    SetPropF1("radio.adc[%d].max_gain", i,                   adc[i].max_gain);
+    SetPropI1("radio.adc[%d].agc", i,                        adc[i].agc);
     SetPropI1("radio.dac[%d].antenna", i,                    dac[i].antenna);
     SetPropF1("radio.dac[%d].gain", i,                       dac[i].gain);
   }

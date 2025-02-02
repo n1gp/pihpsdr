@@ -623,7 +623,6 @@ void vfo_apply_mode_settings(RECEIVER *rx) {
 
     tx_set_compressor(transmitter);
     tx_set_dexp(transmitter);
-
     suppress_popup_sliders = 1;
     set_mic_gain(mode_settings[m].mic_gain);
     suppress_popup_sliders = 0;
@@ -1348,11 +1347,11 @@ static gboolean vfo_draw_cb (GtkWidget *widget,
 //
 void vfo_update() {
   char wid[6];
+
   if (!vfo_surface) { return; }
 
   int id = active_receiver->id;
   int m = vfo[id].mode;
-
   //
   // Determine the width of the band filter of the active receiver
   // and convert this to a 3-letter string
@@ -1360,6 +1359,7 @@ void vfo_update() {
   int rxhigh = active_receiver->filter_high;
   int rxlow = active_receiver->filter_low;
   int w = rxhigh - rxlow;
+
   //
   // CW: renormalize the filter edges to zero
   //
@@ -1372,17 +1372,18 @@ void vfo_update() {
   }
 
   if (w < 995) {
-    w = 10 * ((w+5)/10);   // between 0 and 990
+    w = 10 * ((w + 5) / 10); // between 0 and 990
     snprintf(wid, sizeof(wid), "%3d", w);
   } else if (w < 9950) {
-    w = 100 * ((w+50) / 100); // between 1000 and 9900
+    w = 100 * ((w + 50) / 100); // between 1000 and 9900
     // print "2.7k" for a width of 2700
-    snprintf(wid, sizeof(wid), "%d.%dk", w/1000, (w % 1000) / 100);
+    snprintf(wid, sizeof(wid), "%d.%dk", w / 1000, (w % 1000) / 100);
   } else {
     // print "11k" for a width of 11000
-    w = (w+500) / 1000;
+    w = (w + 500) / 1000;
     snprintf(wid, sizeof(wid), "%2dk", w);
   }
+
   int f = vfo[id].filter;
   int txvfo = vfo_get_tx_vfo();
   const VFO_BAR_LAYOUT *vfl = &vfo_layout_list[vfo_layout];
@@ -1396,7 +1397,7 @@ void vfo_update() {
   cr = cairo_create (vfo_surface);
   cairo_set_source_rgba(cr, COLOUR_VFO_BACKGND);
   cairo_paint (cr);
-  cairo_select_font_face(cr, DISPLAY_FONT_BOLD, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+  cairo_select_font_face(cr, DISPLAY_FONT_FACE, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
 
   // -----------------------------------------------------------
   //

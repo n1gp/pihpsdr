@@ -5533,7 +5533,7 @@ int parse_cmd(void *data) {
 }
 
 // Serial Port Launch
-int set_interface_attribs (int fd, int speed, int parity) {
+int set_interface_attribs (int fd, speed_t speed, int parity) {
   struct termios tty;
   memset (&tty, 0, sizeof tty);
 
@@ -5705,7 +5705,7 @@ static gpointer serial_server(gpointer data) {
 
 int launch_serial_rigctl (int id) {
   int fd;
-  int baud;
+  speed_t speed;
   t_print("%s:  Port %s\n", __FUNCTION__, SerialPorts[id].port);
   //
   // Use O_NONBLOCK to prevent "hanging" upon open(), set blocking mode
@@ -5721,19 +5721,19 @@ int launch_serial_rigctl (int id) {
   t_print("%s: serial port fd=%d\n", __FUNCTION__, fd);
   serial_client[id].fd = fd;
   // hard-wired parity = NONE
-  baud = SerialPorts[id].baud;
+  speed = SerialPorts[id].speed;
 
   //
   // ANDROMEDA uses a hard-wired baud rate 9600
   //
   if (SerialPorts[id].andromeda && !SerialPorts[id].g2) {
-    baud = B9600;
+    speed = B9600;
   }
-  t_print("%s: Baud rate=%d\n", __FUNCTION__, baud);
 
+  t_print("%s: Speed (baud rate code)=%d\n", __FUNCTION__, (int) speed);
   serial_client[id].fifo = 0;
 
-  if (set_interface_attribs (fd, baud, 0) == 0) {
+  if (set_interface_attribs (fd, speed, 0) == 0) {
     set_blocking (fd, 1);                   // set blocking
   } else {
     //
@@ -5862,11 +5862,11 @@ void rigctlRestoreState() {
       GetPropS1("rigctl_serial_port[%d]", id,                  SerialPorts[id].port);
       GetPropI1("rigctl_serial_enable[%d]", id,                SerialPorts[id].enable);
       GetPropI1("rigctl_serial_andromeda[%d]", id,             SerialPorts[id].andromeda);
-      GetPropI1("rigctl_serial_baud_rate[%i]", id,             SerialPorts[id].baud);
+      GetPropI1("rigctl_serial_baud_rate[%i]", id,             SerialPorts[id].speed);
       GetPropI1("rigctl_serial_autoreporting[%d]", id,         SerialPorts[id].autoreporting);
 
       if (SerialPorts[id].andromeda) {
-        SerialPorts[id].baud = B9600;
+        SerialPorts[id].speed = B9600;
       }
     }
   }
@@ -5885,7 +5885,7 @@ void rigctlSaveState() {
   for (int id = 0; id < MAX_SERIAL; id++) {
     SetPropI1("rigctl_serial_enable[%d]", id,                SerialPorts[id].enable);
     SetPropI1("rigctl_serial_andromeda[%d]", id,             SerialPorts[id].andromeda);
-    SetPropI1("rigctl_serial_baud_rate[%i]", id,             SerialPorts[id].baud);
+    SetPropI1("rigctl_serial_baud_rate[%i]", id,             SerialPorts[id].speed);
     SetPropS1("rigctl_serial_port[%d]", id,                  SerialPorts[id].port);
     SetPropI1("rigctl_serial_autoreporting[%d]", id,         SerialPorts[id].autoreporting);
   }

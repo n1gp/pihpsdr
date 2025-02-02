@@ -20,7 +20,7 @@
 \frontmatter
 \title{
 \pH User's Manual \\
-\small{For development version 2.4}
+\small{\pH development version 2.5}
 }
 \author{
 Christoph van W\"ullen, DL1YCF \\
@@ -59,7 +59,7 @@ where the \LaTeX\   ,,source code'' of this manual, together with all figures in
 in the \texttt{release/LatexManual} directory. At this moment this code has numerous additions/corrections
  compared
 to the \pH code in John Melton's master repository, but there is still hope that both versions can
-be merged in  the  future.
+be merged in  the  future. A version history can be found in Chapter \ref{sec:versionhistory}.
 
 If you think you can improve the manual, you are welcome.
 Simply fork the above repository and make a pull request, or (this is the recommended way) write an
@@ -68,6 +68,7 @@ email to the author: \texttt{dl1ycf@darc.de}
 \mainmatter
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Introduction}
+\section{What is \pH?}
 \pH is a program that can operate with software defined radios (SDRs). As a graphical user interface,
 it uses the GTK-3 toolkit, while the actual signal processing is done by Warren Pratt's WDSP library. Thus,
 \pH organises the transfer of digitised radio ,,intermediate frequency'' (IF)
@@ -82,15 +83,16 @@ including a Raspberry Pi (hence
 the name \pH), but equally well on Linux desktop or laptop computers, and on Apple Macintosh (Mac OSX)
 computers which have a Unix variant under the hood.
 It is possible to run
-/pH under the Windows operating system, see e.g. \texttt{https://github.com/ew8bak/pihpsdr}.
-This page reports how to set up an ,,ecosystem'' under Windows which can then be used to compile
+\pH under the Windows operating system, see e.g. \texttt{https://github.com/ew8bak/pihpsdr}.
+There you find instructions on how to set up an ,,ecosystem'' under Windows which can then be used to compile
 \pH. The resource mentioned seems to come with an older version of \pH, but others have reported
 that using that ,,ecosystem'' it is possible to run the version of \pH described in this document
 as well. Note that this is what has been reported to me, I never tried to use \pH under Windows
 myself.
 
 
-Although \pH can be operated entirely by using mouse and keyboard as input devices, many users prefer to
+Although \pH can be operated entirely by using mouse (or touchscreen) 
+and keyboard as input devices, many users prefer to
 have physical push-buttons and/or knobs or dials. To this end, \pH can control push-buttons and rotary
 encoders connected to the GPIO (general purpose input/output)
 lines of a Raspberry Pi. At least two generations of such controllers have
@@ -105,7 +107,7 @@ which
 have successfully been used with \pH. A third possibility to control \pH is via a serial interface
 through CAT (computer aided transceiver) commands. The CAT model used by \pH is based on the Kenwood
 TS-2000 command set with lots of PowerSDR extensions. The ANDROMEDA controller uses such CAT commands to
-communicate with /pH, so using CAT is, in addition to MIDI, the second option to have buttons and knobs
+communicate with \pH, so using CAT is, in addition to MIDI, the second option to have buttons and knobs
 for general (non-GPIO) computers.
 
 Using a touch-screen instead of a mouse offers the possibility to put the actual radio hardware together
@@ -122,7 +124,7 @@ rather quickly over time, I do no longer have precompiled binaries in the reposi
 usually only work on a specific hardware, and with a specific variant (e.g. 32-bit compared to 64-bit) of
 the operating system. It is therefore necessary to build \pH \textit{on the target system}
 from the sources. I know this sounds daunting to non-LINUX-nerds. But I have put much effort into making
-the installation/compilation procedure semi-automatic and easy-to-use for non-nerds.
+the installation/compilation procedure semi-automatic and easy-to-use for ``the rest of us''.
 To this end, I provide so-called shell scripts which do all the work behind the scene.
 The procedure is described in some detail in Appendix \ref{sec:installsources} for Linux (including RaspPi)
 computers and in Appendix \ref{sec:installmacosx} for Mac OSX. Several ,,absolute beginners'' have meanwhile
@@ -144,6 +146,46 @@ description, depending on whether the text refers to the command in an abstract 
 can be found on the screen. This may be confusing upon first reading, but I shall try to follow the colouring
  convention as laid out here.
 
+\section{Version history}
+\label{sec:versionhistory}
+Here we list the main new featured introduced in each version.
+
+\medskip
+\textbf{\pH Version 2.4, released January 2024}
+\begin{itemize}
+\item{Dynamically change the font \pH is using (\bltt{Screen} menu)}
+\item{Dynamically assign functions to G2 Ultra panel knobs/buttons (\bltt{G2panel} menu)}
+\item{Stripped-down TCI server for use with logbook programs and linear amplifiers (\bltt{CAT/TCI} menu)}
+\end{itemize}
+
+\medskip
+\textbf{\pH Version 2.3, released October 2024}
+\begin{itemize}
+\item{Preliminary ``accessibility'' support for the blind (see Appendix \ref{sec:accessibility})}
+\item{Added the ``trained'' NR2 noise reduction method introduced with WDSP 1.25 (\bltt{Noise} menu)}
+\item{Extended the RX and TX equalizers to 10 bands (\bltt{Equalizer} menu)}
+\item{Support for HermesLite-II I/O board}
+\item{Added audio capture and replay (see Chapter \ref{sec:capture})}
+\item{Added a multi-function encoder (Appendix \ref{sec:multiencoder})}
+\end{itemize}
+
+\medskip
+\textbf{\pH Version 2.2, released October 2023}
+\begin{itemize}
+\item{Support for ANAN-G2 radios}
+\item{Added a CW audio peak filter (\bltt{Filter} menu)}
+\item{A new double-buffering scheme that ``survives'' short-time CPU stalling in the DSP functions}
+\item{Support for ANDROMEDA controllers}
+\item{Added an in-depth manual (this document)}
+\item{\pH now works both with light and dark GTK themes}
+\item{Option for ``touch screen friendly'' combo-boxes}
+\item{Dynamically change the size  of the \pH window (\bltt{Screen} menu)}
+\item{Unified layout for nearly all menus}
+\end{itemize}
+
+\medskip
+\textbf{\pH Version 2.0.8}\\
+The last synchronisation with John Melton's (G0ORX) \pH version 2.0.8 took place in January 2022.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Starting \pH for the first time}
 Let us assume you have an SDR (say, an Anan-7000 or a HermesLite-II) powered up and connected to an antenna,
@@ -199,7 +241,7 @@ the network connection, you then see a screen with a discovery menu (Fig. \ref{f
 It is possible that the \rett{Start} button is deactivated and shows another text. \rett{In Use} at
 this point means that the radio is already in use (connected by another SDR application), while
 \rett{Incompatible} denotes that the radio is not compatible with this version of \pH. This
-is only the case if piHPDSR runs on the compute module inside the new Anan Saturn/G2
+is only the case if \pH runs on the compute module inside the new Anan Saturn/G2
 radios and the FPGA firmware is known to be too old (or too new)
 for direct (XDMA) data transfer between the compute
 module and the FPGA. Updating both \pH and the FPGA firmware to the latest version
@@ -242,25 +284,31 @@ automatically started. So in normal operation, when starting \pH subsequently, a
 still valid, the radio is started without user intervention. If this option is activated and one radio is
 present, you will not see this menu, so in order to make further changes here, you have to disconnect the
 radio from the ethernet cable, start \pH until you see this menu, and update the \rett{Protocols}
-settings. Then you can re-discover using the \rett{Discover} button.}
+settings. Then you can re-discover using the \rett{Discover} button.
+If you have an Anan-G2 radio and activated \texttt{Autostart}, then you have a problem. Since always
+exactly one radio (the G2) is discovered, you will always step over the discovery menu and start the
+radio right away, which means you cannot change any setting in the discovery menu. The only way
+to get of of this trap is to remove the file \texttt{protocols.props} in the directory where \pH
+stores its settings. On a G2, this is usually \texttt{\$HOME/github/pihpsdr}.
+
+}
 \end{itemize}
 
-See Appendix \ref{sec:compiletime} on how to specify the compile time options.
 
 Sometimes \pH needs to know the IP address of the radio. This is, for example, the case for the
 \texttt{STEMlab} discovery
 described above. In such a case the IP address in numerical form (xxx.xxx.xxx.xxx) can be entered in the box
 with the label \rett{Radio IP Addr:}. If a legal IP address is contained in this box, protocol-1 and
 protocol-2 discovery queries
-will also sent to the IP address specified, in addition to the standard broadcast discovery packets which
+will also be sent to the IP address specified, in addition to the standard broadcast discovery packets which
 can only reach
 radios on the same network segment. With a known IP address (and if supported by the radio),  one can
 connect to radios which are not on the same sub-net as the computer, in principle you can connect to any
 radio on the world
 provided it is on the internet. However, the original HPSDR standard states that a broadcast packet must be
-used, so several
-radios won't reply. On the other hand, there are some radios such as a RedPitaya or a HermesLite-II which
-allow being discovered by such a routed packet.
+used, so radios strictly adhering to that standard
+won't reply. On the other hand, there are some radios such as a RedPitaya or a HermesLite-II which
+allow being discovered by such a routed (non-broadcast) packet.
 
 The \rett{Discover} button re-starts the discovery process. This is useful if the radio has been powered up
 too late and
@@ -269,7 +317,7 @@ was not yet ready when \pH was started. Simply press \rett{Discover} to start an
 The combo-box (pop-down menu) to the left of the \rett{Discover} button lets you choose which type of GPIO
 controller you
 have attached to the computer.  If compiled with GPIO support (this can also be done for
-programs running on a Raspberry Pi or on an internal Raspberry module of Anan G2 radios),
+programs running on a Raspberry Pi or on an internal Raspberry module of first-generation (2023) Anan G2 radios),
 the menu lets you choose between
 
 \begin{itemize}[font=\texttt, left=80pt]
@@ -287,15 +335,18 @@ This controller is denoted Controller2 in the rest of this manual.}
 \item[G2 Front Panel]{Choose this if you have an Anan G2 radio with a built-in controller.}
 \item[G2 Mk2 Panel]{Choose this if you have an Anan G2 Mk2 (also known as ,,G2 Ultra'')
 radio (with LEDs in the front panel).
-This not only tells \pH not to use any GPIO lines, but also to use a serial line to connect to the front panel.
-So this setting is needed for G2 Mk2 even if \pH is compiled without GPIO support.}
+This tells \pH not to use any GPIO lines, if it is compied with GPIO support. However, it is
+strongly recommended \textit{not} to eable GPIO for G2 Ultras. Previously, \pH required this choice
+to set up the serial line for the panel controller of the G2 Ultras, but this is now handled
+automatically.}
 \end{itemize}
 
 \textbf{Attention.} Be sure to choose a controller only if such a controller is actually connected to your
 Raspberry Pi. Unexpected things can happen if you chose one type of controller here but have totally different
 hardware connected to the GPIO. For example, if you have a so-called ,,audio hat'' attached to the RaspPi
 GPIO, then it is safest to choose \texttt{No Controller} to avoid \pH using GPIO lines actually used
-by the audio hat.
+by the audio hat. The same applies to G2 Ultras where GPIO lines may be used for serial connection
+to the panel.
 
 All settings (protocols, controller, IP address) made in this menu are stored in the global (radio
 independent) settings
@@ -346,7 +397,7 @@ is completely black in the above picture since there was no RF signal.
 
  Many conventional rigs with two independent receivers discriminate
  between the \textit{main} and the \textit{sub} receiver. It is important that
- this is \textbf{not} the case for \pH. In piHPDSR, both  receivers are
+ this is \textbf{not} the case for \pH. In \pH, both  receivers are
  largely equivalent. For example, if you start transmitting in
  normal (non-split) mode, the TX frequency matches the frequency
  of the active receiver, no matter whether this is RX1 or RX2.
@@ -729,13 +780,12 @@ which has been selected, if its width has been adjusted
 e.g. by using controller knobs.
 In Fig. \ref{fig:VFObar}, the text is \rett{USB 2.7k}
 which indicates that the  mode
-is USB using the filter width is about 2.7 kHz. If the filter
-width has not been temporarily modified (for fighting QRM)
-using a controller or panel button, then this agrees with the
-name of the chosen filter except for the two variable filters
-(\texttt{Var1} and \texttt{Var2}) which are there for each mode
-(see the \bltt{Filter} menu). So note the VFO bar reports the
-actual filter width and not the name of the chosen filter.
+is USB and the filter width is about 2.7 kHz.
+Note the VFO bar reports the
+\textit{actual} filter width and not the name of the chosen filter,
+the actual filter width can be temporarily modified for QRM fighting
+if one has e.g. a console or a penal with knobs assigned to the \bltt{Filter Cut High/Low}
+commands.
 For the CW (CWU and CWL) modes, the CW speed (in wpm) and the side tone
 frequency (in Hz) is stated as well. For CW, the filter size may be appended
 by a ,,P'', which indicates whether the CW audio peak filter (see the
@@ -856,11 +906,9 @@ indicator becomes yellow and shows the offset of the true
 TX frequency from the VFO dial frequency.
 
 Finally, in the top right corner you see a symbol with a green and a red line
-that only occurs if
-one of the variable filters (\texttt{Var1} or \texttt{Var2}) have been
-selected. The green caret indicates the default filter edges,  while the
-red one above denotes the current filter edges.
-
+which show the actual RX filter edges (in red) compared to the nominal
+filter edges (in green). Both filter edges normally agree unless the actual
+filter edge has been temporarily modified, e.g. to cope with QRM.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Meter section}
 \label{sec:MeterSection}
@@ -907,10 +955,10 @@ is described in the \bltt{Meter} menu.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter{piHPSDR menus: introduction}
+\chapter{\pH menus: introduction}
 
-\section{piHPSDR menus}
-Now we have a series of chapters that discuss all the piHPDSR menus. Many menus can be
+\section{\pH menus}
+Now we have a series of chapters that discuss all the \pH menus. Many menus can be
 opened by a button click (or a push-button on an external controller), e.g. hitting the
  \rett{MODE}, \rett{FILT}, or \rett{NOISE} button on the
 toolbar you have seen in the last picture. You already know that the VFO and Meter
@@ -940,7 +988,7 @@ recommended.
 \section{Using menus \textit{and} controllers/panels}
 
 Menus in piHPSR are windows that pop up if a menu is opened. These windows by default are positioned such
-that they cover a relevant part of the piHPSDR window. If you have a large display, you can move the menu
+that they cover a relevant part of the \pH window. If you have a large display, you can move the menu
 window such that it no longer covers the panadapter(s), if you want.
 
 If a menu window pops open, its controls reflect the status of \pH when the menu opens. One can then operate
@@ -962,7 +1010,7 @@ is open is not supported. In most cases, \pH will behave as expected, but
 if you change a \pH setting with a controller or a panel while a menu is open that lets you change just
 that setting, the behavious may be unexpected or even undetermined.
 
-\section{The main piHPSDR menu}
+\section{The main \pH menu}
 \begin{figure}[ht]
 \center
 \includegraphics[width=10cm]{MainMenu.png}
@@ -990,17 +1038,22 @@ breaking the connection to the radio, do some work with the operating system, an
 get the \pH window back. Note in earlier versions of \pH this function was
 associated with the "Hide" button in the top right corner of the main window.
 Then, there are two menus (\bltt{Exit} and \bltt{About}) which are described in due course and which
-one can open by clicking either \rett{Exit piHPDSR} or \rett{About} in the main menu.
+one can open by clicking either \rett{Exit \pH} or \rett{About} in the main menu.
 
 The other buttons, between the two horizontal separator lines, give access to \pH
 control and fine tuning. They are organised in six columns, namely radio related
 menus (first column), VFO related menus (second column), RX and TX related menus (third
 and fourth column), menus affecting both RX and TX (fifth column) and, finally,
 menus for adjusting how you can control \pH (sixth column), either via Toolbar,
-MIDI, or GPIO encoders or switches. \textbf{,,Encoders''} are knobs which you can turn, and which
-can be used to change AF volume or TX output power. \textbf{,,Switches''} are push-buttons which
-can be used to trigger a function such as transmitting a carrier for tuning, toggle
-between RX and TX, open a menu, and so forth.
+MIDI, GPIO encoders/switches or the new G2-ultra front panel.
+ 
+Not all menus appear in all cases: For example, the \bltt{Encoders} and \bltt{Switches}
+menus shown in Fig. \ref{fig:MainMenu} are only present if \pH is controlled by
+a GPIO-based controller. If, instead, a G2-Ultra type front panel is detected, a menu
+\bltt{G2panel} appears in that place which lets you assign non-default functions to
+buttons and encoders of the front panel. If there is neither a GPIO controller nor
+a G2-Ultra front panel, the last column of the main menu ends with the \bltt{MIDI}
+menu.
 
 Whenever one of the sub-menus is closed, /pH writes its settings to the props file. This is not done
 automatically (that is, periodically) because on some systems I/O operations affect
@@ -1333,24 +1386,50 @@ the author.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The \texttt{Screen} Menu}
 
-The \bltt{Screen} menu lets you dynamically change the size of the \pH main
-window, and choose between different VFO bar layouts. Furthermore, one
+The \bltt{Screen} menu lets you dynamically change the font used by \pH and 
+the size of the \pH main
+window, it also lets you choose between different VFO bar layouts that are designed to fit
+on a screen with a given width. Furthermore, one
 can select whether the Zoom/Pan, the Sliders, or the Toolbar area are shown or hidden.
 The possibility to adjust
 the screen size has been the most frequent feature request in the last years,
 so I finally decided to implement it. The menu is opened
 via the main menu and the \bltt{Screen} button and is shown in Fig. \ref{fig:ScreenMenu}.
+To demonstrate the effect of choosing another font, the entire \pH window is shown,
+the \rett{Roboto Mono} font has just been chosen. The figure shows how the menu window,
+the slider area and the VFO bar have switched to  the new font.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{ScreenMenu.png}
+\includegraphics[width=12cm]{ScreenMenu.png}
 \caption{The \bltt{Screen} menu.}
 \label{fig:ScreenMenu}
 \end{figure}
 
-The window width and height can be chosen with the spin buttons shown. The minimum
-values for width and height are 640 and 400, the maximum values are determined by
-the resolution of the monitor. If more than one monitor is attached, the dimension
+In the first line there is a combo-box for choosing the font. Currently, the choices
+are \rett{FreeSans}, \rett{Roboto Mono}, \rett{Open Sans} and \rett{Piboto}. Changing
+the font affects all menus, the slider, zoom and tool bars, as well as the VFO bar.
+The default font is \rett{FreeSans} simply because it is supposed to be available on all
+systems. The \rett{Open Sans} and \rett{Piboto} fonts are often told to have a
+better on-screen legibility. Some people prefer mono-spaced fonts, therefore \rett{Roboto Mono}
+is included in the list.
+
+It is possible that the VFO bar layout looks not OK if you choose a font
+that is not installed on your system because the system then falls back to some
+other font that is hard to predict. The list of fonts currently installed can be
+obtained with the \texttt{fc-list} command, but
+if one or more of these fonts are not available on your system, this can easily be
+cured: all fonts offered in the menu can be downloaded
+free of charge from the internet, installation on LINUX usually requires to create
+a directory \texttt{\$HOME/.fonts} (if it not exists already), then copy the downloaded
+font files (\texttt{*.otf} or \texttt{*.ttf}) to that directory and run the command
+\texttt{fc-cache -v -f} in a terminal window. Installation on MacOS is even simpler:
+double-clicking a font  (\texttt{*.ttf}) file will opens the FontBook application
+which shows you the new font, and then click on the "Install" button.
+
+The spin buttons in the next line can be used to adjust the window width and height.
+The minimum values for width and height are 640 and 400, the maximum values are determined by
+the size of the monitor. If more than one monitor is attached, the dimension
 of the monitor on which the initial \pH window was opened determines
 the maximum width and height. Changes made in the spin buttons become effective
 immediately. If \pH is in full screen mode (see below), you can change the
@@ -1369,19 +1448,23 @@ the first one in the list that does fit is automatically selected, and the
 current choice shown in the
  pop-down menu \rett{Select VFO bar layout} is updated. This menu lets you choose
  the layout of the VFO
-bar. In Fig. \ref{fig:VFObarChoice} the pre-defined layouts are shown.
+bar. In Fig. \ref{fig:VFObarChoice} five pre-defined layouts are shown.
 
 
 
 These layouts require a screen size of 1152, 1024, 896, 800, and 640 pixels (from top to
 bottom). Screens slightly wider (about 50 pixel) than these minimal values then allow for a larger meter
 area with increased readability, this enlarged meter is automatically used if the display
-width permits.
+width permits. There is one even larger VFO bar (for a screen width of 1960 pixels) available
+that is not shown but does not look different from the topmost one in Fig. \ref{fig:VFObarChoice}.
 The VFO bar has been described in detail in chapter
 \ref{sec:VFObar}. If you choose a VFO bar layout that is wider than the current
 window width allows, the window width is automatically adjusted (increased). On the
 other hand, choosing a VFO bar layout that is smaller than before does not affect
-the screen dimensions.
+the screen dimensions, but there will then be some empty space between the VFO-B
+frequency and the meter. The smallest VFO bars do not offer enough space to display all controls
+For example, the indicator for the downward expander and the actual filter edges are  missing
+in  the smallest layouts, but if one is restricted to such small screen one has to live with it.
 
 \begin{figure}[ht!]
 \center
@@ -1394,12 +1477,12 @@ Fig. \ref{fig:640x400} shows, as an example, \pH running in a window as small
 as 640*400 pixels. It is admitted that this looks rather squeezed, and this
 will only be useful if a single receiver is run with no waterfall. However, for
 portable operations such small windows are often desired,
-if \pH is to be run alongside with a logbook and/or digi mode program on a small laptop.
+if \pH is to be run alongside with a logbook and digi mode program on a  laptop.
 Note that the \pH menus are designed to fit on a window 800*480 pixels large, so
 it is not recommended to run \pH on a \textit{screen} that small. On the other hand,
 if \pH is run on a laptop in a small 640*400 window, then menus may be larger than
-that but still fit well on the screen (thus hiding, momentarily, the window of,
-say, your logbook program) and are perfectly usable.
+that but still fit well on the screen (thus hiding, momentarily, the window of some
+other program) and are perfectly usable.
 
 \rett{Stack receivers horizontally}. If checked, this puts the panels
 of the two receivers (if two receivers are used) side-by-side instead of on top
@@ -1446,12 +1529,16 @@ either arrive too fast or too slow, such that the first-in/first-out queue of TX
 inside the FPGA of the radio either overflows or drains.
 
 \textbf{High SWR} During TX, an SWR above the SWR threshold has been detected. If this occurs
-frequently, check your antenna. The SWR threshold (default: 3.0) can be set in the
-\bltt{TX} menu.
+frequently, check your antenna. The SWR warning threshold (default: 3.0) can be set in the
+\bltt{TX} menu. Because the forward and reflected power used to calculate the SWR have
+possibly been measured at slightly different points in time, the calculated SWR may be
+much too high at the beginning or the end of an RF pulse. \pH has been instrumented to
+avoid such false warnings by using power readings averaged over some time, but it still
+cannot be excluded that a too high SWR is reported for a short amount of time.
 
 \rett{Display PA current} If this is checked, the PA supply voltage and the PA current
-are shown while transmitting. This data is only available for Orion-II and SATURN boards
-(Anan-7000/8000 and Anan-G2 and the HermesLite-II).
+are shown while transmitting. Such data is only available for Orion-II and SATURN boards
+(Anan-7000/8000 and Anan-G2) and the HermesLite-II.
  For the HermesLite-II, the PA temperature and the PA current are shown.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The \texttt{Display} Menu}
@@ -1678,7 +1765,7 @@ frequency until the display reads 10489.500 MHz. Now swap VFO-A and VFO-B (\bltt
 and enter 2400 MHz into VFO-A using the \bltt{VFO} menu (Chapter \ref{sec:vfomenu}). and
 swap the VFOs again. SAT mode will now ensure the 10.489 GHz Receive
  Frequencies and the 2.4GHz Transmit frequencies track correctly when changes are made
- to the Receive frequency. PiHPSDR will now remember these settings when you select
+ to the Receive frequency. \pH will now remember these settings when you select
  the bands. The complicated swapping was necessary since band stack entries will
  only be stored from VFO-A.
 
@@ -1749,7 +1836,7 @@ can also be entered by push-buttons from a GPIO or MIDI controller, see
 the NumPad commands in Appendix A.
 
 In addition to frequency entry, the VFO menu offers a convenient way of changing
-some piHPDSR settings, simply because the VFO menu can be opened by a simple
+some \pH settings, simply because the VFO menu can be opened by a simple
 mouse click into the VFO bar.
 
 \rett{Rit Step:} In this pop-down menu, the RIT step size can be chosen (1/10/100 Hz).
@@ -2330,7 +2417,7 @@ This means that from 300 to 3000 Hz (the usual range of audio frequencies in ama
 radio FM), there is a 6 dB per octave (20 dB per decade) that leads to a 20 dB damping
 of an input signal at 300 Hz (8 dB damping at 1200 Hz, and no damping ad 3000 Hz).
 This of course distorts the audio, but the reverse process is built into FM demodulators
-to correct for this. Because there is a lot of damping of the audio signal, piHPDSR
+to correct for this. Because there is a lot of damping of the audio signal, \pH
 applies a 15 dB boost to the TX audio input samples when the mode is FMN.
 
 This boost is nearly ineffective if the FM pre-emphasis takes place \textit{after}
@@ -2917,7 +3004,7 @@ are reversed, so you need not re-wire your paddle.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{DSPMenu.png}
+\includegraphics[width=8cm]{DSPMenu.png}
 \caption{The DSP menu.}
 \label{fig:DSPMenu}
 \end{figure}
@@ -3556,7 +3643,7 @@ to change the VFO frequency.
 \begin{figure}[ht!]
 \center
 \includegraphics[width=12cm]{g2_frontpanel.png}
-\caption{A picture of the G2 front panel (image courtesy of Apache Labs).}
+\caption{A picture of the (first generation) G2 front panel (image courtesy of Apache Labs).}
 \label{fig:g2_frontpanel}
 \end{figure}
 
@@ -3566,16 +3653,17 @@ to change the VFO frequency.
 \caption{The Encoder menu for the G2 front panel controller}
 \label{fig:EncoderMenuG2}
 \end{figure}
-The encoders menu can be used to assign functions to the encoders of a
-\pH Controller1, Controller2 or the G2 front panel (first version without LEDs)
-controller. For the second-generation G2 front panels (with LEDs), the functions
-of the knobs and buttons are hard-wired.
-This implies that if \texttt{No Controller} or \texttt{G2 Mk2 Panel} has been chosen
-in the initial discovery screen
-(Fig. \ref{fig:Start}), this menu is not available.
-Note that the ,,large knob'' of these controllers
-cannot be assigned a function, it is hard-wired to the \bltt{VFO} function.
+The \bltt{Encoders} menu can be used to assign functions to the encoders of a
+GPIO-based controller, that is, either a
+Controller1, Controller2 or the G2 front panel of the first-generation Anan-G2 radios
+(those without LEDs and a 7-inch screen). For the second-generation G2 radios
+(``G2 Ultra'') with LEDs and an 8-inch screen in the panel, see the \bltt{G2panel} 
+menu, chapter \ref{sec:G2panelMenu}.
 
+This implies that this menu is only available if \pH has been compiled with GPIO support,
+and if furthermore on the initial (discovery) screen one of the controllers mentioned above have
+been selected. Note further that the ,,large knob'' of these controllers
+cannot be assigned a non-default function, this knob is hard-wired to the \bltt{VFO} function.
 
 
 While the function of this menu is the same in all three cases (Controller1, Controller2,
@@ -3651,14 +3739,19 @@ function printed on the enclosure.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The \texttt{Switches} Menu}
 
-The encoders menu can be used to assign functions to the push buttons of a
-\pH  Controller2 or the G2 front panel controller.
-If \texttt{No Controller}, \texttt{Controller1} or \texttt{G2 Mk2 Panel}
-has been chosen in the initial discovery screen
-(Fig. \ref{fig:Start}), this menu is not available. This menu is not available
+he \bltt{Switches} menu can be used to assign functions to the encoders of a
+GPIO-based controllers Controller2 or the G2 front panel of the first-generation Anan-G2 radios
+(those without LEDs and a 7-inch screen). For the second-generation G2 radios
+(``G2 Ultra'') with LEDs and an 8-inch screen in the panel, see the \bltt{G2panel} 
+menu, chapter \ref{sec:G2panelMenu}.
+
+This implies that this menu is only available if \pH has been compiled with GPIO support,
+and if furthermore on the initial (discovery) screen one of the controllers mentioned above have
+been selected. Note that this menu is also not available
 for the Controller1 because the eight push buttons of this controller are hard-wired to
 the toolbar buttons and their functions as thus assigned via the \bltt{Toolbar} menu
 (see Chapter \ref{sec:toolbarmenu}).
+
 
 On the G2 front panel (see Fig. \ref{fig:g2_frontpanel}),
  there are a lot of push buttons: at the left edge, to the right
@@ -3700,6 +3793,76 @@ shown in Fig. \ref{fig:SwitchMenuV2} which match the functions printed on the en
 \caption{The Switches menu for Controller2.}
 \label{fig:SwitchMenuV2}
 \end{figure}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{The \texttt{G2panel} Menu}
+\label{sec:G2panelMenu}
+
+\begin{figure}[ht]
+\center
+\includegraphics[width=10cm]{g2ultra.png}
+\caption{The front panel of a second-generation G2 radio(image courtesy of Apache Labs).} 
+\label{fig:g2ultrapanel}
+\end{figure}
+
+The \bltt{G2panel} menu becomes available as soon as the presence of a second-generation G2 front panel
+(G2 Ultra or upgraded first-generation G2s) has been detected. These panels communicate with \pH through
+a serial line connection using an ANDROMEDA-like protocol. Fig. \ref{fig:g2ultrapanel} shows the front
+panel of a G2-Ultra. In contrast to a first-generation G2, it has an 8-inch screen and panel contains 
+several LEDs. The \bltt{G2panel} menu also applies to first-generation G2 radios with an upgraded
+compute module running \pH. Part of such an upgrade is an additional micro controller that handles the
+panel and communicates with \pH via a serial line connection.
+
+Note that this menu cannot be used to assign a non-default command to the VFO knob.
+After first opening the \bltt{G2panel} menu, it looks quite empty (Fig. \ref{fig:g2panelmenu-initial}):
+
+\begin{figure}[ht]
+\center
+\includegraphics[width=8cm]{g2panelmenu-1.png}
+\caption{The \bltt{G2panel} menu, just opened.} 
+\label{fig:g2panelmenu-initial}
+\end{figure}
+
+As long as this menu is open, the front panel seems inoperative. The reason is, that all button and
+encoder event are ``digested'' by the menu itself. As soon as a button is pressed or an encoder is
+turned in either direction, the menu records which controller was last used, and reports the last
+recorded action (either a button press or turning an encoder knob). For example, after pressing
+the TUNE button, the menu changes to the following (Fig. \ref{fig2:g2panelmenu-recorded}):
+
+\begin{figure}[ht]
+\center
+\includegraphics[width=8cm]{g2panelmenu-2.png}
+\caption{The \bltt{G2panel} menu, reporting the last ``panel action''.} 
+\label{fig:g2panelmenu-initial}
+\end{figure}
+
+So the menu states that the last ``panel action'' recorded was a button press (the internal code number
+of the button is of little importance here), and that the \pH command assigned to this button was
+\bltt{Tune}. Furthermore, once there has been communication between the panel and the \bltt{G2panel}
+menu, a large button appears at the bottom of the menu which can be used to overwrite all button and
+encoder assignments with the factory default.
+
+I you wish to assign a new command to this button (it is the last button you have touched), simply
+click into the button in the second line which states which command is currently assigned. In our
+example, it is the button with the label \bltt{Tune}. Clicking this button opens the same
+``action dialog'' already discussed in the previous sections. In this dialog, you can choose a
+new command to be assigned with that button. In our example, I have chosen the \bltt{Cmpr On/Off}
+command which switches TX compression on/off (Fig. \ref{fig:g2panelmenu-chosen}).
+
+\begin{figure}[ht]
+\center
+\includegraphics[width=8cm]{g2panelmenu-3.png}
+\caption{The \bltt{G2panel} menu, reporting the newly chosen command.} 
+\label{fig:g2panelmenu-chosen}
+\end{figure}
+
+If one wants to assign new commands to other buttons or encoder, just press the button or turn the
+encoder, and the menu will report a new ``last panel action'' and lets you assign a new command
+to that button or encoder. If all assignments have been made, close the menu and the new panel
+functions become operative.
+
+Note that your assignments are permanent. They will be stored in the props file and be restored
+the next time you start \pH. If you think your choices were not that clever, you can always go back
+to the factory settings, which will then overwrite your personal assignments in the props file as well.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Miscellaneous Topics}
@@ -4496,7 +4659,7 @@ enabled (disabled) if  the resulting value  is non-zero (zero).}
 enabled (disabled) if the resulting value  is non-zero (zero).}
 
 \phcommand{Swap RX}{SWAPRX}{B}{Make the inactive receiver the active one. This command is only effective if
-piHPDSR is running two receivers.}
+\pH is running two receivers.}
 
 \phcommand{ToolBar1}{TBAR1}{B}{Pressing/Releasing this button is equivalent to pressing the leftmost
 (first) of the eight toolbar buttons on the screen.}
@@ -4700,7 +4863,7 @@ slider, you can use the up-arrow and down-arrow keys to fine adjust the value. I
 section we will only list the keyboard binding that are captured and processed by \pH.
 
 \section{Accessibility for the Blind}
-
+\label{sec:accessibility}
 \pH has built-in support for making operating easier for those with very limited
 eye-sight. The idea is that pressing one of the function keys generates a message that
 is read aloud and that informs about frequency, mode, etc.
@@ -4802,7 +4965,7 @@ TS-2000. Modern version of these programs are not restricted to serial lines and
 
 Many digi mode programs (and perhaps others as well) use the \texttt{hamlib} library for radio control. The digi mode
 program communicates with \texttt{hamlib} using an abstract interface, and \texttt{hamlib} then communicates with the radio
-using CAT commands. piHPDSR is supported by \texttt{hamlib}, the radio model name is ,,\texttt{OPENHPSDR PiHPSDR}''.
+using CAT commands. \pH is supported by \texttt{hamlib}, the radio model name is ,,\texttt{OPENHPSDR PiHPSDR}''.
 
 In the SDR community, there exist a heavily extended TS-2000 CAT command set known as the ,,PowerSDR CAT
 command set''. In contrast to the two-letter commands characteristic for the original (TS-2000) CAT
@@ -6069,11 +6232,11 @@ The ALSA audio module for Linux, as well as the PortAudio audio  module for MacO
  take special provisions to keep this latency small. Still, ,,small'' might not
  be small enough for CW at higher speeds, so the present author normally uses
  external hardware to generate a nearly zero latency side tone that is then
- mixed with the audio from piHPDSR.
+ mixed with the audio from \pH.
 
 \textbf{MIDI.}
 If running \pH on non-RaspPi Linux or Macintosh computers, there are no GPIO
-lines. The same problem arises for piHPDSR running on a RaspPi and using a controller
+lines. The same problem arises for \pH running on a RaspPi and using a controller
 which does not leave enough spare GPIO lines. In these cases, the best
 choice to get "the key into the computer" is to use MIDI. There are low-cost
 micro controllers which can be programmed such that they act as MIDI input devices
@@ -6118,7 +6281,7 @@ via MIDI over the USB cable.
 \begin{small}
 \begin{verbatim}
 /*
- * Small Arduino sketch to demonstrate MIDI connection to piHPDSR
+ * Small Arduino sketch to demonstrate MIDI connection to piHPSDR
  * ===============================================================
  */
 
@@ -6295,7 +6458,7 @@ shown here.
 
 In this section, we will cover four different scenarios, namely
 \begin{itemize}
-\item{piHPDSR and digi mode program running on different computers.}
+\item{\pH and digi mode program running on different computers.}
 \item{\pH and digi mode program running on the same LINUX computer
 (including RaspPi) using ALSA.}
 \item{\pH and digi mode program running on the same LINUX computer
@@ -6730,11 +6893,11 @@ library which may or may not be available on the computer intended  to run \pH.
 In contrast to earlier version of \pH which required editing the \texttt{Makefile},
 compile-time options different from the default ones can be enforced by
 creating a text file
-file within the \pH directory which has the name \grtt{make.config.pihpdsr}.
+file within the \pH directory which has the name \grtt{make.config.pihpsdr}.
 
 If this file does not exist, compilation proceeds with the default options defined
 in the \texttt{Makefile}.  The file
-\grtt{make.config.pihpdsr} should contain lines of the form
+\grtt{make.config.pihpsdr} should contain lines of the form
 
 \texttt{OPTION=VALUE}
 
@@ -6742,12 +6905,12 @@ which then assigns a value to the option. The value may be empty, in this case n
 to the option. In most cases, the value is either \texttt{ON} or \texttt{OFF} depending on whether
 the compile-time option shall be activated or not.
 The exception is the \texttt{AUDIO} option, which may take various values
-(see below). For example, for compilation without GPIO support the file \grtt{make.config.pihpdsr}
+(see below). For example, for compilation without GPIO support the file \grtt{make.config.pihpsdr}
 contains the line
 
 \texttt{GPIO=OFF}
 
-After modifying the file \grtt{make.config.pihpdsr}, you have to recompile the
+After modifying the file \grtt{make.config.pihpsdr}, you have to recompile the
 whole program using the commands
 
 
@@ -6825,30 +6988,30 @@ PulseAudio is used. On MacOS, the \texttt{AUDIO} choice has no effect since the 
 module is used no matter what the \texttt{AUDIO} setting is.
 }
 
-\item[\rett{EXTENDED\_NR}] {(\textbf{Deprecated}, default: \texttt{OFF})
-There is a special version of the WDSP library that contains additional noise
-reduction facilities which are based on  \texttt{rnnnoise} and \texttt{libspecbleach}, see
- \texttt{https://github.com/vu3rdd/wdsp}. If you have such a version of WDSP installed, these
- extended noise reduction facilities can be used with \pH if this option is \texttt{ON}.
- Note that activating this option implies that the modified WDSP version is installed such
- that the WDSP include file can be found by the compiler, and that the WDSP (shared)
- library can be linked with the ,,\texttt{-lwdsp}'' linker option. This normally means
- that the WDSP shared library is installed in /usr/local/lib, while the WDSP header file
- is installed in /usr/local/include. The \texttt{wdsp} directory which is part of
- the \pH repository is not used if \texttt{EXTENDED\_NR} is activated.
-
-{\bf Note:} When I  checked the repository mentioned above in November 2024, it seems that the
-WDSP version is outdated (version 1.23) so it cannot be used with \pH. Ask the maintainer
-of that repository to update their code if you want to use it. Note that since version 1.25, WDSP
-contains a new and highly effective ,,trained'' NR2 noise reduction which was very well
-received by the community. Having said this, I consider EXTENDED\_NR as deprecated and may
-remove it from \pH in the future.
-}
+%\item[\rett{EXTENDED\_NR}] {(\textbf{Deprecated}, default: \texttt{OFF})
+%There is a special version of the WDSP library that contains additional noise
+%reduction facilities which are based on  \texttt{rnnnoise} and \texttt{libspecbleach}, see
+% \texttt{https://github.com/vu3rdd/wdsp}. If you have such a version of WDSP installed, these
+% extended noise reduction facilities can be used with \pH if this option is \texttt{ON}.
+% Note that activating this option implies that the modified WDSP version is installed such
+% that the WDSP include file can be found by the compiler, and that the WDSP (shared)
+% library can be linked with the ,,\texttt{-lwdsp}'' linker option. This normally means
+% that the WDSP shared library is installed in /usr/local/lib, while the WDSP header file
+% is installed in /usr/local/include. The \texttt{wdsp} directory which is part of
+% the \pH repository is not used if \texttt{EXTENDED\_NR} is activated.
+%
+%{\bf Note:} When I  checked the repository mentioned above in November 2024, it seems that the
+%WDSP version is outdated (version 1.23) so it cannot be used with \pH. Ask the maintainer
+%of that repository to update their code if you want to use it. Note that since version 1.25, WDSP
+%contains a new and highly effective ,,trained'' NR2 noise reduction which was very well
+%received by the community. Having said this, I consider EXTENDED\_NR as deprecated and may
+%remove it from \pH in the future.
+%}
 
 \item[\rett{SERVER}] {(\textbf{Unfinished/Experimental}, default: \texttt{OFF})
  This is not yet completed but is mentioned here anyway. There are plans to have
  a client/server model in \pH such that you can have a ,,distant'' radio with a computer
- running piHPDSR connected to that radio, and a ,,local'' computer running \pH, and an
+ running \pH connected to that radio, and a ,,local'' computer running \pH, and an
  internet connection between the two computers. All the time-critical data exchange happens
  between the ,,distant'' radio and the ,,distant'' computer using a straight internet
  cable connection, while the user interface data is exchanged between the two copies of
@@ -7031,7 +7194,7 @@ using the screen and keyboard and mouse from that other computer to control the 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter[Linux: piHPDSR install from sources]{Installation of \pH from the sources (Linux, RaspPi)}
+\chapter[Linux: \pH install from sources]{Installation of \pH from the sources (Linux, RaspPi)}
 \label{sec:installsources}
 \textit{This procedure has been tested on a Pi 4B, with a fresh and plain vanilla operating
 system (32-bit ,,BullsEye'', released May 3rd 2023, Kernel version 6.1) obtained from} \\
@@ -7113,7 +7276,7 @@ The \pH repository is downloaded, and support libraries are installed, with the 
 Proceeding as shown above will provide an up-to-date ,,snap shot'' of the \pH repository.
 This ensures that you have the latest (development) version which corresponds to the present
 version of the manual, but there is a chance that there is a recently introduced bug
-which has not yet been found and fixed. Currently, the development version has version number 2.4.
+which has not yet been found and fixed. Currently, the development version has version number 2.5.
 
 There is also a ,,release'' version which is the previous version. The ,,release'' version lags
 behind the current development since new features are not included there. This means that any
@@ -7123,10 +7286,10 @@ To get the release version, you must, after typing in the the command \texttt{cd
 insert the command
 
 \vskip0.2cm
-\grtt{git checkout Rel-2.3}
+\grtt{git checkout Rel-2.4}
 
 \vskip0.2cm
-and this will then switch your local repository to the release version 2.3. No more details on how
+and this will then switch your local repository to the release version 2.4. No more details on how
 to switch between version with the \texttt{git} command can be given in this manual.
 }
 }
@@ -7144,7 +7307,7 @@ libraries such as libgpiod that are missing in the repository, which you can ign
 
 \textbf{\color{red}SoapySDR Note.} The SoapySDR library, and all SoapySDR modules, must be compiled from the sources
 (and the libinstall.sh script does so). The reason is, that SoapySDR in the standard repository
-is quite outdated (version 0.7) while piHPDSR requires a more recent version (0.8) because the
+is quite outdated (version 0.7) while \pH requires a more recent version (0.8) because the
 SoapySDR API has changed from 0.7 to 0.8. The necessity to compile SoapySDR from the sources
 may be dropped in the future, if the libraries in the standard repositiories are all updated
 to the 0.8 API. Use the \grtt{SoapySDRUtil -info} command (see below for a sample output) to
@@ -7192,7 +7355,7 @@ directory at that point).
 But if you make changes (e.g. changing the compile time options as described in
 Appendix \ref{sec:compiletime}, or apply some code modifications)
 and want to re-compile later, this sequence is the safest way to create a new binary,
-namely go to the pihpsdr
+namely go to the \texttt{pihpsdr}
 directory and recompile by executing ``make''.
 
 \begin{figure}[ht]
@@ -7302,13 +7465,13 @@ Found device 0
 
 and this shows that the SoapySDR library has recognised the Pluto. Note then name \texttt{pluto.local}
 is hard-wired into \pH, so if the Pluto shows up with some other name, it is possible that
-\pH must be updated accordingly. There is no way for piHPDSR to connect
+\pH must be updated accordingly. There is no way for \pH to connect
 to a SoapySDR device that has not been recognised by the SoapySDR library. If such a problem arises, this
 stems from missing, corrupt, or outdated SoapySDR libraries which are not part of \pH.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\chapter[MacOS: piHPDSR install from sources]{Installation of \pH from the sources (MacOS)}
+\chapter[MacOS: \pH install from sources]{Installation of \pH from the sources (MacOS)}
 \label{sec:installmacosx}
 
 \textit{This procedure has been tested on several Macintosh models, including a MacBook Air with an
@@ -7318,7 +7481,7 @@ have been used. Very old MacOS systems (e.g. Catalina) are no longer supported b
 \pH on these is still possible but requires (really) advanced skills, so take care to use a Mac with an operating
 system still supported by HomeBrew.}
 
-If you want to run piHPDSR on an Apple Macintosh computer (iMac, Mac Mini, iBook Air, PowerBook), then
+If you want to run \pH on an Apple Macintosh computer (iMac, Mac Mini, iBook Air, PowerBook), then
 you \textit{have to} compile \pH from the sources. Producing a precompiled binary that can be
 distributed and run simply by double-clicking is overly complicated for applications using the GTK
 graphical user interface (as piHSPDR does). But fear not, the procedure is actually very simple because
@@ -7395,20 +7558,20 @@ The \pH repository is downloaded, and support libraries are installed, with the 
 Proceeding as shown above will provide an up-to-date ,,snap shot'' of the \pH repository.
 This ensures that you have the latest (development) version which corresponds to the present
 version of the manual, but there is a chance that there is a recently introduced bug
-which has not yet been found and fixed. Currently, the development version has version number 2.4.
+which has not yet been found and fixed. Currently, the development version has version number 2.5.
 
 There is also a ,,release'' version which is the previous version. The ,,release'' version lags
 behind the current development since new features are not included there. This means that any
 ,,release'' version is stable at least from the end user's view point (bug fixes are still
 occasionally made).
-To get the release version, you must, after typing in the the command \texttt{cd pihpsdr},
+To get the release version, you must, after typing in the the command \grtt{cd pihpsdr},
 insert the command
 
 \vskip0.2cm
-\grtt{git checkout Rel-2.3}
+\grtt{git checkout Rel-2.4}
 
 \vskip0.2cm
-and this will then switch your local repository to the release version 2.3. No more details on how
+and this will then switch your local repository to the release version 2.4. No more details on how
 to switch between version with the \texttt{git} command can be given in this manual.
 }
 }
@@ -7455,7 +7618,7 @@ Compiling \pH then only requires two commands
 \grtt{make app}
 
 and that's it! The first command is even not necessary at this point,
-since you are already in the pihpsdr  directory.
+since you are already in the \texttt{pihpsdr}  directory.
 But if you make changes in the future (e.g. changing the compile time options as described in
 Appendix \ref{sec:compiletime}, or apply some code modifications)
 and want to re-compile later, this sequence of commands is the safest way to create a new binary.
@@ -7578,7 +7741,7 @@ Found device 0
 \end{small}
 
 and this shows that the SoapySDR library has recognised the Pluto.
-There is no way for piHPDSR to connect
+There is no way for \pH to connect
 to a SoapySDR device that has not been recognised by the SoapySDR library. If such a problem arises, this
 stems from missing, corrupt, or outdated SoapySDR libraries which are not part of \pH.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

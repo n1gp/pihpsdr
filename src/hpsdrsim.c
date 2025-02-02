@@ -433,8 +433,8 @@ int main(int argc, char *argv[]) {
   j = RAND_MAX / 2;
 
   for (i = 0; i < LENNOISE; i++) {
-    noiseItab[i] = ((double) rand_r(&seed) / j - 1.0) * 0.00001;
-    noiseQtab[i] = ((double) rand_r(&seed) / j - 1.0) * 0.00001;
+    noiseItab[i] = ((double) rand_r(&seed) / j - 1.0) * 0.00003;
+    noiseQtab[i] = ((double) rand_r(&seed) / j - 1.0) * 0.00003;
   }
 
   //
@@ -857,11 +857,12 @@ int main(int argc, char *argv[]) {
     // respond to an incoming Metis detection request
     case 0x0002feef:
       if (oldnew == 2) {
-        t_print("OldProtocol detection request from %s IGNORED.\n",inet_ntoa(addr_from.sin_addr));
+        t_print("OldProtocol detection request from %s IGNORED.\n", inet_ntoa(addr_from.sin_addr));
         break;  // Swallow P1 detection requests
       }
 
-      t_print( "Respond to an incoming Metis detection request from %s / code: 0x%08x\n", inet_ntoa(addr_from.sin_addr),code);
+      t_print( "Respond to an incoming Metis detection request from %s / code: 0x%08x\n", inet_ntoa(addr_from.sin_addr),
+               code);
 
       // processing an invalid packet is too dangerous -- skip it!
       if (bytes_read != 63) {
@@ -1039,11 +1040,11 @@ int main(int argc, char *argv[]) {
 
       if (code == 0 && buffer[4] == 0x02) {
         if (oldnew == 1) {
-          t_print("NewProtocol discovery packet from %s IGNORED.\n",inet_ntoa(addr_from.sin_addr));
+          t_print("NewProtocol discovery packet from %s IGNORED.\n", inet_ntoa(addr_from.sin_addr));
           break;
         }
 
-        t_print("NewProtocol discovery packet received from %s\n",inet_ntoa(addr_from.sin_addr));
+        t_print("NewProtocol discovery packet received from %s\n", inet_ntoa(addr_from.sin_addr));
         // prepeare response
         memset(buffer, 0, 60);
         buffer [4] = 0x02 + new_protocol_running();
@@ -1527,7 +1528,7 @@ void process_ep2(uint8_t *frame) {
     rc = frame[0] >> 1;
 
     if (hl2addr[rc].c1 != frame[1] || hl2addr[rc].c2 != frame[2] ||
-                          hl2addr[rc].c3 != frame[3] || hl2addr[rc].c4 != frame[4]) {
+        hl2addr[rc].c3 != frame[3] || hl2addr[rc].c4 != frame[4]) {
       t_print("        HL2 AHL2 DDR=0x%2x C1=0x%2x C2=0x%2x C3=0x%2x C4=0x%2x\n",
               rc, frame[1], frame[2], frame[3], frame[4]);
       hl2addr[rc].c1 = frame[1];

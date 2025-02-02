@@ -20,6 +20,8 @@
 #include <stdio.h>
 
 #include "appearance.h"
+#include "css.h"
+#include "ext.h"
 #include "main.h"
 #include "message.h"
 #include "new_menu.h"
@@ -94,6 +96,12 @@ static void cleanup() {
 static gboolean close_cb () {
   cleanup();
   return TRUE;
+}
+
+static void font_cb(GtkWidget *widget, gpointer data) {
+  int choice = gtk_combo_box_get_active (GTK_COMBO_BOX(widget));
+  load_font(choice);
+  g_idle_add(ext_vfo_update, NULL);
 }
 
 static void vfo_cb(GtkWidget *widget, gpointer data) {
@@ -185,7 +193,24 @@ void screen_menu(GtkWidget *parent) {
   g_signal_connect (close_b, "button-press-event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid), close_b, col, row, 1, 1);
   row++;
-  label = gtk_label_new("Window Width:");
+  col = 0;
+  label = gtk_label_new("Font used:");
+  gtk_widget_set_name(label, "boldlabel");
+  gtk_widget_set_halign(label, GTK_ALIGN_END);
+  gtk_grid_attach(GTK_GRID(grid), label, col, row, 1, 1);
+  col++;
+  button = gtk_combo_box_text_new();
+
+  for (int i = 0; i < num_css_fonts; i++) {
+    gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(button), NULL, cssfont[i]);
+  }
+
+  gtk_combo_box_set_active(GTK_COMBO_BOX(button), which_css_font);
+  my_combo_attach(GTK_GRID(grid), button, col, row, 2, 1);
+  g_signal_connect(button, "changed", G_CALLBACK(font_cb), NULL);
+  row++;
+  col = 0;
+  label = gtk_label_new("Window Width/Height:");
   gtk_widget_set_name(label, "boldlabel");
   gtk_widget_set_halign(label, GTK_ALIGN_END);
   gtk_grid_attach(GTK_GRID(grid), label, col, row, 1, 1);
@@ -194,11 +219,6 @@ void screen_menu(GtkWidget *parent) {
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(wide_b), (double) my_display_width);
   gtk_grid_attach(GTK_GRID(grid), wide_b, col, row, 1, 1);
   g_signal_connect(wide_b, "value-changed", G_CALLBACK(width_cb), NULL);
-  col++;
-  label = gtk_label_new("Window Height:");
-  gtk_widget_set_halign(label, GTK_ALIGN_END);
-  gtk_widget_set_name(label, "boldlabel");
-  gtk_grid_attach(GTK_GRID(grid), label, col, row, 1, 1);
   col++;
   height_b = gtk_spin_button_new_with_range(400.0, (double) screen_height, 16.0);
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(height_b), (double) my_display_height);
@@ -223,7 +243,7 @@ void screen_menu(GtkWidget *parent) {
 
   gtk_combo_box_set_active(GTK_COMBO_BOX(vfo_b), my_vfo_layout);
   // This combo-box spans three columns so the text may be really long
-  my_combo_attach(GTK_GRID(grid), vfo_b, col, row, 3, 1);
+  my_combo_attach(GTK_GRID(grid), vfo_b, col, row, 2, 1);
   vfo_signal_id = g_signal_connect(vfo_b, "changed", G_CALLBACK(vfo_cb), NULL);
   row++;
   button = gtk_check_button_new_with_label("Stack receivers horizontally");
@@ -234,7 +254,7 @@ void screen_menu(GtkWidget *parent) {
   full_b = gtk_check_button_new_with_label("Full Screen Mode");
   gtk_widget_set_name(full_b, "boldlabel");
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(full_b), my_full_screen);
-  gtk_grid_attach(GTK_GRID(grid), full_b, 2, row, 2, 1);
+  gtk_grid_attach(GTK_GRID(grid), full_b, 2, row, 1, 1);
   g_signal_connect(full_b, "toggled", G_CALLBACK(full_cb), NULL);
   row++;
   GtkWidget *b_display_zoompan = gtk_check_button_new_with_label("Display Zoom/Pan");

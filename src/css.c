@@ -77,8 +77,18 @@
 // displayed on a large screen
 //
 //////////////////////////////////////////////////////////////////////////////////////////
+
+char *cssfont[] = {"FreeSans", "Roboto Mono", "Open Sans", "Piboto" };
+
+const int num_css_fonts = sizeof(cssfont) / sizeof(char *);
+int which_css_font = 0;
+
+//
+// This string will be printed using printf, it contains
+// a single data element %s, that is, the font family name
+// from cssfont[]
+//
 char *css =
-  "  * { font-family: Sans; }\n"
   "  combobox { font-size: 15px; }\n"
   "  button   { font-size: 15px; }\n"
   "  checkbutton label { font-size: 15px; }\n"
@@ -89,79 +99,65 @@ char *css =
   "  notebook { font-size: 15px; }\n"
   "  #boldlabel {\n"
   "    padding: 3px;\n"
-  "    font-family: Sans;\n"
   "    font-weight: bold;\n"
   "    font-size: 15px;\n"
   "  }\n"
   "  #slider1   {\n"
   "    padding: 3px;\n"
-  "    font-family: Sans;\n"
   "    font-weight: bold;\n"
   "    font-size: 16px;\n"
   "  }\n"
   "  #slider2   {\n"
   "    padding: 3px;\n"
-  "    font-family: Sans;\n"
   "    font-weight: normal;\n"
   "    font-size: 18px;\n"
   "  }\n"
   "  #slider3   {\n"
   "    padding: 3px;\n"
-  "    font-family: Sans;\n"
   "    font-weight: normal;\n"
   "    font-size: 22px;\n"
   "  }\n"
   "  #big_txt {\n"
-  "    font-family: Sans;\n"
   "    font-size: 22px;\n"
   "    font-weight: bold;\n"
   "    }\n"
   "  #med_txt {\n"
-  "    font-family: Sans;\n"
   "    font-size: 18px;\n"
   "    }\n"
   "  #small_txt {\n"
-  "    font-family: Sans;\n"
   "    font-weight: bold;\n"
   "    font-size: 12px;\n"
   "    }\n"
   "  #close_button {\n"
   "    padding: 5px;\n"
-  "    font-family: Sans;\n"
   "    font-size: 15px;\n"
   "    font-weight: bold;\n"
   "    border: 1px solid rgb(50%, 50%, 50%);\n"
   "    }\n"
   "  #small_button {\n"
   "    padding: 1px;\n"
-  "    font-family: Sans;\n"
   "    font-size: 15px;\n"
   "    }\n"
   "  #medium_button {\n"
   "    padding: 1px;\n"
-  "    font-family: Sans;\n"
   "    font-size: 20px;\n"
   "    }\n"
   "  #large_button {\n"
   "    padding: 1px;\n"
-  "    font-family: Sans;\n"
   "    font-size: 25px;\n"
   "    }\n"
   "  #small_button_with_border {\n"
   "    padding: 3px;\n"
-  "    font-family: Sans;\n"
   "    font-size: 15px;\n"
   "    border: 1px solid rgb(50%, 50%, 50%);\n"
   "    }\n"
   "  #small_toggle_button {\n"
   "    padding: 1px;\n"
-  "    font-family: Sans;\n"
   "    font-size: 15px;\n"
   "    background-image: none;\n"
   "    }\n"
   "  #small_toggle_button:checked {\n"
   "    padding: 1px;\n"
-  "    font-family: Sans;\n"
   "    font-size: 15px;\n"
   "    background-image: none;\n"
   "    background-color: rgb(100%, 20%, 20%);\n"    // background if selected
@@ -183,12 +179,47 @@ char *css =
   "  radiobutton radio {\n"
   "    border: 1px solid rgb(50%, 50%, 50%);\n"
   "    }\n"
-  "  headerbar { min-height: 0px; padding: 0px; margin: 0px; font-size: 15px; font-family: Sans; }\n"
+  "  headerbar { min-height: 0px; padding: 0px; margin: 0px; font-size: 15px; }\n"
   ;
+
+void load_font(int font) {
+  GtkCssProvider *provider;
+  GdkDisplay *display;
+  GdkScreen *screen;
+  GError *error;
+  char str[128];
+  int rc;
+
+  if (font < 0) { font = 0; }
+
+  if (font >= num_css_fonts) { font = num_css_fonts - 1; }
+
+  which_css_font = font;
+  provider = gtk_css_provider_new ();
+  display = gdk_display_get_default ();
+  screen = gdk_display_get_default_screen (display);
+  gtk_style_context_add_provider_for_screen (screen,
+      GTK_STYLE_PROVIDER(provider),
+      GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+  error = NULL;
+  snprintf(str, sizeof(str), "  * { font-family: %s; }\n", cssfont[which_css_font]);
+  rc = gtk_css_provider_load_from_data(provider, str, -1, &error);
+  g_clear_error(&error);
+
+  if (rc) {
+    t_print("%s: CSS font set to %s\n", __FUNCTION__, cssfont[which_css_font]);
+  } else {
+    t_print("%s: failed to set CSS font\n", __FUNCTION__);
+  }
+
+  g_object_unref (provider);
+}
 
 //
 // If CSS loading from a file named default.css is successful, take that
-// Otherwise load the default settings hard-coded above
+// Otherwise load the default settings hard-coded above.
+// If the CSS comes from a file, its font family name is not changed,
+// but the argument "font" in any case applies to the VFO bar
 //
 void load_css() {
   GtkCssProvider *provider;

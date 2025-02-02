@@ -43,7 +43,8 @@ int *g2panel_default_buttons(int andromeda_type) {
   switch (andromeda_type) {
   case 4:
     result = g_new(int, 100);
-    for (int i=0; i<100; i++) { result[i] = NO_ACTION; }
+
+    for (int i = 0; i < 100; i++) { result[i] = NO_ACTION; }
 
     // left edge lower encoder push-button, silk print: "RX AF/AGC", default: MUTE
     result[1] = MUTE;
@@ -86,9 +87,11 @@ int *g2panel_default_buttons(int andromeda_type) {
     // lower button left of screen, silk print: "2TONE/TUNE", default: TUNE
     result[50] = TUNE;
     break;
+
   case 5:
     result = g_new(int, 100);
-    for (int i=0; i<100; i++) { result[i] = NO_ACTION; }
+
+    for (int i = 0; i < 100; i++) { result[i] = NO_ACTION; }
 
     // left edge lower encoder, push-button, silk print: "RX2 AF/AGC", default: MUTE_RX2
     result[1] = MUTE_RX2;
@@ -173,10 +176,12 @@ int *g2panel_default_buttons(int andromeda_type) {
     // right edge upper encoder, push-button, SHIFT ON, silk print: "MULTI 2", default: DIV
     result[41] = DIV;
     break;
+
   default:
     result = NULL;
     break;
-  } 
+  }
+
   return result;
 }
 
@@ -193,7 +198,8 @@ int *g2panel_default_encoders(int andromeda_type) {
   switch (andromeda_type) {
   case 4:
     result = g_new(int, 50);
-    for (int i=0; i<50; i++) { result[i] = NO_ACTION; }
+
+    for (int i = 0; i < 50; i++) { result[i] = NO_ACTION; }
 
     // left edge lower encoder inner knob, silk print: "RX AF/AGC", default: AF_GAIN
     result[1] = AF_GAIN;
@@ -212,9 +218,11 @@ int *g2panel_default_encoders(int andromeda_type) {
     // left edge upper encoder outer knob, silk print: "MIC/DRIVE", default: DRIVE
     result[12] = DRIVE;
     break;
+
   case 5:
     result = g_new(int, 50);
-    for (int i=0; i<50; i++) { result[i] = NO_ACTION; }
+
+    for (int i = 0; i < 50; i++) { result[i] = NO_ACTION; }
 
     // left edge lower encoder, inner knob, silk print: "RX2 AF/AGC", default: AF_GAIN_RX2
     result[1] = AF_GAIN_RX2;
@@ -241,18 +249,22 @@ int *g2panel_default_encoders(int andromeda_type) {
     // right edge upper encoder outer knob, (shift ON), silk print:" MULTI 2" (?), default: DIV_PHASE
     result[12] = DIV_PHASE;
     break;
+
   default:
     result = NULL;
     break;
-  } 
+  }
+
   return result;
 }
 
 void g2panel_execute_button(int type, int *vec, int button, int tr01, int tr10, int tr12, int tr20) {
   enum ACTION action;
+
   if (vec == NULL || button < 0 || button > 99) { return; }
 
   action = vec[button];
+
   if (action == NO_ACTION) { return; }
 
   //
@@ -262,38 +274,62 @@ void g2panel_execute_button(int type, int *vec, int button, int tr01, int tr10, 
   case BAND_PLUS:
   case BAND_MINUS:
     if (tr10) { schedule_action(action, PRESSED, 0); }
+
     if (tr12) { schedule_action(MENU_BAND, PRESSED, 0); }
+
     break;
+
   case FILTER_PLUS:
   case FILTER_MINUS:
     if (tr10) { schedule_action(action, PRESSED, 0); }
+
     if (tr12) { schedule_action(MENU_FILTER, PRESSED, 0); }
+
     break;
+
   case MODE_PLUS:
   case MODE_MINUS:
     if (tr10) { schedule_action(action, PRESSED, 0); }
+
     if (tr12) { schedule_action(MENU_MODE, PRESSED, 0); }
+
     break;
+
   case ANF:
   case SNB:
   case NB:
   case NR:
     if (tr10) { schedule_action(action, PRESSED, 0); }
+
     if (tr12) { schedule_action(MENU_NOISE, PRESSED, 0); }
+
     break;
+
+  case TWO_TONE:
+    if (tr10) { schedule_action(action, PRESSED, 0); }
+
+    if (tr12) { schedule_action(MENU_PS, PRESSED, 0); }
+
+    break;
+
   default:
     if (tr01) { schedule_action(action, PRESSED, 0); }
+
     if (tr10 || tr20) { schedule_action(action, RELEASED, 0); }
+
     break;
   }
 }
 
 void g2panel_execute_encoder(int type, int *vec, int encoder, int val) {
   enum ACTION action;
+
   if (vec == NULL || encoder < 0 || encoder > 49) { return; }
 
   action = vec[encoder];
+
   if (action == NO_ACTION) { return; }
+
   schedule_action(action, RELATIVE, val);
 }
 
@@ -306,6 +342,7 @@ void g2panelSaveState(int andromeda_type, int *buttonvec, int *encodervec) {
       SetPropA2("andromeda[%d].button[%d].action", andromeda_type, i, buttonvec[i]);
     }
   }
+
   if (encodervec != NULL) {
     for (int i = 0; i < 50; i++) {
       SetPropA2("andromeda[%d].encoder[%d].action", andromeda_type, i, encodervec[i]);
@@ -322,6 +359,7 @@ void g2panelRestoreState(int andromeda_type, int *buttonvec, int *encodervec) {
       GetPropA2("andromeda[%d].button[%d].action", andromeda_type, i, buttonvec[i]);
     }
   }
+
   if (encodervec != NULL) {
     for (int i = 0; i < 50; i++) {
       GetPropA2("andromeda[%d].encoder[%d].action", andromeda_type, i, encodervec[i]);

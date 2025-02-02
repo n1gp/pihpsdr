@@ -37,7 +37,7 @@
 #include "vfo.h"
 
 static GtkWidget *dialog = NULL;
-static GtkWidget *serial_baud[MAX_SERIAL];
+static GtkWidget *serial_speed[MAX_SERIAL];
 static GtkWidget *serial_enable[MAX_SERIAL];
 
 static void cleanup() {
@@ -137,7 +137,7 @@ static void tcp_andromeda_cb(GtkWidget *widget, gpointer data) {
 // - serial_autoreporting_cb
 // - andromeda_cb
 // - serial_enable_cb
-// - baud_cb
+// - speed_cb
 //
 //
 static void serial_autoreporting_cb(GtkWidget *widget, gpointer data) {
@@ -150,8 +150,8 @@ static void andromeda_cb(GtkWidget *widget, gpointer data) {
   SerialPorts[id].andromeda = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
 
   if (SerialPorts[id].andromeda) {
-    gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[id]), 1);
-    SerialPorts[id].baud = B9600;
+    gtk_combo_box_set_active(GTK_COMBO_BOX(serial_speed[id]), 1);
+    SerialPorts[id].speed = B9600;
   }
 }
 
@@ -171,15 +171,15 @@ static void serial_enable_cb(GtkWidget *widget, gpointer data) {
 }
 
 // Set Baud Rate
-static void baud_cb(GtkWidget *widget, gpointer data) {
+static void speed_cb(GtkWidget *widget, gpointer data) {
   int id = GPOINTER_TO_INT(data);
   int bd = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
-  int new;
+  speed_t new;
 
   //
   // If ANDROMEDA is active, keep 9600
   //
-  if (SerialPorts[id].andromeda && SerialPorts[id].baud == B9600) {
+  if (SerialPorts[id].andromeda && SerialPorts[id].speed == B9600) {
     gtk_combo_box_set_active(GTK_COMBO_BOX(widget), 1);
     return;
   }
@@ -207,11 +207,11 @@ static void baud_cb(GtkWidget *widget, gpointer data) {
     break;
   }
 
-  if (new == SerialPorts[id].baud) {
+  if (new == SerialPorts[id].speed) {
     return;
   }
 
-  SerialPorts[id].baud = new;
+  SerialPorts[id].speed = new;
 
   if (SerialPorts[id].enable) {
     t_print("%s: closing/re-opening serial port %s\n", __FUNCTION__, SerialPorts[id].port);
@@ -223,7 +223,7 @@ static void baud_cb(GtkWidget *widget, gpointer data) {
     }
   }
 
-  t_print("%s: Baud rate changed: Port=%s Baud=%d\n", __FUNCTION__, SerialPorts[id].port, SerialPorts[id].baud);
+  t_print("%s: Baud rate changed: Port=%s SpeedCode=%d\n", __FUNCTION__, SerialPorts[id].port, SerialPorts[id].speed);
 }
 
 void rigctl_menu(GtkWidget *parent) {
@@ -312,33 +312,33 @@ void rigctl_menu(GtkWidget *parent) {
       gtk_entry_set_text(GTK_ENTRY(w), SerialPorts[i].port);
       gtk_grid_attach(GTK_GRID(grid), w, 1, row, 2, 1);
       g_signal_connect(w, "changed", G_CALLBACK(serial_port_cb), GINT_TO_POINTER(i));
-      serial_baud[i] = gtk_combo_box_text_new();
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_baud[i]), NULL, "4800 Bd");
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_baud[i]), NULL, "9600 Bd");
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_baud[i]), NULL, "19200 Bd");
-      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_baud[i]), NULL, "38400 Bd");
+      serial_speed[i] = gtk_combo_box_text_new();
+      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_speed[i]), NULL, "4800 Bd");
+      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_speed[i]), NULL, "9600 Bd");
+      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_speed[i]), NULL, "19200 Bd");
+      gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(serial_speed[i]), NULL, "38400 Bd");
 
-      switch (SerialPorts[i].baud) {
+      switch (SerialPorts[i].speed) {
       case B9600:
-        gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[i]), 1);
+        gtk_combo_box_set_active(GTK_COMBO_BOX(serial_speed[i]), 1);
         break;
 
       case B19200:
-        gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[i]), 2);
+        gtk_combo_box_set_active(GTK_COMBO_BOX(serial_speed[i]), 2);
         break;
 
       case B38400:
-        gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[i]), 3);
+        gtk_combo_box_set_active(GTK_COMBO_BOX(serial_speed[i]), 3);
         break;
 
       default:
-        SerialPorts[i].baud = B4800;
-        gtk_combo_box_set_active(GTK_COMBO_BOX(serial_baud[i]), 0);
+        SerialPorts[i].speed = B4800;
+        gtk_combo_box_set_active(GTK_COMBO_BOX(serial_speed[i]), 0);
         break;
       }
 
-      my_combo_attach(GTK_GRID(grid), serial_baud[i], 3, row, 1, 1);
-      g_signal_connect(serial_baud[i], "changed", G_CALLBACK(baud_cb), GINT_TO_POINTER(i));
+      my_combo_attach(GTK_GRID(grid), serial_speed[i], 3, row, 1, 1);
+      g_signal_connect(serial_speed[i], "changed", G_CALLBACK(speed_cb), GINT_TO_POINTER(i));
       serial_enable[i] = gtk_check_button_new_with_label("Enable");
       gtk_widget_set_name(serial_enable[i], "boldlabel");
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (serial_enable[i]), SerialPorts[i].enable);
