@@ -1,11 +1,39 @@
 LIST OF RECENT PIHPSDR CHANGES
 ==============================
 
+February 2025:
+--------------
+
+- Massive work on the client-server version, and
+  integrated that version (without compile-time
+  option) into the master branch.
+
+- Holding the shift key while scrolling with
+  the mouse results in a ten-fold increase
+  of the VFO frequency change.
+
+- Improved TX panadapter for high sample rates
+  (e.g. AdalmPluto).
+
 January 2025:
 -------------
 
+- New 2.4 Release created (the branch is Rel-2.4) and
+  master branch advanced to 2.5
+
+- "Feature Freeze" for the up-coming 2.4 release.
+
+- add option to "label" peaks in RX/TX panadapter
+  with their dbm values (contribution of Lukasz)
+
+- dynamically change the font piHPSDR is using
+  (in the Screen menu)
+
+- a new G2panel menu where you can assign pihpsdr commands
+  to buttons/encoders of the new G2-ultra  panel
+
 - Better support for G2's with uC-controlled panels,
-- including automatic serial port detection
+  including automatic serial port detection
 
 December 2024:
 --------------

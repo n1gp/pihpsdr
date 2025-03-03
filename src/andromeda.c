@@ -42,7 +42,6 @@ int andromeda_execute_button(int v, int p) {
   // derived from Rick's original ANDROMEDA console ZZZP code
   // the return value is the new shift state
   //
-
   if (!numpad_active) switch (p) {
     case 21: // Function Switches
     case 22:
@@ -129,7 +128,6 @@ int andromeda_execute_button(int v, int p) {
       locked = 0;
     }
     } else if (!locked) switch (p) {
-
     case 1: // Rx1 AF Mute
       if (v == 0) { receiver[0]->mute_radio ^= 1; }
 
@@ -191,7 +189,7 @@ int andromeda_execute_button(int v, int p) {
         else if (p == 40) { band = band6; }
         else if (p == 41) { band = bandGen; }
 
-        vfo_band_changed(active_receiver->id ? VFO_B : VFO_A, band);
+        vfo_id_band_changed(active_receiver->id ? VFO_B : VFO_A, band);
         shift = 0;
       } else if (!shift && v == 1) {
         if (p == 30) { start_tx(); }                                  // MODE DATA
@@ -220,14 +218,14 @@ int andromeda_execute_button(int v, int p) {
       if (v == 0) {
         if (!vfo[active_receiver->id].rit_enabled && !vfo[vfo_get_tx_vfo()].xit_enabled) {
           // neither RIT nor XIT: ==> activate RIT
-          vfo_rit_onoff(active_receiver->id, 1);
+          vfo_id_rit_onoff(active_receiver->id, 1);
         } else if (vfo[active_receiver->id].rit_enabled && !vfo[vfo_get_tx_vfo()].xit_enabled) {
           // RIT but no XIT: ==> de-activate RIT and activate XIT
-          vfo_rit_onoff(active_receiver->id, 0);
+          vfo_id_rit_onoff(active_receiver->id, 0);
           vfo_xit_onoff(1);
         } else {
           // else deactivate both.
-          vfo_rit_onoff(active_receiver->id, 0);
+          vfo_id_rit_onoff(active_receiver->id, 0);
           vfo_xit_onoff(0);
         }
 
@@ -308,6 +306,7 @@ int andromeda_execute_button(int v, int p) {
       }
     }
   }
+
   return shift;
 }
 

@@ -123,7 +123,7 @@ void waterfall_update(RECEIVER *rx) {
     // corrects for a number of VFO update steps.
     //
     if (rx->waterfall_frequency != 0 && (rx->sample_rate == rx->waterfall_sample_rate)
-    && (rx->zoom == rx->waterfall_zoom)) {
+        && (rx->zoom == rx->waterfall_zoom)) {
       if (rx->waterfall_frequency != vfofreq || rx->waterfall_pan != pan) {
         //
         // Frequency and/or PAN value changed: possibly shift waterfall
@@ -304,14 +304,13 @@ void waterfall_init(RECEIVER *rx, int width, int height) {
   g_signal_connect (rx->waterfall, "configure-event",
                     G_CALLBACK (waterfall_configure_event_cb), rx);
   /* Event signals */
-  g_signal_connect (rx->waterfall, "motion-notify-event",
-                    G_CALLBACK (waterfall_motion_notify_event_cb), rx);
-  g_signal_connect (rx->waterfall, "button-press-event",
-                    G_CALLBACK (waterfall_button_press_event_cb), rx);
-  g_signal_connect (rx->waterfall, "button-release-event",
-                    G_CALLBACK (waterfall_button_release_event_cb), rx);
-  g_signal_connect(rx->waterfall, "scroll_event",
-                   G_CALLBACK(waterfall_scroll_event_cb), rx);
+  g_signal_connect (rx->waterfall, "motion-notify-event", G_CALLBACK (waterfall_motion_notify_event_cb), rx);
+  g_signal_connect (rx->waterfall, "button-press-event", G_CALLBACK (waterfall_button_press_event_cb), rx);
+  g_signal_connect (rx->waterfall, "button-release-event", G_CALLBACK (waterfall_button_release_event_cb), rx);
+  //
+  // Note the scroll event is generated from  to both RX1/RX2 AND the vfo panel and will scroll the active receiver only
+  //
+  g_signal_connect(rx->waterfall, "scroll_event", G_CALLBACK(waterfall_scroll_event_cb), NULL);
   /* Ask to receive events the drawing area doesn't normally
    * subscribe to. In particular, we need to ask for the
    * button press and motion notify events that want to handle.

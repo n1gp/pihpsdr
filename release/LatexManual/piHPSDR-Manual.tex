@@ -30,11 +30,11 @@ email: \texttt{dl1ycf@darc.de}
 \maketitle
 \textbf{Copyright Notice:}
 
-Copyright (C) 2023--2024 Christoph van W\"ullen, DL1YCF.
+Copyright (C) 2023--2025 Christoph van W\"ullen, DL1YCF.
 
 This work is licensed under
 the Creative Commons licence CC BY-SA, version 4 or later, so it can be freely distributed.
- This license also allows re-users to distribute, modify and build upon the material in any medium or format,
+This license also allows re-users to distribute, modify and build upon the material in any medium or format,
 as long as attribution is given to the creator. The license allows for commercial use.
 If you modify or build upon the material, you must license the modified material under identical terms.
 
@@ -57,7 +57,7 @@ to the code in his GitHub account
 
 where the \LaTeX\   ,,source code'' of this manual, together with all figures in .png format, can be found
 in the \texttt{release/LatexManual} directory. At this moment this code has numerous additions/corrections
- compared
+compared
 to the \pH code in John Melton's master repository, but there is still hope that both versions can
 be merged in  the  future. A version history can be found in Chapter \ref{sec:versionhistory}.
 
@@ -75,9 +75,9 @@ it uses the GTK-3 toolkit, while the actual signal processing is done by Warren 
 data between the radio hardware and the
 WDSP library, the
 transfer of audio input (e.g. from a microphone) or output (e.g. to a headphone) data,
- as well as the processing of user
+as well as the processing of user
 input (either by mouse/touch-screen, keyboard, or external "knobs and buttons"),
- and the graphical display of the IF data. \pH is intended
+and the graphical display of the IF data. \pH is intended
 to run on different variants of Unix/Linux. It runs on all sorts of Linux systems,
 including a Raspberry Pi (hence
 the name \pH), but equally well on Linux desktop or laptop computers, and on Apple Macintosh (Mac OSX)
@@ -91,7 +91,7 @@ as well. Note that this is what has been reported to me, I never tried to use \p
 myself.
 
 
-Although \pH can be operated entirely by using mouse (or touchscreen) 
+Although \pH can be operated entirely by using mouse (or touchscreen)
 and keyboard as input devices, many users prefer to
 have physical push-buttons and/or knobs or dials. To this end, \pH can control push-buttons and rotary
 encoders connected to the GPIO (general purpose input/output)
@@ -144,22 +144,31 @@ printed in blue. The author hopes that this improves readability. In some cases,
 or  menu is written on the screen, you may find the same string both typed in red and blue in the
 description, depending on whether the text refers to the command in an abstract sense or to the string as it
 can be found on the screen. This may be confusing upon first reading, but I shall try to follow the colouring
- convention as laid out here.
+convention as laid out here.
 
+\clearpage
 \section{Version history}
 \label{sec:versionhistory}
 Here we list the main new featured introduced in each version.
 
 \medskip
-\textbf{\pH Version 2.4, released January 2024}
+\textbf{\pH Version 2.5, under development}
 \begin{itemize}
+\item{...}
+\end{itemize}
+
+\medskip
+\textbf{\pH Version 2.4, released January 2025}
+\begin{itemize}
+\item{Possibility to label peaks (with dBm values) in the RX/TX panadapters (contributed
+by Lukasz).}
 \item{Dynamically change the font \pH is using (\bltt{Screen} menu)}
 \item{Dynamically assign functions to G2 Ultra panel knobs/buttons (\bltt{G2panel} menu)}
 \item{Stripped-down TCI server for use with logbook programs and linear amplifiers (\bltt{CAT/TCI} menu)}
 \end{itemize}
 
 \medskip
-\textbf{\pH Version 2.3, released October 2024}
+\textbf{\pH Version 2.3, released August 2024}
 \begin{itemize}
 \item{Preliminary ``accessibility'' support for the blind (see Appendix \ref{sec:accessibility})}
 \item{Added the ``trained'' NR2 noise reduction method introduced with WDSP 1.25 (\bltt{Noise} menu)}
@@ -205,7 +214,7 @@ into the RJ45 jacks of the computer and of the radio (see Appendix
 
 \begin{figure}
 \center
-\includegraphics[width=12cm]{Planning.png}
+\includegraphics[scale=0.45]{Planning.png}
 \caption{\pH screen while completing the \textit{wisdom plans}.}
 \label{fig:Planning}
 \end{figure}
@@ -233,7 +242,7 @@ the network connection, you then see a screen with a discovery menu (Fig. \ref{f
 
 \begin{figure}
 \center
-\includegraphics[width=12cm]{Start.png}
+\includegraphics[scale=0.45]{Start.png}
 \caption{A radio has been discovered. You are ready  to start it.}
 \label{fig:Start}
 \end{figure}
@@ -357,7 +366,7 @@ if this succeeds, you see something like shown in Fig. \ref{fig:FirstDisplay}.
 
 \begin{figure}
 \center
-\includegraphics[width=12cm]{FirstDisplay.png}
+\includegraphics[scale=0.45]{FirstDisplay.png}
 \caption{The radio with two RX. Sliders and Toolbar are not on display
 by default when using a controller.}
 \label{fig:FirstDisplay}
@@ -381,76 +390,75 @@ the first time.
 
 \section{One or two receivers}
 At the end of the previous chapter (Fig. \ref{fig:FirstDisplay}),
- there were two receiver panels in the
-\pH window, stacked vertically, and both including a spectrum scope
+there were two receiver panels in the
+\pH window, and both including a spectrum scope
 (the green-coloured noise floor) and a waterfall. The waterfall area
 is completely black in the above picture since there was no RF signal.
 \pH can be switched between having one or two receivers in the
 \texttt{Radio} menu. If there are two receivers (called RX1 and RX2),
- one of the two is the \textit{active receiver}. If you look closely
- at the above picture, you will note that the spectrum scope of
- the lower (RX2) panel is shaded, while it is in bright colour for RX1.
- This indicates that RX1 is currently the active receiver. By simply
- clicking into the panel of the other (inactive) receiver, either with
- a mouse or on a touch screen, the formerly inactive receiver becomes
- active.
+one of the two is the \textit{active receiver}. If you look closely
+at the above picture, you will note that the spectrum scope of
+the lower (RX2) panel is shaded, while it is in bright colour for RX1.
+This indicates that RX1 is currently the active receiver. By simply
+clicking into the panel of the other (inactive) receiver, either with
+a mouse or on a touch screen, the formerly inactive receiver becomes
+active.
 
- Many conventional rigs with two independent receivers discriminate
- between the \textit{main} and the \textit{sub} receiver. It is important that
- this is \textbf{not} the case for \pH. In \pH, both  receivers are
- largely equivalent. For example, if you start transmitting in
- normal (non-split) mode, the TX frequency matches the frequency
- of the active receiver, no matter whether this is RX1 or RX2.
- Likewise, in split mode, the TX frequency matches the frequency
- of the non-active receiver. Most of the receiver-specific controls,
- for example adjusting the AF volume or the AGC gain, refer to the
- current active receiver. If \pH runs with two receivers,
- RX1 is always controlled by VFO-A while RX2 is controlled by VFO-B.
- The VFO settings not only include the frequency but also the
- current mode (e.g. LSB or CWU), the filter setting, the band and
- band stack setting, whether RIT is enabled or not, and the RIT
- offset. So changing the RIT value only changes it for the active
- receiver. If you want  to change the RIT value for RX2 while RX1 is
- the active receiver, you have to make RX2 active, change the RIT
- value and then make RX1 active again.
+Many conventional rigs with two independent receivers discriminate
+between the \textit{main} and the \textit{sub} receiver. It is important that
+this is \textbf{not} the case for \pH. In \pH, both  receivers are
+largely equivalent. For example, if you start transmitting in
+normal (non-split) mode, the TX frequency matches the frequency
+of the active receiver, no matter whether this is RX1 or RX2.
+Likewise, in split mode, the TX frequency matches the frequency
+of the non-active receiver. Most of the receiver-specific controls,
+for example adjusting the AF volume or the AGC gain, refer to the
+current active receiver. If \pH runs with two receivers,
+RX1 is always controlled by VFO-A while RX2 is controlled by VFO-B.
+The VFO settings not only include the frequency but also the
+current mode (e.g. LSB or CWU), the filter setting, the band and
+band stack setting, whether RIT is enabled or not, and the RIT
+offset. So changing the RIT value only changes it for the active
+receiver. If you want  to change the RIT value for RX2 while RX1 is
+the active receiver, you have to make RX2 active, change the RIT
+value and then make RX1 active again.
 
- RX1 and RX2 are largely independent. They can receive on different
- bands. They can receive from different antennas provided the radio
- has two RF front-end with two analog-to-digital converters (ADCs),
- as most modern radios do. In this case, one usually
- assigns the first ADC (ADC0) to RX1 and the second ADC (ADC1) to
- RX2. This can be done in the \bltt{RX} menu.
+RX1 and RX2 are largely independent. They can receive on different
+bands. They can receive from different antennas provided the radio
+has two RF front-end with two analog-to-digital converters (ADCs),
+as most modern radios do. In this case, one usually
+assigns the first ADC (ADC0) to RX1 and the second ADC (ADC1) to
+RX2. This can be done in the \bltt{RX} menu.
 
- By default, if there are two receivers, they are vertically stacked,
- with RX1 in the upper part and RX2 in the lower part of the display.
- This can be changed in the \bltt{Screen} menu to horizontal stacking,
- where RX1 is  in the left half and RX2 in the right half of  the
- display. Changing the stacking trades vertical against horizontal
- resolution, of course.
-
+By default, if there are two receivers, they are vertically stacked,
+with RX1 in the upper part and RX2 in the lower part of the display.
+This can be changed in the \bltt{Screen} menu to horizontal stacking,
+where RX1 is  in the left half and RX2 in the right half of  the
+display. Changing the stacking trades vertical against horizontal
+resolution, of course.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{SingleReceiver.png}
+\includegraphics[scale=0.45]{SingleReceiver.png}
 \caption{\pH with a single RX and all controls (Zoom/Pan,
 Sliders, Toolbar) at the  bottom.}
 \label{fig:SingleReceiver}
 \end{figure}
 
- Fig. \ref{fig:SingleReceiver} picture shows, for demonstration purpose, a \pH
- window with a single receiver.
- The RX panel only contains a
- spectrum scope with a white line and no waterfall (this can be changed in the
- \bltt{Display} menu). In addition, you see the toolbar
- with eight buttons at the lower edge of the window, and above
- it an area with sliders. Showing the sliders is the default
- (and necessary) if there is no GPIO or MIDI controller attached,
- since then these sliders are the only way to change, for example,
- the AF volume. If there is only one receiver, it is controlled
- by VFO-A. VFO-B then actually only controls controls the transmitter
- if using split mode, but the data stored in VFO-B can
- be quickly used, for example by copying VFO-B to VFO-A (the
- \bltt{A<B} command), or by swapping the two VFOs (the \bltt{A<>B} command).
+Fig. \ref{fig:SingleReceiver} picture shows, for demonstration purpose, a \pH
+window with a single receiver.
+The RX panel only contains a
+spectrum scope with a white line and no waterfall (this can be changed in the
+\bltt{Display} menu). In addition, you see the toolbar
+with eight buttons at the lower edge of the window, and above
+it an area with sliders. Showing the sliders is the default
+(and necessary) if there is no GPIO or MIDI controller attached,
+since then these sliders are the only way to change, for example,
+the AF volume. If there is only one receiver, it is controlled
+by VFO-A. VFO-B then actually only controls controls the transmitter
+if using split mode, but the data stored in VFO-B can
+be quickly used, for example by copying VFO-B to VFO-A (the
+\bltt{A<B} command), or by swapping the two VFOs (the \bltt{A<>B} command).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Spectrum scope options}
@@ -470,7 +478,7 @@ are filled:
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{ScopeFilling.png}
+\includegraphics[scale=0.40]{ScopeFilling.png}
 \caption{Display options for the spectrum scope.}
 \end{figure}
 
@@ -491,7 +499,7 @@ is no gradient option.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{ZoomPan.png}
+\includegraphics[scale=0.45]{ZoomPan.png}
 \caption{The spectrum scope of Fig. \ref{fig:SingleReceiver} with a
 large Zoom value.}
 \end{figure}
@@ -565,7 +573,7 @@ Note that the slider area can be hidden (removed) via the \bltt{Display} menu (s
 \section{The \texttt{Hide} button}
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{Hidden.png}
+\includegraphics[scale=0.35]{Hidden.png}
 \caption{\pH window with the Toolbar/Sliders/Zoom
 area ,,hidden''.}
 \end{figure}
@@ -622,7 +630,7 @@ the RX  panel, there is the \rett{Hide} button!
 
 \begin{figure}
 \center
-\includegraphics[width=12cm]{SliderOnScreen.png}
+\includegraphics[scale=0.45]{SliderOnScreen.png}
 \caption{A pop-up attenuation slider.}
 \label{fig:SliderOnScreen}
 \end{figure}
@@ -743,7 +751,7 @@ same way, a secondary click in the TX panel will open the
 \label{sec:VFObar}
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{VFObar.png}
+\includegraphics[scale=0.45]{VFObar.png}
 \caption{The VFO bar}
 \label{fig:VFObar}
 \end{figure}
@@ -840,27 +848,27 @@ the CFC is used but not the speech processor, the symbol is \rett{CFC on}.
 restrictions, this indicator is not shown for the smaller VFO bars.
 \rett{PS} indicates whether adaptive pre-distortion (,,PureSignal'')
 is enabled, PS settings can be made in the \bltt{PS} menu.
- \rett{VOX} indicates whether VOX (voice control) is enabled. VOX means
- that if  the microphone delivers an amplitude above a certain threshold,
- the radio is automatically put into TX mode. Enabling/Disabling VOX
- and setting the correct threshold can be done in the \bltt{VOX} menu.
- Finally, \rett{DUP} indicates whether duplex mode is active.
- In duplex mode, the receiver(s) continue to work during transmit. Duplex
- mode when using the same antenna for RX and TX is  no fun: you not only hear
- your own signal with a delay (from the cross-talk at the TRX relay), but
- this cross-talk signal is  usually so strong that it leads to ,,AGC pumping'', so
- your receiver is virtually deaf during the first second after TX/RX
- transition. For satellite operation, on the other hand, duplex  mode
- is very convenient. Here you usually have two separate and well-decoupled
- antennas for RX and TX.
+\rett{VOX} indicates whether VOX (voice control) is enabled. VOX means
+that if  the microphone delivers an amplitude above a certain threshold,
+the radio is automatically put into TX mode. Enabling/Disabling VOX
+and setting the correct threshold can be done in the \bltt{VOX} menu.
+Finally, \rett{DUP} indicates whether duplex mode is active.
+In duplex mode, the receiver(s) continue to work during transmit. Duplex
+mode when using the same antenna for RX and TX is  no fun: you not only hear
+your own signal with a delay (from the cross-talk at the TRX relay), but
+this cross-talk signal is  usually so strong that it leads to ,,AGC pumping'', so
+your receiver is virtually deaf during the first second after TX/RX
+transition. For satellite operation, on the other hand, duplex  mode
+is very convenient. Here you usually have two separate and well-decoupled
+antennas for RX and TX.
 
- The bottom line of the VFO bar  indicators are related to the VFO status.
- If the \rett{Locked} string is red, it indicates that the VFO is locked
- and will not accept changes. There is a LOCK command which toggles the
- LOCK status and which can be assigned to a toolbar button or a push-button
- on a GPIO or MIDI console, but the Lock status can also be set/unset
- via the \bltt{FREQ} menu, accessibly by the main menu window, or just by
- clicking into the VFO bar.
+The bottom line of the VFO bar  indicators are related to the VFO status.
+If the \rett{Locked} string is red, it indicates that the VFO is locked
+and will not accept changes. There is a LOCK command which toggles the
+LOCK status and which can be assigned to a toolbar button or a push-button
+on a GPIO or MIDI console, but the Lock status can also be set/unset
+via the \bltt{FREQ} menu, accessibly by the main menu window, or just by
+clicking into the VFO bar.
 
 The next indicator in the bottom  line indicates the Zoom factor. If the
 Zoom factor is 1, the indicator is grey, otherwise it is yellow and
@@ -919,7 +927,7 @@ during TX.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{MeterDesigns.png}
+\includegraphics[scale=0.45]{MeterDesigns.png}
 \caption{Different designs for the meter.}
 \label{fig:MeterDesigns}
 \end{figure}
@@ -960,7 +968,7 @@ is described in the \bltt{Meter} menu.
 \section{\pH menus}
 Now we have a series of chapters that discuss all the \pH menus. Many menus can be
 opened by a button click (or a push-button on an external controller), e.g. hitting the
- \rett{MODE}, \rett{FILT}, or \rett{NOISE} button on the
+\rett{MODE}, \rett{FILT}, or \rett{NOISE} button on the
 toolbar you have seen in the last picture. You already know that the VFO and Meter
 menus can be opened by clicking into the VFO or meter section at the top of the window.
 When operating with a mouse, a secondary click in the RX or TX pan-adapter opens the
@@ -1013,7 +1021,7 @@ that setting, the behavious may be unexpected or even undetermined.
 \section{The main \pH menu}
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{MainMenu.png}
+\includegraphics[scale=0.45]{MainMenu.png}
 \caption{The Main men, opened by the \rett{Menu} button.}
 \label{fig:MainMenu}
 \end{figure}
@@ -1046,7 +1054,7 @@ menus (first column), VFO related menus (second column), RX and TX related menus
 and fourth column), menus affecting both RX and TX (fifth column) and, finally,
 menus for adjusting how you can control \pH (sixth column), either via Toolbar,
 MIDI, GPIO encoders/switches or the new G2-ultra front panel.
- 
+
 Not all menus appear in all cases: For example, the \bltt{Encoders} and \bltt{Switches}
 menus shown in Fig. \ref{fig:MainMenu} are only present if \pH is controlled by
 a GPIO-based controller. If, instead, a G2-Ultra type front panel is detected, a menu
@@ -1064,7 +1072,7 @@ where ,,much happens'' anyway in the GUI seems a good compromise.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=6cm]{ExitMenu.png}
+\includegraphics[scale=0.45]{ExitMenu.png}
 \caption{The \bltt{Exit} menu.}
 \end{figure}
 
@@ -1073,7 +1081,7 @@ the radio protocol is stopped and all the settings are written to a preferences 
 file is located in the \pH directory and takes the name XX-XX-XX-XX-XX-XX.props, where
 the XX are hexadecimal numbers that encode the MAC address for the radio.
 So the preferences for different radios (if you
-have more than one) are stored in different files. 
+have more than one) are stored in different files.
 Note that the preferences are not only written to file when leaving the program, but also each
 time a menu is opened, so the preferences file should reflect the changes you made even in the
 case the \pH has crashed for whatever reason.
@@ -1096,7 +1104,7 @@ program but no re-boot or shutdown takes place, due to missing administrator pri
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{AboutMenu.png}
+\includegraphics[scale=0.45]{AboutMenu.png}
 \caption{The \bltt{About} menu.}
 \end{figure}
 
@@ -1105,7 +1113,7 @@ John Melton,
 and an (incomplete) list
 of persons who contributed to the code, and then a statement which version of \pH
 is working here, and when it has been compiled. Here you also find the version number of the WDSP
- library which is the ,,engine''
+library which is the ,,engine''
 running under the hood, and which does nearly all of the signal processing. If you file a bug report,
 this is very important information so you should always include a screen shot of the \bltt{About}
 menu when reporting problems. Of particular importance is the so-called \rett{commit},
@@ -1130,7 +1138,7 @@ the colons by dashes and appending ,,.props''.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{RadioMenu.png}
+\includegraphics[scale=0.45]{RadioMenu.png}
 \caption{The \bltt{Radio} menu.}
 \label{fig:RadioMenu}
 \end{figure}
@@ -1148,20 +1156,23 @@ of receivers that are running (well, you can choose between 1 and 2). When the n
 the radio communication will shortly be stopped and then resumed, so do not be surprised if the spectrum
 scope freezes for a second or so.
 
-\rett{RIT/XIT step:} In the pop-down menu you can choose among three (1 Hz, 10 Hz, 100 Hz) step sizes
-for RIT. For example, if the RIT step is 10 Hz, then you can change the RIT offset in steps of
-10 Hz with the RIT+ or RIT- buttons in the toolbar or on the GPIO/MIDI controller. Note that for the
-\bltt{XIT+} and \bltt{XIT-} buttons, the XIT offset changes by 10 times the RIT step size.
+\rett{RIT/XIT step:} In the pop-down menu you can choose among three (1 Hz, 10 Hz, 100 Hz) RIT step sizes
+for the VFO of the active receiver. For example, if the RIT step is 10 Hz, then you can change the RIT offset
+in steps of 10 Hz with the RIT+ or RIT- buttons in the toolbar or a push-button, or with
+an encoder assigned to the \bltt{RIT} command. Note that for the
+\bltt{XIT+} and \bltt{XIT-} buttons, the XIT offset changes by 10 times the RIT step size. The RIT/XIT step
+size is part of the RX/TX profile (see chapter \ref{sec:rxtxprofiles}) and therefore it is automatically updated
+if you change the mode.
 
 \rett{Region:} Although not obvious, this selects settings for the 60m band. Possible choices are "Other",
- "UK" and "WRC15". The \texttt{Other} and \texttt{UK} choices implement the channel structure of the 60m
- band according to the regulations valid in the USA and Great Britain. "WRC15" gives you a small (15 kHz
- wide) 60m band according to the WRC15 (World Radio Conference 2015) document, which is now implemented in
- many countries.
+"UK" and "WRC15". The \texttt{Other} and \texttt{UK} choices implement the channel structure of the 60m
+band according to the regulations valid in the USA and Great Britain. "WRC15" gives you a small (15 kHz
+wide) 60m band according to the WRC15 (World Radio Conference 2015) document, which is now implemented in
+many countries.
 
 \rett{Orion/Saturn Mic jack:} This part of the menu is not shown for pre-Orion boards.
 The Orion, Orion2, and Saturn boards can switch the connections
- of the TRS microphone jack in software (hardware jumpers had to be used previously).
+of the TRS microphone jack in software (hardware jumpers had to be used previously).
 While the ring of the TRS plug is always connected to ground, the microphone and PTT connections are on the
 ring an tip and you can choose which one is on the ring and which one on the tip. You can then separately
 enable the PTT function of the jack, and select whether a bias (DC offset) is applied to the mic connection
@@ -1169,7 +1180,7 @@ enable the PTT function of the jack, and select whether a bias (DC offset) is ap
 a blocking capacitor).
 
 \rett{Mic Input:} This is only shown for Anan G2 radios (Saturn boards).
- These radios have two jacks for connecting a
+These radios have two jacks for connecting a
 microphone, either a 3.5mm TRS jack in the front panel, or an XLR connection in the back panel. The pop-down
 menu lets you choose between these two options.
 
@@ -1180,7 +1191,7 @@ moves applied to one of the two VFOs are applied to the other with the sign inve
 for example you move the frequency of VFO A up by 3 kHz, the frequency of VFO B moves down by the same
 amount. This is convenient for cross-band operation over satellites with inverted transponders. Inverted
 transponders are sometimes find in low and fast moving satellites because this leads to some Doppler
- correction.
+correction.
 
 \rett{Filter board:} Normally SDRs have some sort of built-in PA with a filter board. Filters in the TX path
 between the PA and the antenna are always required, and filters in the RX path provide some protection
@@ -1296,48 +1307,48 @@ which will we applied to all frequencies.
 need a highly accurate signal source of, say, -73 dBm. Connect this source to your
 radio and tune on the signal. If the signal reported by the meter
 appears too strong (say, at -65 dBm),
- \textit{decrease} the
+\textit{decrease} the
 calibration value with the spin button until the meter shows the correct level.
- The RX gain calibration value can be viewed as the  amplification/attenuation of
-   a virtual device you
+The RX gain calibration value can be viewed as the  amplification/attenuation of
+a virtual device you
 would need in your RF front end. Therefore, you need a negative calibration value (attenuation)
 if the signal in the meter is too strong. For most HPSDR radios, the default value is
- zero. For the HermesLite-II and other radios using the AD9866 chip, the default
- value is 14, but this may depend on the RF front end.
+zero. For the HermesLite-II and other radios using the AD9866 chip, the default
+value is 14, but this may depend on the RF front end.
 
- There are some further check boxes in the \bltt{Radio} menu that you cannot see
- in Fig. \ref{fig:RadioMenu}, since they only appear for specific radio hardware.
- They appear to the right of the touch screen optimisation check box
- and will be listed here.
+There are some further check boxes in the \bltt{Radio} menu that you cannot see
+in Fig. \ref{fig:RadioMenu}, since they only appear for specific radio hardware.
+They appear to the right of the touch screen optimisation check box
+and will be listed here.
 
- \rett{HL2 audio codec} This box only appears if the radio is a HermesLite-II (HL2). Some
- of these radios are equipped with an audio codec and a modified firmware. The
- audio codec must be enabled by setting a specific bit in the HL2 protocol,
- and this check box enables/disables this bit. Furthermore, if this check box
- is enabled, RX audio data is sent to the HL2.
+\rett{HL2 audio codec} This box only appears if the radio is a HermesLite-II (HL2). Some
+of these radios are equipped with an audio codec and a modified firmware. The
+audio codec must be enabled by setting a specific bit in the HL2 protocol,
+and this check box enables/disables this bit. Furthermore, if this check box
+is enabled, RX audio data is sent to the HL2.
 
- \rett{Anan-10E/100B} This box only appears for Hermes boards. While the Anan-10E and
- the Anan-100B identify themselves as Hermes boards, they have a FPGA with limited
- resources and this affects the allocation of PureSignal feedback channels. To make
- PureSignal work on these machines, you have to check this box in the \bltt{Radio} menu.
+\rett{Anan-10E/100B} This box only appears for Hermes boards. While the Anan-10E and
+the Anan-100B identify themselves as Hermes boards, they have a FPGA with limited
+resources and this affects the allocation of PureSignal feedback channels. To make
+PureSignal work on these machines, you have to check this box in the \bltt{Radio} menu.
 
- \rett{Swap IQ} This box only appears for radios connected via the SoapySDR library. If checked
- the I and Q samples are exchanged, both in the receivers and in the transmitter. An indication
- that this is necessary is if you see signals with a frequency above your dial frequency in
- the left half of the RX panel, or if you have to go to LSB to receive USB signals. If you
- observe this behaviour, check this box.
+\rett{Swap IQ} This box only appears for radios connected via the SoapySDR library. If checked
+the I and Q samples are exchanged, both in the receivers and in the transmitter. An indication
+that this is necessary is if you see signals with a frequency above your dial frequency in
+the left half of the RX panel, or if you have to go to LSB to receive USB signals. If you
+observe this behaviour, check this box.
 
- \rett{Hardware AGC} This box only appears for radios connected via the SoapySDR library.
- If checked, automatic gain control (AGC) that is implemented in hardware in the radio is enabled.
+\rett{Hardware AGC} This box only appears for radios connected via the SoapySDR library.
+If checked, automatic gain control (AGC) that is implemented in hardware in the radio is enabled.
 
- \textbf{ATLAS bus options.} For legacy ATLAS bus radios, a number of additional settings have to be
- made. Therefore, the area where we have seen the Orion microphone options now contains ATLAS bus
- settings, as shown in Fig. \ref{fig:RadioMenuMetis}. You will see this only if the radio identifies
- itself as a METIS board.
+\textbf{ATLAS bus options.} For legacy ATLAS bus radios, a number of additional settings have to be
+made. Therefore, the area where we have seen the Orion microphone options now contains ATLAS bus
+settings, as shown in Fig. \ref{fig:RadioMenuMetis}. You will see this only if the radio identifies
+itself as a METIS board.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{RadioMenuMetis.png}
+\includegraphics[scale=0.45]{RadioMenuMetis.png}
 \caption{The \bltt{Radio} menu for a legacy METIS board.}
 \label{fig:RadioMenuMetis}
 \end{figure}
@@ -1386,7 +1397,7 @@ the author.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The \texttt{Screen} Menu}
 
-The \bltt{Screen} menu lets you dynamically change the font used by \pH and 
+The \bltt{Screen} menu lets you dynamically change the font used by \pH and
 the size of the \pH main
 window, it also lets you choose between different VFO bar layouts that are designed to fit
 on a screen with a given width. Furthermore, one
@@ -1401,7 +1412,7 @@ the slider area and the VFO bar have switched to  the new font.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{ScreenMenu.png}
+\includegraphics[scale=0.45]{ScreenMenu.png}
 \caption{The \bltt{Screen} menu.}
 \label{fig:ScreenMenu}
 \end{figure}
@@ -1438,7 +1449,7 @@ you leave the full screen mode.
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{VFObarChoice.png}
+\includegraphics[scale=0.30]{VFObarChoice.png}
 \caption{Five choices for the VFO bar built into \pH.}
 \label{fig:VFObarChoice}
 \end{figure}
@@ -1446,8 +1457,8 @@ you leave the full screen mode.
 If the window width is decreased such that the VFO bar chosen does no longer fit,
 the first one in the list that does fit is automatically selected, and the
 current choice shown in the
- pop-down menu \rett{Select VFO bar layout} is updated. This menu lets you choose
- the layout of the VFO
+pop-down menu \rett{Select VFO bar layout} is updated. This menu lets you choose
+the layout of the VFO
 bar. In Fig. \ref{fig:VFObarChoice} five pre-defined layouts are shown.
 
 
@@ -1468,7 +1479,7 @@ in  the smallest layouts, but if one is restricted to such small screen one has 
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=10cm]{640x400.png}
+\includegraphics[scale=0.45]{640x400.png}
 \caption{\pH running in a 640 x 400 window.}
 \label{fig:640x400}
 \end{figure}
@@ -1488,6 +1499,7 @@ other program) and are perfectly usable.
 of the two receivers (if two receivers are used) side-by-side instead of on top
 of each other.
 
+
 \rett{Full Screen Mode}. If you check this option, \pH goes to full screen mode.
 In this mode, the window width and height is ignore, instead, \pH occupies
 the whole area of the screen. In a multi-monitor setup, the area of the monitor
@@ -1495,22 +1507,22 @@ on which the \pH window was opened upon program start is filled.
 If you leave full screen mode, the size of the \pH window is again
 determined by the width and height chosen above.
 
- \rett{Display Zoom/Pan} This option can be used to show/hide the Zoom and
- Pan slider below the RX or TX panel. If you do not use Zoom, or control
- Zoom via an external GPIO or MIDI controller, this can be used to save
- some vertical space.
+\rett{Display Zoom/Pan} This option can be used to show/hide the Zoom and
+Pan slider below the RX or TX panel. If you do not use Zoom, or control
+Zoom via an external GPIO or MIDI controller, this can be used to save
+some vertical space.
 
- \rett{Display Sliders} This option can be used to show/hide the slider area
- (that is where the AF gain and the Drive slider resides).
- Hiding them makes little sense unless you
- have a GPIO or MIDI controller. For temporarily gaining vertical space,
- use the \rett{Hide} button at the top right of the main window.
+\rett{Display Sliders} This option can be used to show/hide the slider area
+(that is where the AF gain and the Drive slider resides).
+Hiding them makes little sense unless you
+have a GPIO or MIDI controller. For temporarily gaining vertical space,
+use the \rett{Hide} button at the top right of the main window.
 
- \rett{Display Toolbar} This option can be used to show/hide the toolbar. This
- only makes sense of using an external GPIO or MIDI controller. Note that
- when using the \pH Controller1, the toolbar should remain on display since
- this then serves as an indication which function is associated with each of
- the 8 push buttons immediately below the screen.
+\rett{Display Toolbar} This option can be used to show/hide the toolbar. This
+only makes sense of using an external GPIO or MIDI controller. Note that
+when using the \pH Controller1, the toolbar should remain on display since
+this then serves as an indication which function is associated with each of
+the 8 push buttons immediately below the screen.
 
 \rett{Display Warnings} There are several non-fatal conditions that can
 be displayed either on the pan-adapter of the first receiver or, in non-duplex
@@ -1539,21 +1551,29 @@ cannot be excluded that a too high SWR is reported for a short amount of time.
 \rett{Display PA current} If this is checked, the PA supply voltage and the PA current
 are shown while transmitting. Such data is only available for Orion-II and SATURN boards
 (Anan-7000/8000 and Anan-G2) and the HermesLite-II.
- For the HermesLite-II, the PA temperature and the PA current are shown.
+For the HermesLite-II, the PA temperature and the PA current are shown.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The \texttt{Display} Menu}
 
 The \bltt{Display} menu is used to customise the overall layout of the \pH
 window and the pan-adapters of the active receiver. Adjustments
-for the TX pan-adapter must be done in the \bltt{TX} menu. The menu is shown
-in Fig. \ref{fig:DisplayMenu}.
+for the TX pan-adapter must be done in the \bltt{TX} menu. The menu has two sub-menus,
+namely the general settings and the peak label settings, the selection is done
+in the topmost row.
+
+\subsection{Display Menu: General}
+
+For the general settings, the \bltt{Display} menis shown
+in Fig. \ref{fig:DisplayMenuGeneral}.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{DisplayMenu.png}
-\caption{The \bltt{Display} menu.}
-\label{fig:DisplayMenu}
+\includegraphics[scale=0.45]{DisplayMenuGeneral.png}
+\caption{The \bltt{Display} menu (General settings).}
+\label{fig:DisplayMenuGeneral}
 \end{figure}
+
+
 
 \rett{Frames Per Second:} This adjust how often the RX display is re-drawn.
 10 frames per second (the default) is a good value.
@@ -1583,8 +1603,8 @@ Fig. \ref{fig:DisplayMenu}), the \rett{Waterfall High} and
 \rett{Waterfall Low} controls are inactive and the values are not used. Instead,
 the lowest and highest signal strength in the RX spectrum are automatically determined
 in each update of the waterfall, and these min/max values
- are then used instead of the waterfall High/Low control values to determine which
- colour belongs to which signal strength.
+are then used instead of the waterfall High/Low control values to determine which
+colour belongs to which signal strength.
 
 \rett{Detector:} Here one can choose between Peak, Rosenfell, Average and Sample. The
 Rosenfell detector is probably closest to what one knows from a spectrum analyser.
@@ -1605,11 +1625,45 @@ for the RX  spectrum scope (see chapter \ref{sec:FillingGradient}).
 \rett{Display Panadapter}. This option enables/disables the pan-adapter display
 on the RX panels. With the pan-adapter enabled, you can have the waterfall alone.
 
- \rett{Display Waterfall}. This option enables/disables the waterfall display
- of the RX panels. Note if both the waterfall and the pan-adapter is disabled,
- there will simply be a large ,,hole'' in the \pH window. This makes little sense
- except on machines with very weak CPUs, since \textit{not} displaying neither waterfall
- nor pan-adapter saves some CPU time in the graphics back-end.
+\rett{Display Waterfall}. This option enables/disables the waterfall display
+of the RX panels. Note if both the waterfall and the pan-adapter is disabled,
+there will simply be a large ,,hole'' in the \pH window. This makes little sense
+except on machines with very weak CPUs, since \textit{not} displaying neither waterfall
+nor pan-adapter saves some CPU time in the graphics back-end.
+
+\subsection{Display Menu: Peak Labels}
+
+The ``Peak Labels'' sub-menu allows one to control if and how labels
+(values in dBm) are printed at the most prominent peaks on the
+RX panadapter (Fig. \ref{fig:DisplayMenuPeak}):
+
+
+\begin{figure}[ht]
+\center
+\includegraphics[scale=0.45]{DisplayMenuPeak.png}
+\caption{The \bltt{Display} menu (Peak label settings).}
+\label{fig:DisplayMenuPeak}
+\end{figure}
+
+\rett{Label Strongest Peaks} This enables peak detection and labelling.
+
+\rett{Label in Passband Only} If the box is checked only the peaks within the
+current filter passband  are shown.
+
+\rett{No Labels Below Noise Floor} This suppresses labelling of peaks below the noise floor.
+
+\rett{Number of Peaks to Label:} Set maximum number of peaks to be shown. There can always be less,
+but no more than this number. The strongest peaks will be labeled first.
+
+\rett{Ignore Adjacent Peaks:} Determine how close two peaks can be such that both are labeled.
+The higher the number the closer the peaks can be to each other. It's a divisor of the
+full window width so setting it to 1 will mean only one peak can occupy the entire window,
+
+\rett{Noise Floor Percentile:} This is the percentile setting that defines the noise floor. If the
+percentile is 50, then the noise floor is the level of that pixel that is in the middle of the list
+if all pixels are sorted by their dBm value (a safety margin of 3 dBm is added).
+If the \rett{No Labels Below Noise Floor} box is ticked
+peaks below this value will not be labeled.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1617,7 +1671,7 @@ on the RX panels. With the pan-adapter enabled, you can have the waterfall alone
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=6cm]{MeterMenu.png}
+\includegraphics[scale=0.45]{MeterMenu.png}
 \caption{The \bltt{Meter} menu.}
 \label{fig:Meter}
 \end{figure}
@@ -1646,7 +1700,7 @@ S-meter readings.
 ALC gain. Normally one uses the peak ALC value. If it is negative, the level
 of the TX audio signal or the Mic gain slider should be increased.
 This is very important since, for example,
- PureSignal only works if the TX audio input has maximum amplitude,
+PureSignal only works if the TX audio input has maximum amplitude,
 so you can put the drive slider to zero, then put the radio into TX mode,
 whistle into the microphone and slowly increase the Mic gain until the
 ALC value shown is only slightly less than zero. The average TX ALC
@@ -1663,7 +1717,7 @@ For RX-only radios, the TX ALC setting will not be shown in the menu.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{XVTRMenu.png}
+\includegraphics[scale=0.45]{XVTRMenu.png}
 \caption{The \bltt{XVTR} (transverter) menu.}
 \label{fig:XVTRMenu}
 \end{figure}
@@ -1721,7 +1775,7 @@ of the radio, if something does not fit. It is therefore recommended to push
 
 \begin{figure}[h!]
 \center
-\includegraphics[width=12cm]{QO100-XVTR.png}
+\includegraphics[scale=0.45]{QO100-XVTR.png}
 \caption{\bltt{XVTR} setup for QO-100 operation.}
 \label{fig:QO100-XVTR}
 \end{figure}
@@ -1737,7 +1791,7 @@ for disabling the PA.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=6cm]{QO100-BandMenu.png}
+\includegraphics[scale=0.45]{QO100-BandMenu.png}
 \caption{The \bltt{Band} menu after defining the QO100 band.}
 \label{fig:QO100-BandMenu}
 \end{figure}
@@ -1751,7 +1805,7 @@ a screen shot from operation with an Adalm PLUTO, where the 70 MHz (4 m) band is
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{QO100-Waterfall.png}
+\includegraphics[scale=0.45]{QO100-Waterfall.png}
 \caption{Working QO100 with \pH and the Pluto.}
 \label{fig:QO100-Waterfall}
 \end{figure}
@@ -1764,10 +1818,10 @@ click on the QO100 in the band menu (Fig. \ref{fig:QO100-BandMenu} and adjust th
 frequency until the display reads 10489.500 MHz. Now swap VFO-A and VFO-B (\bltt{A<>B} command)
 and enter 2400 MHz into VFO-A using the \bltt{VFO} menu (Chapter \ref{sec:vfomenu}). and
 swap the VFOs again. SAT mode will now ensure the 10.489 GHz Receive
- Frequencies and the 2.4GHz Transmit frequencies track correctly when changes are made
- to the Receive frequency. \pH will now remember these settings when you select
- the bands. The complicated swapping was necessary since band stack entries will
- only be stored from VFO-A.
+Frequencies and the 2.4GHz Transmit frequencies track correctly when changes are made
+to the Receive frequency. \pH will now remember these settings when you select
+the bands. The complicated swapping was necessary since band stack entries will
+only be stored from VFO-A.
 
 
 Fig. \ref{fig:QO100-Waterfall} (a contribution from a ham using the Adalm Pluto for QO-100
@@ -1792,7 +1846,7 @@ of the main menu. These are all VFO-related menus.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=6cm]{VFOmenu.png}
+\includegraphics[scale=0.45]{VFOmenu.png}
 \caption{The \bltt{VFO} menu.}
 \label{fig:VFOmenu}
 \end{figure}
@@ -1864,7 +1918,7 @@ is highlighted.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{BandMenu.png}
+\includegraphics[scale=0.45]{BandMenu.png}
 \caption{The \bltt{Band} menu.}
 \label{fig:BandMenu}
 \end{figure}
@@ -1897,7 +1951,7 @@ will end up in the General band. If you have defined transverter bands (see the
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=10cm]{BandstackMenu.png}
+\includegraphics[scale=0.45]{BandstackMenu.png}
 \caption{The \bltt{BndStack} (Band stack) menu.}
 \label{fig:BandstackMenu}
 \end{figure}
@@ -1915,7 +1969,7 @@ If you press the highlighted button, the parameters which are currently effectiv
 entry. If you press another (non highlighted) band stack button, then first the current
 parameters are stored in the highlighted band stack entry, and then the parameters of the
 new entry become effective. Note that parameters in band stack entries are only changed if the active
-receiver is controlled by VFO-A. Note further that when changing the mode as a consequence of 
+receiver is controlled by VFO-A. Note further that when changing the mode as a consequence of
 moving to another bandstack entry, the RX/TX profile associated with the new mode (see chapter \ref{sec:rxtxprofiles})
 is restored.
 
@@ -1923,7 +1977,7 @@ is restored.
 \section{The \texttt{Mode} menu}
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{ModeMenu.png}
+\includegraphics[scale=0.45]{ModeMenu.png}
 \caption{The \bltt{Mode} menu.}
 \label{fig:ModeMenu}
 \end{figure}
@@ -1938,9 +1992,9 @@ a lot of settings are changed ''behind the scenes'' if you change a mode.
 \section{The \texttt{Memory}  menu}
 \label{sec:memmenu}
 
- \begin{figure}[ht]
+\begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{MemMenu.png}
+\includegraphics[scale=0.45]{MemMenu.png}
 \caption{The \bltt{Memory} menu.}
 \label{fig:MemMenu}
 \end{figure}
@@ -1953,7 +2007,7 @@ data from any slot by clicking on one of the entries in the right column
 which shows the frequency, mode and filter width stored in that slot.
 In addition (not shown in the right column) the FM deviation and the CTCSS setting are stored
 in the memory slots.
- So if you have some often used frequencies (e.g. for a net), the
+So if you have some often used frequencies (e.g. for a net), the
 \bltt{Memory} menu allows you to become QRV there with only few mouse clicks.
 
 
@@ -1968,7 +2022,7 @@ receiver settings.
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=10cm]{RXMenu.png}
+\includegraphics[scale=0.45]{RXMenu.png}
 \caption{The \bltt{RX} menu.}
 \label{fig:RXMenu}
 \end{figure}
@@ -2014,11 +2068,9 @@ for some legacy HPSDR boards which had a switch-able RX preamp.
 from this receiver is muted when
 it is not the active receiver.
 
-\rett{Mute Audio to Radio}. If checked, the audio in the HPSDR data stream from this receiver is muted.
-This has only an effect for Protocol-1 and Protocol-2 (not for SoapySDR), and only affects headphones/speakers
-connected to the radio. Local audio (to a sound card or a virtual audio cable)
-is not affected. The main use of this checkbox is
-to mute a radio-connected headphone while doing digi mode via local RX output.
+\rett{Mute Receiver}. If checked, the audio from this receiver is muted.
+This applies both to the audio data stream to the radio and local audio
+(sound cards or virtual  audio cables).
 
 \rett{Bypass ADC0 RX filters}. This box is only shown if the radio is an HPSDR radio
 and an ALEX filter board
@@ -2067,7 +2119,7 @@ because one then hears the hounds and the fox on different ears.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{FilterMenuUSB.png}
+\includegraphics[scale=0.45]{FilterMenuUSB.png}
 \caption{The \bltt{Filter} menu (single side band modes).}
 \label{fig:FilterMenuUSB}
 \end{figure}
@@ -2091,7 +2143,7 @@ a 1.0k filter for DIGU/DIGL passes audio frequencies between 1000 and 2000 Hz.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{FilterMenuCW.png}
+\includegraphics[scale=0.45]{FilterMenuCW.png}
 \caption{The \bltt{Filter} menu for CWL/CWU.}
 \label{fig:FilterMenuCW}
 \end{figure}
@@ -2100,7 +2152,7 @@ For modes such as CW and AM, low/high cutoff frequencies have little meaning, so
 \bltt{Filter} menu looks slightly different (Fig. \ref{fig:FilterMenuCW}). The fixed
 filters are designated by their width, they are centred around zero (for AM) or around
 the CW side tone frequency (for CWU and CWL). For the variable filters \texttt{Var1}
- and \texttt{Var2},
+and \texttt{Var2},
 the spin buttons can set the filter width and the filter shift. Normally you will not
 want to change the filter shift, but it may help in special cases.
 
@@ -2109,10 +2161,10 @@ But if filter edges of the active receiver haven been changed through
 controller or panel buttons, then clicking the filter seemingly already in use
 (and this includes the \texttt{Var1} and \texttt{Var2} filters!)
 will restore the nominal filter edges, which for the variable filters are those
-displayes here in the \bltt{Filter} menu. 
+displays here in the \bltt{Filter} menu.
 Restoring nominal filter edges also happens on each filter change and thus
-also on each  mode, band, or bandstack change, and on recalling a memory
-location. This is so because a band/bandstack/memory change restores
+also on each  mode, band, or band stack change, and on recalling a memory
+location. This is so because a band/band stack/memory change restores
 the mode stored for that case, and each mode change also sets a new filter
 because it loads the RX/TR profile associated with that mode.
 
@@ -2171,7 +2223,7 @@ blanker NB2 ).
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{NoiseMenu1.png}
+\includegraphics[scale=0.45]{NoiseMenu1.png}
 \caption{The \bltt{Noise} menu (with NR settings).}
 \label{fig:NoiseMenu1}
 \end{figure}
@@ -2184,15 +2236,15 @@ We discuss the noise reduction settings first, but note again for the details yo
 to study the WDSP manual. It should also be noted that noise reduction in general has two
 goals, namely to reduce fatigue (that is, quieting the background)
 and to increase readability (that is, digging otherwise unreadable signals out of the noise).
- This implies that which settings
+This implies that which settings
 are judged to be ,,best'' very much depends on the beholder,
 and that you have to play around with the parameters until you find a setting that
 suits your needs.
 
 \rett{NR2 Gain Method}. The available choices for the NR2 gain-per-bin calculation
- are \rett{Linear},
- \rett{Log}, \rett{Gamma}, and \rett{Trained} (\rett{Gamma} is the default). The new method
- \rett{Trained} has recently been introduced (since WDSP, version 1.25).
+are \rett{Linear},
+\rett{Log}, \rett{Gamma}, and \rett{Trained} (\rett{Gamma} is the default). The new method
+\rett{Trained} has recently been introduced (since WDSP, version 1.25).
 
 \rett{NR2 NPE Method}. The available choices for the NR2 noise power estimation
 are OSMS
@@ -2231,7 +2283,7 @@ The options to control the noise blanker algorithms are:
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{NoiseMenu2.png}
+\includegraphics[scale=0.45]{NoiseMenu2.png}
 \caption{The \bltt{Noise} menu (with NB settings).}
 \label{fig:NoiseMenu2}
 \end{figure}
@@ -2239,7 +2291,7 @@ The options to control the noise blanker algorithms are:
 Sample\&Hold, Mean Hold, Hold Sample, and Interpolate.
 
 \rett{NB Slew time/NB Lag time/NB Lead time/NB Threshold}.\\
- These parameters apply both to NB and NB2.
+These parameters apply both to NB and NB2.
 \pH currently does not allow to have a separate set of parameters for NB and NB2.
 The times are in the range $0\ldots0.1$ msec, and 0.01 msec is a good starting point. The Threshold
 can vary from 15 to 500. If normal signals are blanked out (erroneously treated as impulse noise),
@@ -2252,7 +2304,7 @@ noise blanker from detecting (and blanking) impulse noise.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=6cm]{AGCMenu.png}
+\includegraphics[scale=0.45]{AGCMenu.png}
 \caption{The \bltt{AGC} menu.}
 \label{fig:AGCMenu}
 \end{figure}
@@ -2283,7 +2335,7 @@ QRM and only very little DX signal.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{DiversityMenu.png}
+\includegraphics[scale=0.45]{DiversityMenu.png}
 \caption{The \bltt{Diversity} menu.}
 \label{fig:DiversityMenu}
 \end{figure}
@@ -2307,7 +2359,7 @@ the RX ,,BFO frequency''.
 \label{sec:txmenu}
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{TXMenu.png}
+\includegraphics[scale=0.45]{TXMenu.png}
 \caption{The \bltt{TX} menu with the TX settings.}
 \label{fig:TXMenu}
 \end{figure}
@@ -2315,9 +2367,10 @@ the RX ,,BFO frequency''.
 The \bltt{TX} menu can be opened from the main menu, or just by a secondary mouse click
 into the TX pan-adapter (while transmitting). The menu is shown in Fig. \ref{fig:TXMenu}.
 This menu has three sub-menus, called the \rett{TX Settings} for general transmitter settings,
-the \rett{CFC settings} for controlling the continuous frequency compressor (CFC), and the
-\rett{DwdExp Settings} for controlling the downward expander (DEXP). With the radio buttons
-in the top row of the menu you can switch between the three sub-menus. When you open the TX
+the \rett{CFC settings} for controlling the continuous frequency compressor (CFC),  the
+\rett{DwdExp Settings} for controlling the downward expander (DEXP), and the \rett{Peak Lables}
+settings for controlling if and how peaks are labeled with their dBm values. With the radio buttons
+in the top row of the menu you can switch between the four sub-menus. When you open the TX
 menu for the first time after starting \pH, the TX settings are shown. Subsequently opening
 the TX menu always shows the sub-menu that was on display when the TX  menu was closed the last
 time.
@@ -2327,7 +2380,7 @@ time.
 \rett{Local Microphone}. If this box is checked, the TX audio samples come from a sound card
 attached to the host computer, or from a virtual audio cable. The sound device can be
 selected from the pop-down menu to the right.
- This check box, and the pop-down menu, is absent if
+This check box, and the pop-down menu, is absent if
 there are no output sound devices available. Note that with PulseAudio/PipeWire, the
 names of audio sources can be quite long, therefore much horizontal space has been
 given to the pop-down menu.
@@ -2342,7 +2395,7 @@ So you can go from digital mode to SSB without the need to change the microphone
 in the TX menu.
 
 \rett{Radio Mic} The pop-down menu to the right of this text
- lets you choose between \rett{Mic In} which means
+lets you choose between \rett{Mic In} which means
 that a microphone can be connected to the microphone input jack, \rett{Mic Boost}, which
 additionally switches on a hardware 20 dB mic amp, and \rett{Line In} which means that the
 "Line In" jack of the radio is used for the audio samples transferred from the radio to the
@@ -2451,7 +2504,7 @@ since many digital modes (unlike SSB voice) are constantly transmitting at full 
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{TX_CFC.png}
+\includegraphics[scale=0.45]{TX_CFC.png}
 \caption{The TX menu with the CFC settings}
 \label{fig:CFCmenu}
 \end{figure}
@@ -2485,7 +2538,7 @@ corner frequency while linear interpolation is used between corner frequencies.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{TX_DEXP.png}
+\includegraphics[scale=0.45]{TX_DEXP.png}
 \caption{The TX menu with the DEXP settings}
 \label{fig:DEXPmenu}
 \end{figure}
@@ -2535,6 +2588,41 @@ new triggering audio arrives within that time, the gate is closed and the noise 
 \rett{Filter Low-Cut (Hz)} and \rett{Filter  High-Cut (Hz)} specify the frequency edges of the side
 channel filter (if it is enabled). The defaults given here (1000--2000 Hz) are well suited  for distinguishing
 human voice from humming noise coming from fans etc.
+
+
+
+\subsection{TX Menu: Peak Labels}
+
+The ``Peak Labels'' sub-menu allows one to control if and how labels
+(values in dBm) are printed at the most prominent peaks on the
+TX panadapter (Fig. \ref{fig:TXPeakMenu}):
+
+\begin{figure}[ht]
+\center
+\includegraphics[scale=0.45]{TX_PEAK.png}
+\caption{The TX menu with the peak label settings}
+\label{fig:TXPeakMenu}
+\end{figure}
+
+\rett{Label Strongest Peaks} This enables peak detection and labelling.
+
+\rett{Label in Passband Only} If the box is checked only the peaks within the
+current filter passband  are shown.
+
+\rett{No Labels Below Noise Floor} This suppresses labelling of peaks below the noise floor.
+
+\rett{Number of Peaks to Label:} Set maximum number of peaks to be shown. There can always be less,
+but no more than this number. The strongest peaks will be labeled first.
+
+\rett{Ignore Adjacent Peaks:} Determine how close two peaks can be such that both are labeled.
+The higher the number the closer the peaks can be to each other. It's a divisor of the
+full window width so setting it to 1 will mean only one peak can occupy the entire window,
+
+\rett{Noise Floor Percentile:} This is the percentile setting that defines the noise floor. If the
+percentile is 50, then the noise floor is the level of that pixel that is in the middle of the list
+if all pixels are sorted by their dBm value (a safety margin of 3 dBm is added).
+If the \rett{No Labels Below Noise Floor} box is ticked
+peaks below this value will not be labeled.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{The \texttt{PA} Menu}
 
@@ -2545,7 +2633,7 @@ The menu presents itself as shown in Fig. \ref{fig:PAMenuCalibrate}.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{PAmenuCalibrate.png}
+\includegraphics[scale=0.45]{PAmenuCalibrate.png}
 \caption{The PA menu, PA calibration screen}
 \label{fig:PAMenuCalibrate}
 \end{figure}
@@ -2580,7 +2668,7 @@ TUNE-ing, you send a carrier with the power according to the drive
 slider. For each band, go to the middle of the band, open the PA
 menu, put the drive (\rett{TX Drv} slider) at 50 and hit the TUNE button. If the
 output (measured with the Watt meter) is higher than half
- of your nominal PA power, increase the
+of your nominal PA power, increase the
 PA calibration value of that band, otherwise decrease it. Choose
 a value such that your Watt meter reads half the nominal output
 power. For fine adjusting, move the drive slider to 100 and
@@ -2602,13 +2690,13 @@ and looks like in Fig. \ref{fig:PAMenuWatt}.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{PAmenuWatt.png}
+\includegraphics[scale=0.45]{PAmenuWatt.png}
 \caption{The PA menu, Watt meter calibration}
 \label{fig:PAMenuWatt}
 \end{figure}
 Note that for calibrating the Watt meter as well,
- \rett{Tune use Drive} in the \bltt{TX} menu must be checked
- to allow for high RF output
+\rett{Tune use Drive} in the \bltt{TX} menu must be checked
+to allow for high RF output
 power while TUNE-ing.
 
 You have 10 Watt values from $\frac{1}{10}$ to the full nominal power. Initially,
@@ -2622,7 +2710,7 @@ interpolation between two adjacent calibration values.
 Start with resetting the value by hitting the \rett{Reset} button. Then, move the
 drive slider to 100 (the unit of the drive slider is per cent, not Watt!) and hit
 \texttt{TUNE} in the toolbar.
- After the PA calibration described above, your (external) Watt meter should
+After the PA calibration described above, your (external) Watt meter should
 show the nominal PA output power (e.g. 100 Watt for an Anan-7000). Now look at the
 forward power reported in the meter section (top right of the \pH window).
 Suppose you read "250 W" there although your output is 200 Watt. Then simply
@@ -2666,7 +2754,7 @@ is shown in Fig. \ref{fig:VOXMenu}.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{VOXMenu.png}
+\includegraphics[scale=0.45]{VOXMenu.png}
 \caption{The VOX menu}
 \label{fig:VOXMenu}
 \end{figure}
@@ -2694,7 +2782,7 @@ VOX is very nice for rag-chew phone QSOs, I won't recommend it for contest opera
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{PSMenu.png}
+\includegraphics[scale=0.45]{PSMenu.png}
 \caption{The PureSignal (PS) menu}
 \label{fig:PSMenu}
 \end{figure}
@@ -2768,27 +2856,21 @@ for PAs with a very poor load regulation in the power supply such that there are
 severe and slow memory effects. \textit{PS is stopped and re-started if
 this box is changed.}
 
- \rett{OneShot}. This box is unchecked by default. In the default case, the PURESIGNAL
- algorithm constantly compares the transmitted and the feedback signal and thus
- constantly updates the calibration. If \rett{OneShot} is checked, the calibration
- is kept when the two tone experiment is finished. There are cases, especially if
- CPU power is lacking, where the PURESIGNAL algorithm from time to time fails to obtain
- a valid calibration, and when this happens during transmitting, a bad signal may
- be transmitted for a short amount of time. Checking \rett{OneShot} can help in such
- situations because the calibration, once obtained, is kept and not changed.
- When a successful "one shot" PURESIGNAL calibration has been achieved, the \bltt{status}
- field in the menu becomes stable and reads \texttt{STAYON}.
+\rett{OneShot}. This box is unchecked by default. In the default case, the PURESIGNAL
+algorithm constantly compares the transmitted and the feedback signal and thus
+constantly updates the calibration. If \rett{OneShot} is checked, the calibration
+is kept when the two tone experiment is finished. There are cases, especially if
+CPU power is lacking, where the PURESIGNAL algorithm from time to time fails to obtain
+a valid calibration, and when this happens during transmitting, a bad signal may
+be transmitted for a short amount of time. Checking \rett{OneShot} can help in such
+situations because the calibration, once obtained, is kept and not changed.
+When a successful "one shot" PURESIGNAL calibration has been achieved, the \bltt{status}
+field in the menu becomes stable and reads \texttt{STAYON}.
 
- However, if something changes (e.g. output power, or the finals get warm, etc.) the
- calibration is probably no longer valid but still kept. So unless you have good reason,
- do not use the \rett{OneShot} option.
+However, if something changes (e.g. output power, or the finals get warm, etc.) the
+calibration is probably no longer valid but still kept. So unless you have good reason,
+do not use the \rett{OneShot} option.
 
-\begin{figure}[ht]
-\center
-\includegraphics[width=12cm]{PSnomon.png}
-\caption{PS: TwoTone without MON}
-\label{fig:PSnomon}
-\end{figure}
 
 \rett{Feedback Lvl}. When doing a PS calibration through a two-tone experiment, this string
 turns red if the feedback level is good. It turns yellow if the feedback level is slightly
@@ -2799,13 +2881,6 @@ The feedback level reported by the PS calibration algorithm is further reported 
 \rett{Correcting}. When doing a PS calibration through a two-tone experiment, this string
 is green if calibration was successful and PS correction takes place, and the string is
 red if no good calibration could be made.
-
-\begin{figure}[t!]
-\center
-\includegraphics[width=12cm]{PSmon.png}
-\caption{PS: TwoTone with MON}
-\label{fig:PSmon}
-\end{figure}
 
 \rett{TX ATT}. This element can occur both as a text field or as a spin button.
 If PURESIGNAL is enabled while \rett{Auto Attenuate} is not enabled, it is a spin button with which
@@ -2823,10 +2898,17 @@ The standard value for Protocol-1 and Protocol-2 radios are 0.407 and 0.290. Not
 the HermesLite-II running Protocol-1 (SetPK=0.240) and the Anan-G2 running Protocol-2 (SetPK=0.612).
 The SetPK value is determined by the FPGA firmware of the radio can can experimentally
 be determined by comparing the outgoing TX and the incoming TX feedback signal.
- It should match the value reported
+It should match the value reported
 by the calibration algorithm in the GetPk field. The  value
 chosen by \pH can be incorrect if you use a highly experimental firmware on your
 HPSDR board with modified TX DAC filters, but this should normally not happen.
+
+\begin{figure}[t!]
+\center
+\includegraphics[scale=0.45]{PSnomon.png}
+\caption{PS: TwoTone without MON}
+\label{fig:PSnomon}
+\end{figure}
 
 If you want to use PURESIGNAL, it is required to enable PURESIGNAL by checking the
 \rett{Enable PS} box, and it is recommended to use auto calibration (check the
@@ -2844,37 +2926,49 @@ two peaks on the TX pan-adapter during the two-tone experiment.
 
 \begin{figure}[t!]
 \center
-\includegraphics[width=12cm]{PSoff.png}
+\includegraphics[scale=0.45]{PSmon.png}
+\caption{PS: TwoTone with MON}
+\label{fig:PSmon}
+\end{figure}
+
+\begin{figure}[t!]
+\center
+\includegraphics[scale=0.45]{PSoff.png}
 \caption{PS: after hitting OFF}
 \label{fig:PSoff}
 \end{figure}
 
-To demonstrate what happens, I show an example performed with a Hermes\-Lite-II
-radio running Protocol-1. Checking both \rett{Enable PS} and
+To demonstrate how PURESIGNAL works, I show an example performed with a Hermes\-Lite-II
+radio running Protocol-1. The radio runs at a sample rate of 96 kHz, since it is my
+experience that PURESIGNAL does not work too well in Protocol-1 when it is run
+at 48 kHz. I also activated the optional ``peak labelling''
+in the \bltt{TX Menu} such that the four main peaks heights are also printed
+(in dBm) on the screen. Checking both \rett{Enable PS} and
 \rett{Auto Attenuation}, and hitting the \rett{Two Tone} button, it needs only few
 seconds to stabilise and then Fig. \ref{fig:PSnomon} results, where the TX
 spectrum scope and the PS menu window have been arranged such that they do
 not cover each other. Although both the PS menu and the spectrum scope state
 that PS is working and correcting, the signal does not look good: a two-tone
-signal should only have two peaks, but here one sees the two main peaks at $-6$ dBm
-and two IM3 satellites at about $-42$ dBm.
-The reason is, that the TX spectrum scope
-normally shows the signal that is sent to the PA, so we see a distorted signal.
-However this distortion is magically exactly such that the PA makes a nice signal
+signal should only have two peaks, but here one sees the two main peaks at $-7$ dBm
+and two IM3 satellites at about $-43$ dBm (this amounts to an IM3 value of only $-36$ dBc).
+The reason for this seemingly bad performance is of course, that the TX spectrum scope
+normally shows the signal that is \textit{sent} to the PA, so we see a signal that
+is distorted on purpose, and magically
+exactly such that the PA makes a nice signal
 out of this (\textit{adaptive pre-distortion}). If one wants to see what the antenna
- is actually transmitting, one must
-push the \rett{MON} button such that it is highlighted.
+is actually transmitting, one must
+activate the \rett{MON} button such that it is highlighted.
 This is shown in Fig. \ref{fig:PSmon}, where one sees the
 feedback signal, that is, what the PA sends to the antenna.
-This is a much cleaner two-tone signal (the first satellites are at $-56$ dBm,
-the IM3 value is about $-50$ dBc). To demonstrate how effective the PS algorithm is,
-I have pushed the \rett{OFF} button which stops the PureSignal calibration, the result
+This is a much cleaner two-tone signal (the IM3 value is about $-50$ dBc).
+To demonstrate how effective the PS algorithm is,
+I have pushed the \rett{OFF} button which stops the PureSignal correction, the result
 is shown in Fig. \ref{fig:PSoff}. After hitting that button, IM3 satellites immediately
-grow and rise to about $-40$ dBm (which means IM3
-about $-34$ dBc), which is s reflects the intrinsic
+grow and IM3 decreases to
+about $-35$ dBc which reflects the intrinsic
 non-linearity of the PA.
- Note that this is still a quite acceptable value,
-unless you have a class-A amplifier, your PA probably won't be much better.
+Note that this is still a quite acceptable value.
+Unless you have a class-A amplifier, your PA probably won't be much better.
 This experiment demonstrates that adaptive pre-distortion is a mechanism that allows you to produce a clean
 signal with a quality that would be impossible (or \textit{very} difficult) to achieve
 with traditional hardware.
@@ -2886,7 +2980,7 @@ is shown in Fig. \ref{fig:CWMenu}.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{CWMenu.png}
+\includegraphics[scale=0.45]{CWMenu.png}
 \caption{The CW menu}
 \label{fig:CWMenu}
 \end{figure}
@@ -3004,7 +3098,7 @@ are reversed, so you need not re-wire your paddle.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{DSPMenu.png}
+\includegraphics[scale=0.45]{DSPMenu.png}
 \caption{The DSP menu.}
 \label{fig:DSPMenu}
 \end{figure}
@@ -3070,7 +3164,7 @@ is shown in Fig. \ref{fig:EqualizerMenu}.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=9cm]{EqualizerMenu.png}
+\includegraphics[scale=0.45]{EqualizerMenu.png}
 \caption{The Equaliser menu}
 \label{fig:EqualizerMenu}
 \end{figure}
@@ -3099,7 +3193,7 @@ channels. Gains in this menu are in dB and can vary from -20 to +20,
 
 In the bottom part of the menu, there are ten pairs of spin buttons
 that specify 10 corner frequencies and the gains associated therewith.
- This defines the 10 channels
+This defines the 10 channels
 of the equaliser. Note frequencies may appear in any order since they
 are sorted before the equaliser settings are updated. Note however,
 if you specify a frequency twice with two different gains, the outcome
@@ -3132,33 +3226,33 @@ is much simpler because there are much fewer choices possible.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{ANTmenu.png}
+\includegraphics[scale=0.45]{ANTmenu.png}
 \caption{The ANT (antenna) menu.}
 \label{fig:ANTmenu}
 \end{figure}
 
- Standard HPSDR radios have, in most cases, three main antenna jacks
- denoted \rett{Ant1}, \rett{Ant2}, \rett{Ant3}, which can be used both for receiving to
- the first ADC and
- transmitting. Then there are up to additional antenna jacks (\rett{Ext1}, \rett{Ext2},
- and \rett{Xvtr}) which can only be used for receiving and are also connected
- to the first ADC. If the radio has more than one ADC, the (RX only)
- antenna jack, usually denoted RX2, is hard-wired to the second ADC.
+Standard HPSDR radios have, in most cases, three main antenna jacks
+denoted \rett{Ant1}, \rett{Ant2}, \rett{Ant3}, which can be used both for receiving to
+the first ADC and
+transmitting. Then there are up to additional antenna jacks (\rett{Ext1}, \rett{Ext2},
+and \rett{Xvtr}) which can only be used for receiving and are also connected
+to the first ADC. If the radio has more than one ADC, the (RX only)
+antenna jack, usually denoted RX2, is hard-wired to the second ADC.
 
- If the menu is opened, the \rett{HF} button is checked, and the HF bands
- are displayed. If one checks the \rett{XVTR} button, the transverter bands
- are shown (this leads to an empty window if no transverter bands have
- yet been defined), and one can go back to the HF bands by re-checking
- \rett{HF}.
- For each band, one can now choose one (out the three) antennas for
- transmitting and one (out of six) antennas for receiving. The main purpose
- of this is the possibility to connect an additional receive-only antenna
+If the menu is opened, the \rett{HF} button is checked, and the HF bands
+are displayed. If one checks the \rett{XVTR} button, the transverter bands
+are shown (this leads to an empty window if no transverter bands have
+yet been defined), and one can go back to the HF bands by re-checking
+\rett{HF}.
+For each band, one can now choose one (out the three) antennas for
+transmitting and one (out of six) antennas for receiving. The main purpose
+of this is the possibility to connect an additional receive-only antenna
 such as a beverage antenna which often has a better signal-to-noise
- ration than standard antennas used for transmitting.
+ration than standard antennas used for transmitting.
 
 \textbf{Transverter operation.} Newer radios (Anan-7000, 8000, and Saturn/G2) have a
 switchable low-power TX output, e.g. the \texttt{Xvtr Out} jack at the Anan-7000 back plane.
- This output is automatically enabled if \rett{Xvtr} is selected as the RX antenna of RX1.
+This output is automatically enabled if \rett{Xvtr} is selected as the RX antenna of RX1.
 
 
 
@@ -3210,7 +3304,7 @@ there is no such update so the problem remains.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{OCMenu.png}
+\includegraphics[scale=0.45]{OCMenu.png}
 \caption{The OC (open collector) menu.}
 \label{fig:OCMenu}
 \end{figure}
@@ -3262,7 +3356,7 @@ configured via the Toolbar menu.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{ToolbarMenu1.png}
+\includegraphics[scale=0.45]{ToolbarMenu1.png}
 \caption{The Toolbar menu, just opened.}
 \label{fig:ToolbarMenu1}
 \end{figure}
@@ -3277,7 +3371,7 @@ layer is currently active.
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{ToolbarMenu2.png}
+\includegraphics[scale=0.45]{ToolbarMenu2.png}
 \caption{Toolbar menu. Changing third button in \texttt{F1} layer.}
 \label{fig:ToolbarMenu2}
 \end{figure}
@@ -3285,14 +3379,14 @@ layer is currently active.
 If the \bltt{Toolbar} menu is opened, it looks like Fig. \ref{fig:ToolbarMenu1}.
 The rows correspond to the six different layers, and the rightmost button in each
 row indicates to which layer this row belongs.
- If one now clicks (just an example)
+If one now clicks (just an example)
 the \texttt{CTUN} button (third button in the second row) a ,,command dialog'' pops up that looks as
 in Fig. \ref{fig:ToolbarMenu2}.
 
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{ToolbarMenu3.png}
+\includegraphics[scale=0.45]{ToolbarMenu3.png}
 \caption{Just selected \texttt{Band20}.}
 \label{fig:ToolbarMenu3}
 \end{figure}
@@ -3310,7 +3404,7 @@ switch the active receiver to the 20m band (see the explanation of all the comma
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{ToolbarMenu4.png}
+\includegraphics[scale=0.45]{ToolbarMenu4.png}
 \caption{Toolbar assignment accomplished.}
 \label{fig:ToolbarMenu4}
 \end{figure}
@@ -3322,7 +3416,7 @@ are updated (Fig. \ref{fig:ToolbarMenu5}).
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{ToolbarMenu5.png}
+\includegraphics[scale=0.45]{ToolbarMenu5.png}
 \caption{The new \texttt{F1} layer is operative.}
 \label{fig:ToolbarMenu5}
 \end{figure}
@@ -3356,11 +3450,10 @@ This controller (or rather the Arduino inside) is connected to the host computer
 USB-to-serial
 device on the host computer. The CAT command set is explained in Appendix \ref{sec:catcommands}. In most
 cases, using
-the Kenwood TS-2000 as the radio model would do it, if the digi mode or laptop program uses the \texttt{hamlib} library  to
-interface with
-radios, either choose TS-2000 or (preferably) the ,,OpenHPSDR PiHPSDR'' radio model because this uses time-
-out values
-adapted to \pH.
+the Kenwood TS-2000 as the radio model would do it, if the digi mode or laptop program uses the
+\texttt{hamlib} library  to interface with
+radios, either choose TS-2000 or (preferably) the ,,OpenHPSDR PiHPSDR'' radio model because this
+uses time-out values adapted to \pH.
 
 If compiled  with TCI  support, \pH also offers a (substantially  stripped-down) TCI server, and in this
 case this menu is named \bltt{CAT/TCI}. \pH cannot
@@ -3373,7 +3466,7 @@ with TCI support,  this menu is simply called  \bltt{CAT} and lower part  of the
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{CATmenu.png}
+\includegraphics[scale=0.45]{CATmenu.png}
 \caption{The CAT/TCI  menu.}
 \label{fig:CATmenu}
 \end{figure}
@@ -3399,17 +3492,11 @@ Which names to use
 is highly operating system dependent. On a RaspPi,  USB-to-serial
 adapters (which are nowadays the standard way to add serial ports to a computer) have names such as
 \texttt{/dev/ttyACM0} or \texttt{/dev/USB0} (on RaspPi) or \texttt{/dev/tty.usbserial-....} (on MacOS).
-The serial port shown in the third line of Fig. \ref{fig:CATmenu}, \texttt{/dev/ttyAMA3},
-is used on the Anan G2-Ultra radios for communicating with the front panel. If you chose
-\rett{G2 Mk2 Panel} in the discovery menu, this port will be assigned by default to the third
-slot and it is also enabled, this can be changed in the CAT/TCI menu and will then also be written to
-the props file.
- It is important to know that \pH does not try to ,,detect'' serial
-ports, you must know the proper name (e.g. by looking at the contents of the \texttt{/dev} directory).
-Named pipes can be created everywhere in the file system hierarchy using the command
-,,\texttt{mkdir -p <some\_arbitrary\_name>}''. Names pipes can be used for the communication between \pH
-and another program running on the same computer, and are only meaningful if that other program neither
-supports CAT-over-TCP nor TCI.
+On Anan G2-Ultra radios, a serial line is used for the communication with the front panel. This
+port is detected automatically and the third "Serial" line done not contain any controls but simply
+states the auto-detected port name and whether the connection to the panel has been sucessfully
+established.
+
 
 To the right of the serial port text field, there is a pop-down menu for choosing the baud rate. Only 4800,
 9600, 19200, and 38400 baud are offered, but this should cover most cases.
@@ -3499,7 +3586,7 @@ the \pH MIDI configuration menu must be flexible enough to handle all these situ
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{MIDImenu1.png}
+\includegraphics[scale=0.45]{MIDImenu1.png}
 \caption{The (virgin) MIDI menu.}
 \label{fig:MIDImenu1}
 \end{figure}
@@ -3569,7 +3656,7 @@ is fine for most applications.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{MIDImenu2.png}
+\includegraphics[scale=0.45]{MIDImenu2.png}
 \caption{The MIDI menu, VFO wheel turned.}
 \label{fig:MIDImenu2}
 \end{figure}
@@ -3607,14 +3694,14 @@ we have chosen to map all values from 0-63 to a left turn, and all values from 6
 to a right turn.
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{MIDImenu3.png}
+\includegraphics[scale=0.45]{MIDImenu3.png}
 \caption{The MIDI menu, selecting VFO command}
 \label{fig:MIDImenu3}
 \end{figure}
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{MIDImenu4.png}
+\includegraphics[scale=0.45]{MIDImenu4.png}
 \caption{The MIDI menu, VFO command selected}
 \label{fig:MIDImenu4}
 \end{figure}
@@ -3629,8 +3716,8 @@ the \bltt{VFO} button, which then becomes highlighted (Fig. \ref{fig:MIDImenu3})
 
 
 
- Then one has to click the OK button to make the choice, and one returns to the
- MIDI menu (see Fig. \ref{fig:MIDImenu4}).
+Then one has to click the OK button to make the choice, and one returns to the
+MIDI menu (see Fig. \ref{fig:MIDImenu4}).
 
 One sees that the choice just made has entered the MIDI configuration, as documented by the
 list in the bottom right part of the menu. At this stage, we can continue
@@ -3642,14 +3729,14 @@ to change the VFO frequency.
 \section{The \texttt{Encoders} Menu}
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{g2_frontpanel.png}
+\includegraphics[scale=1.00]{g2_frontpanel.png}
 \caption{A picture of the (first generation) G2 front panel (image courtesy of Apache Labs).}
 \label{fig:g2_frontpanel}
 \end{figure}
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{EncoderMenuG2.png}
+\includegraphics[scale=0.45]{EncoderMenuG2.png}
 \caption{The Encoder menu for the G2 front panel controller}
 \label{fig:EncoderMenuG2}
 \end{figure}
@@ -3657,7 +3744,7 @@ The \bltt{Encoders} menu can be used to assign functions to the encoders of a
 GPIO-based controller, that is, either a
 Controller1, Controller2 or the G2 front panel of the first-generation Anan-G2 radios
 (those without LEDs and a 7-inch screen). For the second-generation G2 radios
-(``G2 Ultra'') with LEDs and an 8-inch screen in the panel, see the \bltt{G2panel} 
+(``G2 Ultra'') with LEDs and an 8-inch screen in the panel, see the \bltt{G2panel}
 menu, chapter \ref{sec:G2panelMenu}.
 
 This implies that this menu is only available if \pH has been compiled with GPIO support,
@@ -3691,7 +3778,7 @@ on the enclosure (see Fig. \ref{fig:g2_frontpanel}).
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=10cm]{Apache_Controller2.png}
+\includegraphics[scale=0.8]{Apache_Controller2.png}
 \caption{A picture of the Controller2 (image by courtesy of Apache Labs).}
 \label{fig:Apache_Controller2}
 \end{figure}
@@ -3700,20 +3787,20 @@ The Controller2 (see Fig. \ref{fig:Apache_Controller2}
 has (besides the VFO knob at the bottom right) three knobs (arranged horizontally) at the bottom left,
 and a fourth knob at the top right, all of which are double encoders with a switch.
 So if you run \pH with a Controller2, then the menu looks different (Fig. \ref{fig:EncoderMenuV2}).
- The menu shows
+The menu shows
 for groups with three buttons each, and it should be clear which group belongs to which button. The
 \rett{Default} button again re-installs the default functions (those shown in Fig. \ref{fig:EncoderMenuV2}).
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=10cm]{EncoderMenuV2.png}
+\includegraphics[scale=0.45]{EncoderMenuV2.png}
 \caption{The Encoder menu for Controller2}
 \label{fig:EncoderMenuV2}
 \end{figure}
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=10cm]{Apache_Controller1.png}
+\includegraphics[scale=0.75]{Apache_Controller1.png}
 \caption{A picture of the Controller1 (image by courtesy of Apache Labs).}
 \label{fig:Apache_Controller1}
 \end{figure}
@@ -3730,7 +3817,7 @@ function printed on the enclosure.
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=6cm]{EncoderMenuV1.png}
+\includegraphics[scale=0.45]{EncoderMenuV1.png}
 \caption{The Encoder menu for Controller1}
 \label{fig:EncoderMenuV1}
 \end{figure}
@@ -3742,7 +3829,7 @@ function printed on the enclosure.
 he \bltt{Switches} menu can be used to assign functions to the encoders of a
 GPIO-based controllers Controller2 or the G2 front panel of the first-generation Anan-G2 radios
 (those without LEDs and a 7-inch screen). For the second-generation G2 radios
-(``G2 Ultra'') with LEDs and an 8-inch screen in the panel, see the \bltt{G2panel} 
+(``G2 Ultra'') with LEDs and an 8-inch screen in the panel, see the \bltt{G2panel}
 menu, chapter \ref{sec:G2panelMenu}.
 
 This implies that this menu is only available if \pH has been compiled with GPIO support,
@@ -3754,7 +3841,7 @@ the toolbar buttons and their functions as thus assigned via the \bltt{Toolbar} 
 
 
 On the G2 front panel (see Fig. \ref{fig:g2_frontpanel}),
- there are a lot of push buttons: at the left edge, to the right
+there are a lot of push buttons: at the left edge, to the right
 of the left edge encoders, are two buttons, at the bottom right, below the VFO knob,
 there are two more buttons, and at the top right, to the right of the left edge
 encoders, is an array of 12 (4x3) buttons. The layout of the \bltt{Switches} menu
@@ -3767,7 +3854,7 @@ shown in Fig. \ref{fig:SwitchMenuG2} which match the functions printed on the en
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{SwitchMenuG2.png}
+\includegraphics[scale=0.45]{SwitchMenuG2.png}
 \caption{The Switches menu for the G2 front panel controller.}
 \label{fig:SwitchMenuG2}
 \end{figure}
@@ -3789,7 +3876,7 @@ shown in Fig. \ref{fig:SwitchMenuV2} which match the functions printed on the en
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{SwitchMenuV2.png}
+\includegraphics[scale=0.45]{SwitchMenuV2.png}
 \caption{The Switches menu for Controller2.}
 \label{fig:SwitchMenuV2}
 \end{figure}
@@ -3799,15 +3886,15 @@ shown in Fig. \ref{fig:SwitchMenuV2} which match the functions printed on the en
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=10cm]{g2ultra.png}
-\caption{The front panel of a second-generation G2 radio(image courtesy of Apache Labs).} 
+\includegraphics[scale=0.25]{g2ultra.png}
+\caption{The front panel of a second-generation G2 radio(image courtesy of Apache Labs).}
 \label{fig:g2ultrapanel}
 \end{figure}
 
 The \bltt{G2panel} menu becomes available as soon as the presence of a second-generation G2 front panel
 (G2 Ultra or upgraded first-generation G2s) has been detected. These panels communicate with \pH through
 a serial line connection using an ANDROMEDA-like protocol. Fig. \ref{fig:g2ultrapanel} shows the front
-panel of a G2-Ultra. In contrast to a first-generation G2, it has an 8-inch screen and panel contains 
+panel of a G2-Ultra. In contrast to a first-generation G2, it has an 8-inch screen and panel contains
 several LEDs. The \bltt{G2panel} menu also applies to first-generation G2 radios with an upgraded
 compute module running \pH. Part of such an upgrade is an additional micro controller that handles the
 panel and communicates with \pH via a serial line connection.
@@ -3817,8 +3904,8 @@ After first opening the \bltt{G2panel} menu, it looks quite empty (Fig. \ref{fig
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{g2panelmenu-1.png}
-\caption{The \bltt{G2panel} menu, just opened.} 
+\includegraphics[scale=0.45]{g2panelmenu-1.png}
+\caption{The \bltt{G2panel} menu, just opened.}
 \label{fig:g2panelmenu-initial}
 \end{figure}
 
@@ -3830,8 +3917,8 @@ the TUNE button, the menu changes to the following (Fig. \ref{fig2:g2panelmenu-r
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{g2panelmenu-2.png}
-\caption{The \bltt{G2panel} menu, reporting the last ``panel action''.} 
+\includegraphics[scale=0.45]{g2panelmenu-2.png}
+\caption{The \bltt{G2panel} menu, reporting the last ``panel action''.}
 \label{fig:g2panelmenu-initial}
 \end{figure}
 
@@ -3850,8 +3937,8 @@ command which switches TX compression on/off (Fig. \ref{fig:g2panelmenu-chosen})
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=8cm]{g2panelmenu-3.png}
-\caption{The \bltt{G2panel} menu, reporting the newly chosen command.} 
+\includegraphics[scale=0.45]{g2panelmenu-3.png}
+\caption{The \bltt{G2panel} menu, reporting the newly chosen command.}
 \label{fig:g2panelmenu-chosen}
 \end{figure}
 
@@ -3871,37 +3958,37 @@ the menus. These will be handled in this section.
 
 \section{RX/TX profiles}
 \label{sec:rxtxprofiles}
- Many settings such as VFO step sizes, filter choices, noise reduction
+Many settings such as VFO step sizes, filter choices, noise reduction
 settings, equaliser settings, and TX compressor settings
- are only reasonable for a specific mode and need be re-adjusted if one changes
- the mode. For example, one might wish to use
- different VFO step sizes for different modes, and get the step size chosen for that
- mode automatically if one switches to that mode. The same applies to noise reduction
- settings which are very different for CW and SSB. For digital modes (DIGU/DIGL),
- one normally does not want neither noise reduction or equaliser being active on the RX
- side, nor a speech processor for transmitting.
+are only reasonable for a specific mode and need be re-adjusted if one changes
+the mode. For example, one might wish to use
+different VFO step sizes for different modes, and get the step size chosen for that
+mode automatically if one switches to that mode. The same applies to noise reduction
+settings which are very different for CW and SSB. For digital modes (DIGU/DIGL),
+one normally does not want neither noise reduction or equaliser being active on the RX
+side, nor a speech processor for transmitting.
 
- On the other side, one often wants the same modes for USB and LSB, or for DIGU and DIGL.
- Therefore mode groups have been defined that encompass USB/LSB/DSB, or CWU/CWL, or
- DIGU/DIGL. AM and FM, on the other hand, ,,mode groups'' with only one member.
+On the other side, one often wants the same settings for USB and LSB, or for DIGU and DIGL.
+Therefore mode groups have been defined that encompass USB/LSB/DSB, or CWU/CWL, or
+DIGU/DIGL. AM and FM, on the other hand, ,,mode groups'' with only one member.
 
- Each mode now has an associated RX/TX profile containing lots of settings (see below).
- When switching a mode (either by an explicit request, or implicitly by a VFO swap/copy
- operation, a band or band stack change, or by recalling a memory slot), the profile of
- that mode overwrites the current settings.
+Each mode  has an associated RX/TX profile containing lots of settings (see below).
+When switching a mode (either by an explicit request, or implicitly by a VFO swap/copy
+operation, a band or band stack change, or by recalling a memory slot), the profile of
+that mode overwrites the current settings.
 
- The RX/TX profile for a specific mode (group) is updated whenever one of the setting
- contained in the profile is updated for RX1 or for the transmitter. Note that the
- mode-specific RX/TX profile is also applied to RX2 if the mode of RX2 is changed,
- but changing the settings for RX2 does not update the profile.
+The RX/TX profile for a specific mode (group) is updated whenever one of the setting
+contained in the profile is updated for RX1 or for the transmitter. Note that the
+mode-specific RX/TX profile is also applied to RX2 if the mode of RX2 is changed,
+but changing the settings for RX2 does not update the profile.
 
- For example, if you have adjusted the noise reduction settings while operating USB,
- these settings are stored in the RX/TX profiles of the USB, LSB, and DSB modes. Whenever
- switching to USB, LSB or DSB in the future (until the profile is changed again), these
- settings become active. So you can quickly switch, say, between USB/LSB, CWU/CWL and
- DIGU/DIGL and always get the settings that you have chosen for that mode.
+For example, if you have adjusted the noise reduction settings while operating USB,
+these settings are stored in the RX/TX profiles of the USB, LSB, and DSB modes. Whenever
+switching to USB, LSB or DSB in the future (until the profile is changed again), these
+settings become active. So you can quickly switch, say, between USB/LSB, CWU/CWL and
+DIGU/DIGL and always get the settings that you have chosen for that mode.
 
- Here is the list of settings that form the RX/TX profile:
+Here is the list of settings that form the RX/TX profile:
 
 \begin{center}
 \begin{tabular}{l}
@@ -3909,6 +3996,7 @@ settings, equaliser settings, and TX compressor settings
 $\bullet$ Filter type \cr
 $\bullet$ CW peak filter (on/off) \cr
 $\bullet$ VFO step size  \cr
+$\bullet$ VFO RIT step size \cr
 $\bullet$ RX Noise reduction (all settings) \cr
 $\bullet$ RX Noise blanker (all settings) \cr
 $\bullet$ RX Automatic notch filter (on/off) \cr
@@ -3918,7 +4006,7 @@ $\bullet$ RX equaliser (all settings) \cr
 $\bullet$ TX equaliser (all settings) \cr
 $\bullet$ TX speech processor (on/off, compression level) \cr
 $\bullet$ TX continuous frequency compressor (CFC, all settings) \cr
-$\bullet$ TX downward expander (DEXP, on/off) \cr
+$\bullet$ TX downward expander (DEXP, all settings) \cr
 $\bullet$ TX mic gain slider position \cr
 \bottomrule
 \end{tabular}
@@ -3955,7 +4043,7 @@ Fig. \ref{fig:capture1} shows the status bar, as it has been brought up by hitti
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=6cm]{Capture1.png}
+\includegraphics[scale=0.45]{Capture1.png}
 \caption{The Recording/Playback status bar.}
 \label{fig:capture1}
 \end{figure}
@@ -3973,7 +4061,7 @@ vertical yellow line) is completely replayed (Fig. \ref{fig:capture2}). Again, t
 the \bltt{Capture} button.
 \begin{figure}[ht]
 \center
-\includegraphics[width=6cm]{Capture2.png}
+\includegraphics[scale=0.45]{Capture2.png}
 \caption{Replaying recorded audio data}
 \label{fig:capture2}
 \end{figure}
@@ -4336,7 +4424,7 @@ to a narrower filter (hence the name \texttt{FILTER -}). When reaching the last 
 cycling switches to the first
 (widest) filter.}
 
- \phcommand{Filter +}{FL+}{B}{Cycle backward (!) through the list of filters for the current mode of the active
+\phcommand{Filter +}{FL+}{B}{Cycle backward (!) through the list of filters for the current mode of the active
 receiver. Normally, this means switching
 to a wider filter (hence the name \texttt{FILTER +}). When reaching the first filter in the list, further
 cycling switches to the last
@@ -4347,53 +4435,53 @@ receiver to the nominal values of the currently selected filter. It thus reverts
 with the \bltt{Filter Cut Low/High}, \bltt{IF Shift/Width}, etc. commands.}
 
 \phcommand{Filter Cut Low}{FCUTL}{E}{Adjust the low-cut of the filter of the active receiver.
-Note that for the single side band modes LSB, CWL, DIGL, the filter edge affecting the low 
+Note that for the single side band modes LSB, CWL, DIGL, the filter edge affecting the low
 \textit{audio} frequencies is changed.
 This command is meant for temporary QRM fighting, and
- the filter edges will be restored to their nominal values upon the next filter, mode, band, or
- bandstack change as well when recalling a memory slot. For creating a permanent filter with
- user-defined filter edges, there are two filters (\texttt{Var1}, \texttt{Var2}) for each mode which can be
- changed permanently in the \bltt{Filter} menu.}
+the filter edges will be restored to their nominal values upon the next filter, mode, band, or
+band stack change as well when recalling a memory slot. For creating a permanent filter with
+user-defined filter edges, there are two filters (\texttt{Var1}, \texttt{Var2}) for each mode which can be
+changed permanently in the \bltt{Filter} menu.}
 
 \phcommand{Filter Cut High}{FCUTH}{E}{Adjust the high-cut of the filter of the active receiver.
-Note that for the single side band modes LSB, CWL, DIGL, the filter edge affecting the high 
+Note that for the single side band modes LSB, CWL, DIGL, the filter edge affecting the high
 \textit{audio} frequencies is changed.
-This change is temporary, see the remark in the \bltt{Filter Cut Low} command.} 
+This change is temporary, see the remark in the \bltt{Filter Cut Low} command.}
 
- \phcommand{Filter Menu}{FILT}{B}{This opens the \texttt{Filter} menu.}
+\phcommand{Filter Menu}{FILT}{B}{This opens the \texttt{Filter} menu.}
 
- \phcommand{VFO Menu}{FREQ}{B}{This opens the \texttt{FREQ} (VFO) menu.}
+\phcommand{VFO Menu}{FREQ}{B}{This opens the \texttt{FREQ} (VFO) menu.}
 
- \phcommand{Function}{FUNC}{B}{Cycle through the six toolbar sets. For the \pH GPIO Controller1, where
- the eight switches follow the toolbar buttons, this also affects the function
- of the switches. Note that this command is \textit{always} connected with the right-most toolbar button.}
+\phcommand{Function}{FUNC}{B}{Cycle through the six toolbar sets. For the \pH GPIO Controller1, where
+the eight switches follow the toolbar buttons, this also affects the function
+of the switches. Note that this command is \textit{always} connected with the right-most toolbar button.}
 
-  \phcommand{FuncRev}{FUNC-}{B}{Cycle backwards through the six toolbar sets. For the \pH GPIO Controller1,
-   where the eight switches follow the toolbar buttons, this also affects the function
- of the switches. When using a mouse, this command can be invoked by a secondary mouse click
- on the rightmost toolbar button.}
+\phcommand{FuncRev}{FUNC-}{B}{Cycle backwards through the six toolbar sets. For the \pH GPIO Controller1,
+where the eight switches follow the toolbar buttons, this also affects the function
+of the switches. When using a mouse, this command can be invoked by a secondary mouse click
+on the rightmost toolbar button.}
 
- \phcommand{IF Shift}{IFSHFT}{E}{This command shifts the filter edges of the active receiver, that is,
- it affects  the low and high cut in the same way.
- This change is temporary, see the remark in the \bltt{Filter Cut Low} command.} 
- 
- \phcommand{IF Shift RX1}{IFSHFT1}{E}{Shift the filter edges of the receiver RX1 (low and high cut move the same way).
- This change is temporary, see the remark in the \bltt{Filter Cut Low} command.} 
+\phcommand{IF Shift}{IFSHFT}{E}{This command shifts the filter edges of the active receiver, that is,
+it affects  the low and high cut in the same way.
+This change is temporary, see the remark in the \bltt{Filter Cut Low} command.}
 
- \phcommand{IF Shift RX2}{IFSHFT2}{E}{Shift the filter edges of the receiver RX2 (low and high cut move the same way).
-This change is temporary, see the remark in the \bltt{Filter Cut Low} command.} 
+\phcommand{IF Shift RX1}{IFSHFT1}{E}{Shift the filter edges of the receiver RX1 (low and high cut move the same way).
+This change is temporary, see the remark in the \bltt{Filter Cut Low} command.}
 
- \phcommand{IF Width}{IFWIDTH}{E}{Change the width of the filter of the active receiver.
-This change is temporary, see the remark in the \bltt{Filter Cut Low} command.} 
- 
- \phcommand{IF Width RX1}{IFWIDTH1}{E}{Change the width of the filter of the receiver RX1.
-This change is temporary, see the remark in the \bltt{Filter Cut Low} command.} 
- 
+\phcommand{IF Shift RX2}{IFSHFT2}{E}{Shift the filter edges of the receiver RX2 (low and high cut move the same way).
+This change is temporary, see the remark in the \bltt{Filter Cut Low} command.}
+
+\phcommand{IF Width}{IFWIDTH}{E}{Change the width of the filter of the active receiver.
+This change is temporary, see the remark in the \bltt{Filter Cut Low} command.}
+
+\phcommand{IF Width RX1}{IFWIDTH1}{E}{Change the width of the filter of the receiver RX1.
+This change is temporary, see the remark in the \bltt{Filter Cut Low} command.}
+
 \phcommand{IF Width RX2}{IFWIDTH2}{E}{Change the width of the filter of the receiver RX2.
-This change is temporary, see the remark in the \bltt{Filter Cut Low} command.} 
+This change is temporary, see the remark in the \bltt{Filter Cut Low} command.}
 
 \phcommand{Linein Gain}{LIGAIN}{PE}{Change the line-in gain of the radio. If the
-     radio does not have a line-in input, this control has no effect.}
+radio does not have a line-in input, this control has no effect.}
 
 \phcommand{Lock}{LOCK}{B}{Lock the VFOs. A locked VFO will not accept VFO frequency steps in either direction,
 and cannot be moved by dragging with the  mouse. Band changes etc.
@@ -4444,26 +4532,20 @@ This function is used if one uses one encoder and one push-button to activate th
 encoder feature.}
 
 \phcommand{Mute}{MUTE}{B}{Toggles the ,,mute'' state of the active receiver. If a receiver is muted,
-zero-amplitude audio output is sent to the radio via the HPSDR protocol.
-This has only an effect for Protocol-1 and Protocol-2 (not for SoapySDR), and only affects headphones/speakers
-connected to the radio. Local audio (to a sound card or a virtual audio cable)
-is not affected. The main use of this command is
-to mute a radio-connected headphone while doing digi mode via local RX output.}
+its audio is replaced by  silence.
+This applies both to the audio data stream to the radio and local audio
+(if enabled).}
 
 \phcommand{Mute RX1}{MUTE1}{B}{Toggles the ,,mute'' state of  RX1. If a receiver is muted,
-zero-amplitude audio output is sent to the radio via the HPSDR protocol.
-This has only an effect for Protocol-1 and Protocol-2 (not for SoapySDR), and only affects headphones/speakers
-connected to the radio. Local audio (to a sound card or a virtual audio cable)
-is not affected. The main use of this command is
-to mute a radio-connected headphone while doing digi mode via local RX output..}
+its audio is replaced by  silence.
+This applies both to the audio data stream to the radio and local audio
+(if enabled).}
 
 \phcommand{Mute RX2}{MUTE2}{B}{Toggles the ,,mute'' state of  RX2. This operation is a no-op
 if only one receiver is running. If a receiver is muted,
-zero-amplitude audio output is sent to the radio via the HPSDR protocol.
-This has only an effect for Protocol-1 and Protocol-2 (not for SoapySDR), and only affects headphones/speakers
-connected to the radio. Local audio (to a sound card or a virtual audio cable)
-is not affected. The main use of this command is
-to mute a radio-connected headphone while doing digi mode via local RX output.}
+its audio is replaced by  silence.
+This applies both to the audio data stream to the radio and local audio
+(if enabled).}
 
 \phcommand{NB}{NB}{B}{Cycles through the noise blanker states (NB off/NB1/NB2).}
 
@@ -4807,7 +4889,7 @@ already 8, this is a no-op.}
 When using a controller (GPIO, MIDI or G2 front panel), one (and only one) of the encoders can be chosen as
 \textit{the} multi-function encoder by assigning the \bltt{Multi} command (For the G2 Mk2, the assignment
 is fixed, as for all other encoders an push-buttons there).
- This means that an command (say, changing the AF volume, the TX drive or
+This means that an command (say, changing the AF volume, the TX drive or
 the step attenuator of the RF front-end) can be dynamically assigned to that encoder, making it very
 facile to use a single ,,knob'' for various purposes. One has to sacrifice either another encoder
 or a push-button to have an easy-to-use handle to change the command currently assigned with the
@@ -4977,7 +5059,7 @@ somewhat to support the  ANDROMEDA open-source radio controller developed by Lau
 
 and the additional commands have been implemented in
 the CAT module of \pH by Rick Koch N1GP (thanks Rick).
- Furthermore, if "Andromeda" is selected in the CAT/TCI menu,
+Furthermore, if "Andromeda" is selected in the CAT/TCI menu,
 \pH will constantly
 \textit{send} status information to the ANDROMEDA controller using. Status information is
 sent if something
@@ -5006,7 +5088,7 @@ $\phantom{\Big|}${\large Set} & {AGp$_1$p$_2$p$_2$p$_2$;} \\\hline
 $\phantom{\Big|}${\large Read} & {AGp$_1$;} \\\hline
 $\phantom{\Big|}${\large Response} & {AGp$_1$p$_2$p$_2$p$_2$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0 sets RX1 audio volume, p$_1$=1 sets RX2 audio volume.} \\
- & \multicolumn{1}{|p{11cm}|}{p$_2$ is 0...255 and mapped logarithmically to the volume -40...0 dB} \\
+& \multicolumn{1}{|p{11cm}|}{p$_2$ is 0...255 and mapped logarithmically to the volume -40...0 dB} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5019,7 +5101,7 @@ $\phantom{\Big|}${\large Set} & {AIp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {AI;} \\\hline
 $\phantom{\Big|}${\large Response} & {AIp$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: auto-reporting disabled, p$_1$$>$0: enabled.} \\
- & \multicolumn{1}{|p{11cm}|}{Auto-reporting is affected for the client that sends this command. For p$_1$=1, only frequency changes are sent via FA/FB commands. For p$_1$$>$1, mode changes are also sent via MD commands.} \\
+& \multicolumn{1}{|p{11cm}|}{Auto-reporting is affected for the client that sends this command. For p$_1$=1, only frequency changes are sent via FA/FB commands. For p$_1$$>$1, mode changes are also sent via MD commands.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5134,8 +5216,8 @@ $\phantom{\Big|}${\large Set} & {FWp$_1$p$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {FW;} \\\hline
 $\phantom{\Big|}${\large Response} & {FWp$_1$p$_1$p$_1$p$_1$;} \\\hline
 $\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{When setting, this switches to the Var1 filter and sets its  width to p$_1$. Only valid for CW, FM, AM. Use SH/SL for LSB, USB, DIGL, DIGU.} \\
- & \multicolumn{1}{|p{11cm}|}{For AM, 8kHz filter width (p$_1$=0) or  16 kHz (p$_1$$\ne$0)} \\
- & \multicolumn{1}{|p{11cm}|}{For FM, 2.5kHz deviation (p$_1$=0) or 5 kHz (p$_1$$\ne$0)} \\
+& \multicolumn{1}{|p{11cm}|}{For AM, 8kHz filter width (p$_1$=0) or  16 kHz (p$_1$$\ne$0)} \\
+& \multicolumn{1}{|p{11cm}|}{For FM, 2.5kHz deviation (p$_1$=0) or 5 kHz (p$_1$$\ne$0)} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5907,7 +5989,7 @@ $\phantom{\Big|}$\textbf{\large ZZMA} & Mute/Unmute RX1 \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZMAp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZMA;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZMAp$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: RX1 not muted, p$_1$=1: muted. This only affects the audio sent to the radio via the HPSDR protocol.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: RX1 not muted, p$_1$=1: muted.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -5919,7 +6001,7 @@ $\phantom{\Big|}$\textbf{\large ZZMB} & Mute/Unmute RX2 \\\cline{1-2}
 $\phantom{\Big|}${\large Set} & {ZZMBp$_1$;} \\\hline
 $\phantom{\Big|}${\large Read} & {ZZMB;} \\\hline
 $\phantom{\Big|}${\large Response} & {ZZMBp$_1$;} \\\hline
-$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: RX2 not muted, p$_1$=1: muted. This only affects the audio sent to the radio via the HPSDR protocol.} \\
+$\phantom{\Big|}${\large Notes} & \multicolumn{1}{|p{11cm}|}{p$_1$=0: RX2 not muted, p$_1$=1: muted.} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -6588,14 +6670,14 @@ We begin with the \pH settings in the \bltt{RX} (Fig. \ref{fig:rx_settings_alsa_
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{rx_settings_alsa_audio.png}
+\includegraphics[scale=0.45]{rx_settings_alsa_audio.png}
 \caption{RX menu settings for using loopback with ALSA.}
 \label{fig:rx_settings_alsa_audio}
 \end{figure}
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{tx_settings_alsa_audio.png}
+\includegraphics[scale=0.45]{tx_settings_alsa_audio.png}
 \caption{TX menu settings for using loopback with ALSA.}
 \label{fig:tx_settings_alsa_audio}
 \end{figure}
@@ -6607,7 +6689,7 @@ window is shown):
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{wsjtx_settings_alsa_audio.png}
+\includegraphics[scale=0.45]{wsjtx_settings_alsa_audio.png}
 \caption{WSJTX audio settings for using loopback with ALSA.}
 \label{fig:wsjtx_settings_alsa_audio}
 \end{figure}
@@ -6620,7 +6702,7 @@ tab for establishing the CAT connection, although this is not specific to ALSA
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{wsjtx_settings_radio.png}
+\includegraphics[scale=0.45]{wsjtx_settings_radio.png}
 \caption{WSJTX radio settings for CAT connection to \pH.}
 \label{fig:wsjtx_settings_radio}
 \end{figure}
@@ -6633,6 +6715,10 @@ takes care WSJTX switches \pH to DIGU mode, and using \rett{Fake It} for the Spl
 Operation method is just my personal preference.
 
 \subsection[PulseAudio: NullSink modules]{PulseAudio: Null-Sink modules as virtual audio cables}
+
+\textbf{Important:}In nearly all latest LINUX releases, PulseAudio has been replaced by
+PipeWire, the difference is covered in the following section!
+
 There are no explicit loop-back devices with PulseAudio since they are not needed.
 For \textit{every} PulseAudio output device, there is a corresponding ,,Monitor'' device
 which can be used for sound input, and where the data sent to the primary (output) device
@@ -6723,7 +6809,7 @@ microphone.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{rx_settings_pa_audio.png}
+\includegraphics[scale=0.45]{rx_settings_pa_audio.png}
 \caption{RX menu settings with PulseAudio}
 \label{fig:rx_settings_pa_audio}
 \end{figure}
@@ -6731,7 +6817,7 @@ microphone.
 \begin{figure}[ht]
 \label{fig:pa2}
 \center
-\includegraphics[width=12cm]{tx_settings_pa_audio.png}
+\includegraphics[scale=0.45]{tx_settings_pa_audio.png}
 \caption{TX menu settings with PulseAudio}
 \label{fig:tx_settings_pa_audio}
 \end{figure}
@@ -6742,7 +6828,7 @@ the same as in the ALSA case.
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=12cm]{wsjtx_settings_pa_audio.png}
+\includegraphics[scale=0.45]{wsjtx_settings_pa_audio.png}
 \caption{WSJTX audio settings with PulseAudio}
 \label{fig:wstx_settings_pa_audio}
 \end{figure}
@@ -6780,8 +6866,10 @@ commands.
 \subsection[PipeWire: NullSink modules]{PipeWire: Null-Sink modules as virtual audio cables}
 The PipeWire case is very similar to the PulseAudio case, so we concentrate
 on the differences only. Creating the null-sink modules (,,cables'') is
-done in the same way as described in the previous chapter, except that
-the command now is \texttt{pactl} instead of \texttt{pacmd}:
+done in the same way as described in the previous chapter with very slight modifications:
+for example one can use \texttt{pactl} but not \texttt{pacmd}, and to give the sink name
+when loading the module the parameter reads \texttt{sink\_name} (with an underscore)
+instead of \texttt{sink name}.
 
 \texttt{pactl load-module module-null-sink sink\_name=RXcable rate=48000 \\
 sink\_properties="device.description=RXcable"
@@ -6845,14 +6933,14 @@ when switching between SSB and digi. The following picture just shows my setup
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{loopback_rx.png}
+\includegraphics[scale=0.35]{loopback_rx.png}
 \caption{Setting up ,,loopback'' on MacOS, RXcable}
 \label{fig:loopback_rx}
 \end{figure}
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=12cm]{loopback_tx.png}
+\includegraphics[scale=0.35]{loopback_tx.png}
 \caption{Setting up ,,loopback'' on MacOS, TXcable}
 \label{fig:loopback_tx}
 \end{figure}
@@ -6988,35 +7076,30 @@ PulseAudio is used. On MacOS, the \texttt{AUDIO} choice has no effect since the 
 module is used no matter what the \texttt{AUDIO} setting is.
 }
 
-%\item[\rett{EXTENDED\_NR}] {(\textbf{Deprecated}, default: \texttt{OFF})
-%There is a special version of the WDSP library that contains additional noise
-%reduction facilities which are based on  \texttt{rnnnoise} and \texttt{libspecbleach}, see
-% \texttt{https://github.com/vu3rdd/wdsp}. If you have such a version of WDSP installed, these
-% extended noise reduction facilities can be used with \pH if this option is \texttt{ON}.
-% Note that activating this option implies that the modified WDSP version is installed such
-% that the WDSP include file can be found by the compiler, and that the WDSP (shared)
-% library can be linked with the ,,\texttt{-lwdsp}'' linker option. This normally means
-% that the WDSP shared library is installed in /usr/local/lib, while the WDSP header file
-% is installed in /usr/local/include. The \texttt{wdsp} directory which is part of
-% the \pH repository is not used if \texttt{EXTENDED\_NR} is activated.
-%
-%{\bf Note:} When I  checked the repository mentioned above in November 2024, it seems that the
-%WDSP version is outdated (version 1.23) so it cannot be used with \pH. Ask the maintainer
-%of that repository to update their code if you want to use it. Note that since version 1.25, WDSP
-%contains a new and highly effective ,,trained'' NR2 noise reduction which was very well
-%received by the community. Having said this, I consider EXTENDED\_NR as deprecated and may
-%remove it from \pH in the future.
-%}
+\item[\rett{EXTENDED\_NR}] {(default: \texttt{OFF})
+There is a special version of the WDSP library that contains additional noise
+reduction facilities which are based on  \texttt{rnnnoise} and \texttt{libspecbleach}, see
+ \texttt{https://github.com/vu3rdd/wdsp}. If you have such a version of WDSP installed, these
+ extended noise reduction facilities can be used with \pH if this option is activated
+ at compile time.
+ Note that activating this option implies that the modified WDSP version is installed such
+ that the include file \texttt{wdsp.h} of \textit{that}
+ WDSP library, can be found by the compiler, and that \textit{that} WDSP (shared)
+ library can be linked with the ,,\texttt{-lwdsp}'' linker option. This normally means
+ that the WDSP shared library is installed in \texttt{/usr/local/lib} and the WDSP header file
+ in \texttt{/usr/local/include}. The \texttt{wdsp} directory that is part of
+ the \pH repository is not used if \texttt{EXTENDED\_NR} is activated.}
 
-\item[\rett{SERVER}] {(\textbf{Unfinished/Experimental}, default: \texttt{OFF})
- This is not yet completed but is mentioned here anyway. There are plans to have
- a client/server model in \pH such that you can have a ,,distant'' radio with a computer
- running \pH connected to that radio, and a ,,local'' computer running \pH, and an
- internet connection between the two computers. All the time-critical data exchange happens
- between the ,,distant'' radio and the ,,distant'' computer using a straight internet
- cable connection, while the user interface data is exchanged between the two copies of
- \pH running on the two computers.
-}
+
+%\item[\rett{SERVER}] {(\textbf{Unfinished/Experimental}, default: \texttt{OFF})
+% This is not yet completed but is mentioned here anyway. There are plans to have
+% a client/server model in \pH such that you can have a ,,distant'' radio with a computer
+% running \pH connected to that radio, and a ,,local'' computer running \pH, and an
+% internet connection between the two computers. All the time-critical data exchange happens
+% between the ,,distant'' radio and the ,,distant'' computer using a straight internet
+% cable connection, while the user interface data is exchanged between the two copies of
+% \pH running on the two computers.
+%}
 
 \end{itemize}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -7029,7 +7112,7 @@ other single-board computers with a GPIO.
 
 \begin{figure}[ht!]
 \center
-\includegraphics[width=14cm]{GPIO.pdf}
+\includegraphics[scale=0.6]{GPIO.pdf}
 \caption{GPIO lines used with various controllers. Note that Controller2V2 and the G2 front panel
 share the used GPIO lines.}
 \label{fig:GPIO}
@@ -7170,7 +7253,7 @@ simply by typing in the command ,,make'' in the \pH directory (see Appendix \ref
 
 \begin{figure}[ht]
 \center
-\includegraphics[width=9cm]{piEnableI2C.png}
+\includegraphics[scale=0.45]{piEnableI2C.png}
 \caption{Enabling the I2C controller.}
 \label{fig:piEnableI2C}
 \end{figure}
@@ -7310,7 +7393,11 @@ libraries such as libgpiod that are missing in the repository, which you can ign
 is quite outdated (version 0.7) while \pH requires a more recent version (0.8) because the
 SoapySDR API has changed from 0.7 to 0.8. The necessity to compile SoapySDR from the sources
 may be dropped in the future, if the libraries in the standard repositiories are all updated
-to the 0.8 API. Use the \grtt{SoapySDRUtil -info} command (see below for a sample output) to
+to the 0.8 API. Use the command
+
+\grtt{SoapySDRUtil -info}
+
+(see below for a sample output) to
 verify that the SoapySDR core has correctly been installed.
 
 \textbf{\color{red}Support for specific SoapySDR radios.} The script \texttt{libinstall.sh} only compiles
@@ -7321,10 +7408,14 @@ At the moment, there is support for the Adalm Pluto, for RTL sticks, for AirSpy 
 for the SDRplay. I have put together and tested scripts for the Pluto and for RTL sticks,
 since I have the hardware and can test it. The other scripts that install support modules
 for SoapySDR radios have been contributed by \pH users who have those radios and managed
-to compose an automatic install script for the required SoapySDR modules. Use the
-\grtt{SoapySDRUtil -find} command (see below for a sample output) to verify that SoapySDR
-``finds'' your radio. If SoapySDR does not find it, \pH cannot connect. To install the (radio specific)
-SoapySDR module for an Adalm Pluto (to give an example), you can type in at this place
+to compose an automatic install script for the required SoapySDR modules. Use the command
+
+\grtt{SoapySDRUtil -find}
+
+(see below for a sample output) to verify that SoapySDR
+``finds'' your radio. If SoapySDR does not find it, then \pH also cannot detect it.
+To install the (radio specific) SoapySDR module for an Adalm Pluto (to give an example),
+ you can type in at this place
 
 \grtt{cd \$HOME/pihpsdr}
 \grtt{LINUX/soapy.pluto.sh}
@@ -7335,7 +7426,7 @@ SoapySDR module for an Adalm Pluto (to give an example), you can type in at this
 the GPIO I/O lines for some other purpose, you must de-activate the GPIO compile time option
 first, as described in Appendix \ref{sec:compiletime}.
 
-\textbf{\color{red}Anan G2-Ultra note:}For the Anan G2-Ultra radios (those with a dozen (or so) LEDs on
+\textbf{\color{red}Anan G2-Ultra note:} For the Anan G2-Ultra radios (those with a dozen (or so) LEDs on
 the front panel and a 8-inch screen), as well as for original G2 radios (without LEDs and with a 7-inch screen)
 where the CPU board has been upgraded to a Radxa CM5 module, \pH should also be compiled \textit{without} (!) the
 GPIO compile time option.
@@ -7358,9 +7449,9 @@ and want to re-compile later, this sequence is the safest way to create a new bi
 namely go to the \texttt{pihpsdr}
 directory and recompile by executing ``make''.
 
-\begin{figure}[ht]
+\begin{figure}[h!]
 \center
-\includegraphics[width=9cm]{piDontAsk.png}
+\includegraphics[scale=0.4]{piDontAsk.png}
 \caption{Suppress being asked options when clicking the \pH desktop icon.}
 \label{fig:piDontAsk}
 \end{figure}
@@ -7386,7 +7477,7 @@ Appendix \ref{sec:compiletime}.
 \bigskip
 
 \textbf{\color{red}Checking the SoapySDR installation.}
-If you do not plan to use SoapySDR devices, you need not compile with \texttt{SOAPYSDR}
+If you do not plan to use radios connected via the SoapySDR library, you need not compile with \texttt{SOAPYSDR}
 enabled and can skip the rest of this section.
 
 To check the SoapySDR installation, open a new terminal
@@ -7427,16 +7518,16 @@ Available converters...
 \end{tiny}
 
 (Sorry for the tiny font, I did not want to wrap output lines.)
-Note the Library/API/ABI version (0.8). If you see version 0.7 here
+Note the Lib/API/ABI version (0.8). If you see version 0.7 here
 then you probably have installed SoapySDR on your computer
-from
-the standard repositories, and this is not going to work. The \texttt{libinstall.sh} command  has been
-designed
+from the standard repositories, and this is not going to work.
+The \texttt{libinstall.sh} command  has been designed
 to work (and has been tested on) a plain vanilla operating system, not on a ``spoiled'' one
 where the user has manually installed additional software packages that may induce incompatibilities.
 The best way out of such a problem is to re-install Linux (on a RaspPi, simply use a new SD card to do so).
 
-I think in the near future, the standard repositories will also advance to SoaySDR version 0.8, and then
+I expect that in the near not-too-distant future, the standard LINUX
+repositories will also advance to SoaySDR version 0.8, and then
 the installation procedure no longer needs to download and compile SoapySDR and all
 its modules, they can simply be taken from the ``official'' distribution.
 
@@ -7476,7 +7567,7 @@ stems from missing, corrupt, or outdated SoapySDR libraries which are not part o
 
 \textit{This procedure has been tested on several Macintosh models, including a MacBook Air with an
 M1 Apple Silicon CPU, a MacMini with an M2 pro CPU, and a somewhat older MacMini with an Intel CPU.
-In the last years, MacOS operating systems from version 10.15 (,,Catalina'') through 15.2 (,,Sequoia'')
+In the last years, MacOS operating systems from version 10.15 (,,Catalina'') through 15.3 (,,Sequoia'')
 have been used. Very old MacOS systems (e.g. Catalina) are no longer supported by HomeBrew. Installing
 \pH on these is still possible but requires (really) advanced skills, so take care to use a Mac with an operating
 system still supported by HomeBrew.}
@@ -7518,7 +7609,7 @@ in the Applications folder. It is suggested to drag this application into the ,,
 access.
 
 On a plain vanilla MacOS, even the most basic commands for doing programming are not installed
-by default. For example, the \grtt{git} command used below as the first step  to download /pH is
+by default. For example, the \grtt{git} command used below as the first step  to download \pH is
 not present by default. But this is easily cured. Simply open a terminal window and type in the command
 
 \grtt{xcode-select --install}

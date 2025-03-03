@@ -16,14 +16,19 @@
 *
 */
 
-#ifdef CLIENT_SERVER
-  #include "client_server.h"
-  extern int ext_remote_command(void *data);
-  extern int ext_rx_remote_update_display(void *data);
-  extern int ext_set_title(void *data);
-  extern int ext_remote_set_zoom(void *data);
-  extern int ext_remote_set_pan(void *data);
-#endif
+#include "client_server.h"
+
+extern int ext_remote_command(void *data);
+extern int ext_rx_remote_update_display(void *data);
+extern int ext_tx_remote_update_display(void *data);
+extern int ext_set_title(void *data);
+extern int ext_remote_set_zoom(void *data);
+extern int ext_remote_set_pan(void *data);
+extern int ext_radio_remote_change_receivers(void *data);
+extern int ext_radio_remote_set_mox(void *data);
+extern int ext_radio_remote_set_vox(void *data);
+extern int ext_radio_remote_set_tune(void *data);
+extern int ext_att_type_changed(void *data);
 
 //
 // The following calls functions can be called usig g_idle_add

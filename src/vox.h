@@ -18,7 +18,7 @@
 
 #include "transmitter.h"
 
-extern void update_vox(TRANSMITTER *tx);
+extern void vox_update(double lvl);
 extern void vox_cancel(void);
-extern void clear_vox(void);
+extern void vox_clear(void);
 extern double vox_get_peak(void);

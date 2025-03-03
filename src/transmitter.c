@@ -59,19 +59,18 @@
 #define max(x,y) (x<y?y:x)
 
 //
-// CW pulses are timed by the heart-beat of the mic samples.
-// Other parts of the program may produce CW RF pulses by manipulating
-// these global variables:
+// CW events: There is a ring buffer of CW events that
+// contain the state (key-up or key-down) and the minimum
+// time (in units of 1/48 msec) that has to pass since
+// the previous event has been executed. CW is done
+// exclusively by queuing CW events
 //
-// cw_key_up/cw_key_down: set number of samples for next key-down/key-up sequence
-//                        Any of these variable will only be set from outside if
-//                        both have value 0.
-// cw_not_ready:          set to 0 if transmitting in CW mode. This is used to
-//                        abort pending CAT CW messages if MOX or MODE is switched
-//                        manually.
-int cw_key_up = 0;
-int cw_key_down = 0;
-int cw_not_ready = 1;
+#define CW_RING_SIZE 1024
+static uint8_t cw_ring_state[CW_RING_SIZE];
+static int     cw_ring_wait[CW_RING_SIZE];
+static volatile int cw_ring_inpt = 0;
+static volatile int cw_ring_outpt = 0;
+
 
 double ctcss_frequencies[CTCSS_FREQUENCIES] = {
   67.0,  71.9,  74.4,  77.0,  79.7,  82.5,  85.4,  88.5,  91.5,  94.8,
@@ -177,6 +176,7 @@ static void init_audio_ramp(double *ramp, int width) {
 }
 
 static void init_dl1ycf_ramp(double *ramp, int width) {
+  ASSERT_SERVER();
   //
   // ========================================================================
   //
@@ -227,6 +227,7 @@ static void init_dl1ycf_ramp(double *ramp, int width) {
 
 #if 0
 static void init_ve3nea_ramp(double *ramp, int width) {
+  ASSERT_SERVER();
   //
   // Calculate a "VE3NEA" ramp (integrated Blackman-Harris-Window)
   // Output: ramp[0] ... ramp[width] contain numbers
@@ -265,20 +266,23 @@ void tx_set_ramps(TRANSMITTER *tx) {
   tx->cw_ramp_audio = g_new(double, tx->cw_ramp_audio_len + 1);
   init_audio_ramp(tx->cw_ramp_audio, tx->cw_ramp_audio_len);
 
-  //
-  // For the RF pulse envelope, use a BlackmanHarris ramp with a
-  // user-specified width
-  //
-  if (tx->cw_ramp_rf) { g_free(tx->cw_ramp_rf); }
+  if (!radio_is_remote) {
+    //
+    // For the RF pulse envelope, use a BlackmanHarris ramp with a
+    // user-specified width
+    //
+    if (tx->cw_ramp_rf) { g_free(tx->cw_ramp_rf); }
 
-  tx->cw_ramp_rf_ptr = 0;
-  tx->cw_ramp_rf_len = 48 * tx->ratio * cw_ramp_width;
-  tx->cw_ramp_rf = g_new(double, tx->cw_ramp_rf_len + 1);
-  init_dl1ycf_ramp(tx->cw_ramp_rf, tx->cw_ramp_rf_len);
+    tx->cw_ramp_rf_ptr = 0;
+    tx->cw_ramp_rf_len = 48 * tx->ratio * cw_ramp_width;
+    tx->cw_ramp_rf = g_new(double, tx->cw_ramp_rf_len + 1);
+    init_dl1ycf_ramp(tx->cw_ramp_rf, tx->cw_ramp_rf_len);
+  }
+
   g_mutex_unlock(&tx->cw_ramp_mutex);
 }
 
-void tx_reconfigure(TRANSMITTER *tx, int width, int height) {
+void tx_reconfigure(TRANSMITTER *tx, int pixels, int width, int height) {
   if (width != tx->width || height != tx->height) {
     g_mutex_lock(&tx->display_mutex);
     t_print("%s: width=%d height=%d\n", __FUNCTION__, width, height);
@@ -286,165 +290,197 @@ void tx_reconfigure(TRANSMITTER *tx, int width, int height) {
     tx->height = height;
     gtk_widget_set_size_request(tx->panel, width, height);
     //
-    // Upon calling, width either equals display_width (non-duplex) and
-    // the *shown* TX spectrum is 24 kHz wide, or width equals 1/4 display_width (duplex)
-    // and the *shown* TX spectrum is 6 kHz wide. In both cases, display_width pixels
-    // correspond to 24 kHz, while the width of the whole spectrum is TXIQ.
-    // The mic sample rate is fixed to 48k , so ratio is TXIQ/24k.
-    // The value of tx->pixels corresponds to the *full* TX spectrum in the
-    // target resolution.
+    // In duplex mode, pixels = 4*width, else pixels equals width
     //
-    tx->pixels = display_width * tx->ratio * 2;
+    tx->pixels = pixels;
     g_free(tx->pixel_samples);
     tx->pixel_samples = g_new(float, tx->pixels);
-    tx_set_analyzer(tx);
     g_mutex_unlock(&tx->display_mutex);
+
+    if (!radio_is_remote) {
+      tx_set_analyzer(tx);
+
+      if (protocol == ORIGINAL_PROTOCOL || protocol == NEW_PROTOCOL) {
+        RECEIVER *rx = receiver[PS_RX_FEEDBACK];
+        g_mutex_lock(&rx->mutex);
+        rx->pixels = pixels;
+        g_free(rx->pixel_samples);
+        rx->pixel_samples = g_new(float, rx->pixels);
+        rx_set_analyzer(rx);
+        g_mutex_unlock(&rx->mutex);
+      }
+    }
   }
 
   gtk_widget_set_size_request(tx->panadapter, width, height);
 }
 
 void tx_save_state(const TRANSMITTER *tx) {
-  SetPropI1("transmitter.%d.alcmode",           tx->id,               tx->alcmode);
-  SetPropI1("transmitter.%d.fft_size",          tx->id,               tx->fft_size);
-  SetPropI1("transmitter.%d.fps",               tx->id,               tx->fps);
-  SetPropI1("transmitter.%d.filter_low",        tx->id,               tx->filter_low);
-  SetPropI1("transmitter.%d.filter_high",       tx->id,               tx->filter_high);
-  SetPropI1("transmitter.%d.use_rx_filter",     tx->id,               tx->use_rx_filter);
-  SetPropI1("transmitter.%d.alex_antenna",      tx->id,               tx->alex_antenna);
-  SetPropI1("transmitter.%d.panadapter_low",    tx->id,               tx->panadapter_low);
-  SetPropI1("transmitter.%d.panadapter_high",   tx->id,               tx->panadapter_high);
-  SetPropI1("transmitter.%d.local_microphone",  tx->id,               tx->local_microphone);
-  SetPropS1("transmitter.%d.microphone_name",   tx->id,               tx->microphone_name);
-  SetPropI1("transmitter.%d.puresignal",        tx->id,               tx->puresignal);
-  SetPropI1("transmitter.%d.auto_on",           tx->id,               tx->auto_on);
-  SetPropI1("transmitter.%d.feedback",          tx->id,               tx->feedback);
-  SetPropF1("transmitter.%d.ps_ampdelay",       tx->id,               tx->ps_ampdelay);
-  SetPropI1("transmitter.%d.ps_oneshot",        tx->id,               tx->ps_oneshot);
-  SetPropI1("transmitter.%d.ps_ints",           tx->id,               tx->ps_ints);
-  SetPropI1("transmitter.%d.ps_spi",            tx->id,               tx->ps_spi);
-  SetPropI1("transmitter.%d.ps_stbl",           tx->id,               tx->ps_stbl);
-  SetPropI1("transmitter.%d.ps_map",            tx->id,               tx->ps_map);
-  SetPropI1("transmitter.%d.ps_pin",            tx->id,               tx->ps_pin);
-  SetPropI1("transmitter.%d.ps_ptol",           tx->id,               tx->ps_ptol);
-  SetPropF1("transmitter.%d.ps_moxdelay",       tx->id,               tx->ps_moxdelay);
-  SetPropF1("transmitter.%d.ps_loopdelay",      tx->id,               tx->ps_loopdelay);
-  SetPropI1("transmitter.%d.attenuation",       tx->id,               tx->attenuation);
-  SetPropI1("transmitter.%d.ctcss_enabled",     tx->id,               tx->ctcss_enabled);
-  SetPropI1("transmitter.%d.ctcss",             tx->id,               tx->ctcss);
-  SetPropI1("transmitter.%d.deviation",         tx->id,               tx->deviation);
-  SetPropI1("transmitter.%d.pre_emphasize",     tx->id,               tx->pre_emphasize);
-  SetPropF1("transmitter.%d.am_carrier_level",  tx->id,               tx->am_carrier_level);
-  SetPropI1("transmitter.%d.drive",             tx->id,               tx->drive);
-  SetPropF1("transmitter.%d.mic_gain",          tx->id,               tx->mic_gain);
-  SetPropI1("transmitter.%d.tune_drive",        tx->id,               tx->tune_drive);
-  SetPropI1("transmitter.%d.tune_use_drive",    tx->id,               tx->tune_use_drive);
-  SetPropI1("transmitter.%d.swr_protection",    tx->id,               tx->swr_protection);
-  SetPropF1("transmitter.%d.swr_alarm",         tx->id,               tx->swr_alarm);
-  SetPropI1("transmitter.%d.drive_level",       tx->id,               tx->drive_level);
-  SetPropF1("transmitter.%d.drive_scale",       tx->id,               tx->drive_scale);
-  SetPropF1("transmitter.%d.drive_iscal",       tx->id,               tx->drive_iscal);
-  SetPropI1("transmitter.%d.do_scale",          tx->id,               tx->do_scale);
-  SetPropI1("transmitter.%d.compressor",        tx->id,               tx->compressor);
-  SetPropF1("transmitter.%d.compressor_level",  tx->id,               tx->compressor_level);
-  SetPropI1("transmitter.%d.cfc",               tx->id,               tx->cfc);
-  SetPropI1("transmitter.%d.cfc_eq",            tx->id,               tx->cfc_eq);
-  SetPropI1("transmitter.%d.dexp",              tx->id,               tx->dexp);
-  SetPropI1("transmitter.%d.dexp_exp",          tx->id,               tx->dexp_exp);
-  SetPropI1("transmitter.%d.dexp_filter",       tx->id,               tx->dexp_filter);
-  SetPropI1("transmitter.%d.dexp_filter_low",   tx->id,               tx->dexp_filter_low);
-  SetPropI1("transmitter.%d.dexp_filter_high",  tx->id,               tx->dexp_filter_high);
-  SetPropI1("transmitter.%d.dexp_trigger",      tx->id,               tx->dexp_trigger);
-  SetPropF1("transmitter.%d.dexp_hyst",         tx->id,               tx->dexp_hyst);
-  SetPropF1("transmitter.%d.dexp_tau",          tx->id,               tx->dexp_tau);
-  SetPropF1("transmitter.%d.dexp_attack",       tx->id,               tx->dexp_attack);
-  SetPropF1("transmitter.%d.dexp_release",      tx->id,               tx->dexp_release);
-  SetPropF1("transmitter.%d.dexp_hold",         tx->id,               tx->dexp_hold);
-  SetPropI1("transmitter.%d.dialog_x",          tx->id,               tx->dialog_x);
-  SetPropI1("transmitter.%d.dialog_y",          tx->id,               tx->dialog_y);
-  SetPropI1("transmitter.%d.display_filled",    tx->id,               tx->display_filled);
-  SetPropI1("transmitter.%d.eq_enable",         tx->id,               tx->eq_enable);
+  //
+  // Start with "local" data
+  //
+  SetPropI1("transmitter.%d.panadapter_low",                      tx->id,    tx->panadapter_low);
+  SetPropI1("transmitter.%d.panadapter_high",                     tx->id,    tx->panadapter_high);
+  SetPropI1("transmitter.%d.panadapter_peaks_on",                 tx->id,    tx->panadapter_peaks_on);
+  SetPropI1("transmitter.%d.panadapter_num_peaks",                tx->id,    tx->panadapter_num_peaks);
+  SetPropI1("transmitter.%d.panadapter_ignore_range_divider",     tx->id,    tx->panadapter_ignore_range_divider);
+  SetPropI1("transmitter.%d.panadapter_ignore_noise_percentile",  tx->id,    tx->panadapter_ignore_noise_percentile);
+  SetPropI1("transmitter.%d.panadapter_hide_noise_filled",        tx->id,    tx->panadapter_hide_noise_filled);
+  SetPropI1("transmitter.%d.panadapter_peaks_in_passband_filled", tx->id,    tx->panadapter_peaks_in_passband_filled);
+  SetPropI1("transmitter.%d.local_microphone",                    tx->id,    tx->local_microphone);
+  SetPropS1("transmitter.%d.microphone_name",                     tx->id,    tx->microphone_name);
+  SetPropI1("transmitter.%d.dialog_x",                            tx->id,    tx->dialog_x);
+  SetPropI1("transmitter.%d.dialog_y",                            tx->id,    tx->dialog_y);
+  SetPropI1("transmitter.%d.display_filled",                      tx->id,    tx->display_filled);
 
-  for (int i = 0; i < 11; i++) {
-    SetPropF2("transmitter.%d.eq_freq[%d]",     tx->id, i,            tx->eq_freq[i]);
-    SetPropF2("transmitter.%d.eq_gain[%d]",     tx->id, i,            tx->eq_gain[i]);
-    SetPropF2("transmitter.%d.cfc_freq[%d]",    tx->id, i,            tx->cfc_freq[i]);
-    SetPropF2("transmitter.%d.cfc_lvl[%d]",     tx->id, i,            tx->cfc_lvl[i]);
-    SetPropF2("transmitter.%d.cfc_post[%d]",    tx->id, i,            tx->cfc_post[i]);
+  if (!radio_is_remote) {
+    SetPropI1("transmitter.%d.alcmode",                             tx->id,    tx->alcmode);
+    SetPropI1("transmitter.%d.fft_size",                            tx->id,    tx->fft_size);
+    SetPropI1("transmitter.%d.fps",                                 tx->id,    tx->fps);
+    SetPropI1("transmitter.%d.filter_low",                          tx->id,    tx->filter_low);
+    SetPropI1("transmitter.%d.filter_high",                         tx->id,    tx->filter_high);
+    SetPropI1("transmitter.%d.use_rx_filter",                       tx->id,    tx->use_rx_filter);
+    SetPropI1("transmitter.%d.alex_antenna",                        tx->id,    tx->alex_antenna);
+    SetPropI1("transmitter.%d.puresignal",                          tx->id,    tx->puresignal);
+    SetPropI1("transmitter.%d.auto_on",                             tx->id,    tx->auto_on);
+    SetPropI1("transmitter.%d.feedback",                            tx->id,    tx->feedback);
+    SetPropF1("transmitter.%d.ps_ampdelay",                         tx->id,    tx->ps_ampdelay);
+    SetPropI1("transmitter.%d.ps_oneshot",                          tx->id,    tx->ps_oneshot);
+    SetPropI1("transmitter.%d.ps_ints",                             tx->id,    tx->ps_ints);
+    SetPropI1("transmitter.%d.ps_spi",                              tx->id,    tx->ps_spi);
+    SetPropI1("transmitter.%d.ps_stbl",                             tx->id,    tx->ps_stbl);
+    SetPropI1("transmitter.%d.ps_map",                              tx->id,    tx->ps_map);
+    SetPropI1("transmitter.%d.ps_pin",                              tx->id,    tx->ps_pin);
+    SetPropI1("transmitter.%d.ps_ptol",                             tx->id,    tx->ps_ptol);
+    SetPropF1("transmitter.%d.ps_moxdelay",                         tx->id,    tx->ps_moxdelay);
+    SetPropF1("transmitter.%d.ps_loopdelay",                        tx->id,    tx->ps_loopdelay);
+    SetPropI1("transmitter.%d.attenuation",                         tx->id,    tx->attenuation);
+    SetPropI1("transmitter.%d.ctcss_enabled",                       tx->id,    tx->ctcss_enabled);
+    SetPropI1("transmitter.%d.ctcss",                               tx->id,    tx->ctcss);
+    SetPropI1("transmitter.%d.deviation",                           tx->id,    tx->deviation);
+    SetPropI1("transmitter.%d.pre_emphasize",                       tx->id,    tx->pre_emphasize);
+    SetPropF1("transmitter.%d.am_carrier_level",                    tx->id,    tx->am_carrier_level);
+    SetPropI1("transmitter.%d.drive",                               tx->id,    tx->drive);
+    SetPropF1("transmitter.%d.mic_gain",                            tx->id,    tx->mic_gain);
+    SetPropI1("transmitter.%d.tune_drive",                          tx->id,    tx->tune_drive);
+    SetPropI1("transmitter.%d.tune_use_drive",                      tx->id,    tx->tune_use_drive);
+    SetPropI1("transmitter.%d.swr_protection",                      tx->id,    tx->swr_protection);
+    SetPropF1("transmitter.%d.swr_alarm",                           tx->id,    tx->swr_alarm);
+    SetPropI1("transmitter.%d.drive_level",                         tx->id,    tx->drive_level);
+    SetPropF1("transmitter.%d.drive_scale",                         tx->id,    tx->drive_scale);
+    SetPropF1("transmitter.%d.drive_iscal",                         tx->id,    tx->drive_iscal);
+    SetPropI1("transmitter.%d.do_scale",                            tx->id,    tx->do_scale);
+    SetPropI1("transmitter.%d.compressor",                          tx->id,    tx->compressor);
+    SetPropF1("transmitter.%d.compressor_level",                    tx->id,    tx->compressor_level);
+    SetPropI1("transmitter.%d.cfc",                                 tx->id,    tx->cfc);
+    SetPropI1("transmitter.%d.cfc_eq",                              tx->id,    tx->cfc_eq);
+    SetPropI1("transmitter.%d.dexp",                                tx->id,    tx->dexp);
+    SetPropI1("transmitter.%d.dexp_exp",                            tx->id,    tx->dexp_exp);
+    SetPropI1("transmitter.%d.dexp_filter",                         tx->id,    tx->dexp_filter);
+    SetPropI1("transmitter.%d.dexp_filter_low",                     tx->id,    tx->dexp_filter_low);
+    SetPropI1("transmitter.%d.dexp_filter_high",                    tx->id,    tx->dexp_filter_high);
+    SetPropI1("transmitter.%d.dexp_trigger",                        tx->id,    tx->dexp_trigger);
+    SetPropF1("transmitter.%d.dexp_hyst",                           tx->id,    tx->dexp_hyst);
+    SetPropF1("transmitter.%d.dexp_tau",                            tx->id,    tx->dexp_tau);
+    SetPropF1("transmitter.%d.dexp_attack",                         tx->id,    tx->dexp_attack);
+    SetPropF1("transmitter.%d.dexp_release",                        tx->id,    tx->dexp_release);
+    SetPropF1("transmitter.%d.dexp_hold",                           tx->id,    tx->dexp_hold);
+    SetPropI1("transmitter.%d.eq_enable",                           tx->id,    tx->eq_enable);
+
+    for (int i = 0; i < 11; i++) {
+      SetPropF2("transmitter.%d.eq_freq[%d]",                       tx->id, i, tx->eq_freq[i]);
+      SetPropF2("transmitter.%d.eq_gain[%d]",                       tx->id, i, tx->eq_gain[i]);
+      SetPropF2("transmitter.%d.cfc_freq[%d]",                      tx->id, i, tx->cfc_freq[i]);
+      SetPropF2("transmitter.%d.cfc_lvl[%d]",                       tx->id, i, tx->cfc_lvl[i]);
+      SetPropF2("transmitter.%d.cfc_post[%d]",                      tx->id, i, tx->cfc_post[i]);
+    }
   }
 }
 
-static void tx_restore_state(TRANSMITTER *tx) {
-  GetPropI1("transmitter.%d.alcmode",           tx->id,               tx->alcmode);
-  GetPropI1("transmitter.%d.fft_size",          tx->id,               tx->fft_size);
-  GetPropI1("transmitter.%d.fps",               tx->id,               tx->fps);
-  GetPropI1("transmitter.%d.filter_low",        tx->id,               tx->filter_low);
-  GetPropI1("transmitter.%d.filter_high",       tx->id,               tx->filter_high);
-  GetPropI1("transmitter.%d.use_rx_filter",     tx->id,               tx->use_rx_filter);
-  GetPropI1("transmitter.%d.alex_antenna",      tx->id,               tx->alex_antenna);
-  GetPropI1("transmitter.%d.panadapter_low",    tx->id,               tx->panadapter_low);
-  GetPropI1("transmitter.%d.panadapter_high",   tx->id,               tx->panadapter_high);
-  GetPropI1("transmitter.%d.local_microphone",  tx->id,               tx->local_microphone);
-  GetPropS1("transmitter.%d.microphone_name",   tx->id,               tx->microphone_name);
-  GetPropI1("transmitter.%d.puresignal",        tx->id,               tx->puresignal);
-  GetPropI1("transmitter.%d.auto_on",           tx->id,               tx->auto_on);
-  GetPropI1("transmitter.%d.feedback",          tx->id,               tx->feedback);
-  GetPropF1("transmitter.%d.ps_ampdelay",       tx->id,               tx->ps_ampdelay);
-  GetPropI1("transmitter.%d.ps_oneshot",        tx->id,               tx->ps_oneshot);
-  GetPropI1("transmitter.%d.ps_ints",           tx->id,               tx->ps_ints);
-  GetPropI1("transmitter.%d.ps_spi",            tx->id,               tx->ps_spi);
-  GetPropI1("transmitter.%d.ps_stbl",           tx->id,               tx->ps_stbl);
-  GetPropI1("transmitter.%d.ps_map",            tx->id,               tx->ps_map);
-  GetPropI1("transmitter.%d.ps_pin",            tx->id,               tx->ps_pin);
-  GetPropI1("transmitter.%d.ps_ptol",           tx->id,               tx->ps_ptol);
-  GetPropF1("transmitter.%d.ps_moxdelay",       tx->id,               tx->ps_moxdelay);
-  GetPropF1("transmitter.%d.ps_loopdelay",      tx->id,               tx->ps_loopdelay);
-  GetPropI1("transmitter.%d.attenuation",       tx->id,               tx->attenuation);
-  GetPropI1("transmitter.%d.ctcss_enabled",     tx->id,               tx->ctcss_enabled);
-  GetPropI1("transmitter.%d.ctcss",             tx->id,               tx->ctcss);
-  GetPropI1("transmitter.%d.deviation",         tx->id,               tx->deviation);
-  GetPropI1("transmitter.%d.pre_emphasize",     tx->id,               tx->pre_emphasize);
-  GetPropF1("transmitter.%d.am_carrier_level",  tx->id,               tx->am_carrier_level);
-  GetPropI1("transmitter.%d.drive",             tx->id,               tx->drive);
-  GetPropF1("transmitter.%d.mic_gain",          tx->id,               tx->mic_gain);
-  GetPropI1("transmitter.%d.tune_drive",        tx->id,               tx->tune_drive);
-  GetPropI1("transmitter.%d.tune_use_drive",    tx->id,               tx->tune_use_drive);
-  GetPropI1("transmitter.%d.swr_protection",    tx->id,               tx->swr_protection);
-  GetPropF1("transmitter.%d.swr_alarm",         tx->id,               tx->swr_alarm);
-  GetPropI1("transmitter.%d.drive_level",       tx->id,               tx->drive_level);
-  GetPropF1("transmitter.%d.drive_scale",       tx->id,               tx->drive_scale);
-  GetPropF1("transmitter.%d.drive_iscal",       tx->id,               tx->drive_iscal);
-  GetPropI1("transmitter.%d.do_scale",          tx->id,               tx->do_scale);
-  GetPropI1("transmitter.%d.compressor",        tx->id,               tx->compressor);
-  GetPropF1("transmitter.%d.compressor_level",  tx->id,               tx->compressor_level);
-  GetPropI1("transmitter.%d.cfc",               tx->id,               tx->cfc);
-  GetPropI1("transmitter.%d.cfc_eq",            tx->id,               tx->cfc_eq);
-  GetPropI1("transmitter.%d.dexp",              tx->id,               tx->dexp);
-  GetPropI1("transmitter.%d.dexp_exp",          tx->id,               tx->dexp_exp);
-  GetPropI1("transmitter.%d.dexp_filter",       tx->id,               tx->dexp_filter);
-  GetPropI1("transmitter.%d.dexp_filter_low",   tx->id,               tx->dexp_filter_low);
-  GetPropI1("transmitter.%d.dexp_filter_high",  tx->id,               tx->dexp_filter_high);
-  GetPropI1("transmitter.%d.dexp_trigger",      tx->id,               tx->dexp_trigger);
-  GetPropF1("transmitter.%d.dexp_hyst",         tx->id,               tx->dexp_hyst);
-  GetPropF1("transmitter.%d.dexp_tau",          tx->id,               tx->dexp_tau);
-  GetPropF1("transmitter.%d.dexp_attack",       tx->id,               tx->dexp_attack);
-  GetPropF1("transmitter.%d.dexp_release",      tx->id,               tx->dexp_release);
-  GetPropF1("transmitter.%d.dexp_hold",         tx->id,               tx->dexp_hold);
-  GetPropI1("transmitter.%d.dialog_x",          tx->id,               tx->dialog_x);
-  GetPropI1("transmitter.%d.dialog_y",          tx->id,               tx->dialog_y);
-  GetPropI1("transmitter.%d.display_filled",    tx->id,               tx->display_filled);
-  GetPropI1("transmitter.%d.eq_enable",         tx->id,               tx->eq_enable);
+void tx_restore_state(TRANSMITTER *tx) {
+  //
+  // Start with "local" data
+  //
+  GetPropI1("transmitter.%d.panadapter_low",                      tx->id,    tx->panadapter_low);
+  GetPropI1("transmitter.%d.panadapter_high",                     tx->id,    tx->panadapter_high);
+  GetPropI1("transmitter.%d.panadapter_peaks_on",                 tx->id,    tx->panadapter_peaks_on);
+  GetPropI1("transmitter.%d.panadapter_num_peaks",                tx->id,    tx->panadapter_num_peaks);
+  GetPropI1("transmitter.%d.panadapter_ignore_range_divider",     tx->id,    tx->panadapter_ignore_range_divider);
+  GetPropI1("transmitter.%d.panadapter_ignore_noise_percentile",  tx->id,    tx->panadapter_ignore_noise_percentile);
+  GetPropI1("transmitter.%d.panadapter_hide_noise_filled",        tx->id,    tx->panadapter_hide_noise_filled);
+  GetPropI1("transmitter.%d.panadapter_peaks_in_passband_filled", tx->id,    tx->panadapter_peaks_in_passband_filled);
+  GetPropI1("transmitter.%d.local_microphone",                    tx->id,    tx->local_microphone);
+  GetPropS1("transmitter.%d.microphone_name",                     tx->id,    tx->microphone_name);
+  GetPropI1("transmitter.%d.dialog_x",                            tx->id,    tx->dialog_x);
+  GetPropI1("transmitter.%d.dialog_y",                            tx->id,    tx->dialog_y);
+  GetPropI1("transmitter.%d.display_filled",                      tx->id,    tx->display_filled);
 
-  for (int i = 0; i < 11; i++) {
-    GetPropF2("transmitter.%d.eq_freq[%d]",     tx->id, i,            tx->eq_freq[i]);
-    GetPropF2("transmitter.%d.eq_gain[%d]",     tx->id, i,            tx->eq_gain[i]);
-    GetPropF2("transmitter.%d.cfc_freq[%d]",    tx->id, i,            tx->cfc_freq[i]);
-    GetPropF2("transmitter.%d.cfc_lvl[%d]",     tx->id, i,            tx->cfc_lvl[i]);
-    GetPropF2("transmitter.%d.cfc_post[%d]",    tx->id, i,            tx->cfc_post[i]);
+  if (!radio_is_remote) {
+    GetPropI1("transmitter.%d.alcmode",                             tx->id,    tx->alcmode);
+    GetPropI1("transmitter.%d.fft_size",                            tx->id,    tx->fft_size);
+    GetPropI1("transmitter.%d.fps",                                 tx->id,    tx->fps);
+    GetPropI1("transmitter.%d.filter_low",                          tx->id,    tx->filter_low);
+    GetPropI1("transmitter.%d.filter_high",                         tx->id,    tx->filter_high);
+    GetPropI1("transmitter.%d.use_rx_filter",                       tx->id,    tx->use_rx_filter);
+    GetPropI1("transmitter.%d.alex_antenna",                        tx->id,    tx->alex_antenna);
+    GetPropI1("transmitter.%d.puresignal",                          tx->id,    tx->puresignal);
+    GetPropI1("transmitter.%d.auto_on",                             tx->id,    tx->auto_on);
+    GetPropI1("transmitter.%d.feedback",                            tx->id,    tx->feedback);
+    GetPropF1("transmitter.%d.ps_ampdelay",                         tx->id,    tx->ps_ampdelay);
+    GetPropI1("transmitter.%d.ps_oneshot",                          tx->id,    tx->ps_oneshot);
+    GetPropI1("transmitter.%d.ps_ints",                             tx->id,    tx->ps_ints);
+    GetPropI1("transmitter.%d.ps_spi",                              tx->id,    tx->ps_spi);
+    GetPropI1("transmitter.%d.ps_stbl",                             tx->id,    tx->ps_stbl);
+    GetPropI1("transmitter.%d.ps_map",                              tx->id,    tx->ps_map);
+    GetPropI1("transmitter.%d.ps_pin",                              tx->id,    tx->ps_pin);
+    GetPropI1("transmitter.%d.ps_ptol",                             tx->id,    tx->ps_ptol);
+    GetPropF1("transmitter.%d.ps_moxdelay",                         tx->id,    tx->ps_moxdelay);
+    GetPropF1("transmitter.%d.ps_loopdelay",                        tx->id,    tx->ps_loopdelay);
+    GetPropI1("transmitter.%d.attenuation",                         tx->id,    tx->attenuation);
+    GetPropI1("transmitter.%d.ctcss_enabled",                       tx->id,    tx->ctcss_enabled);
+    GetPropI1("transmitter.%d.ctcss",                               tx->id,    tx->ctcss);
+    GetPropI1("transmitter.%d.deviation",                           tx->id,    tx->deviation);
+    GetPropI1("transmitter.%d.pre_emphasize",                       tx->id,    tx->pre_emphasize);
+    GetPropF1("transmitter.%d.am_carrier_level",                    tx->id,    tx->am_carrier_level);
+    GetPropI1("transmitter.%d.drive",                               tx->id,    tx->drive);
+    GetPropF1("transmitter.%d.mic_gain",                            tx->id,    tx->mic_gain);
+    GetPropI1("transmitter.%d.tune_drive",                          tx->id,    tx->tune_drive);
+    GetPropI1("transmitter.%d.tune_use_drive",                      tx->id,    tx->tune_use_drive);
+    GetPropI1("transmitter.%d.swr_protection",                      tx->id,    tx->swr_protection);
+    GetPropF1("transmitter.%d.swr_alarm",                           tx->id,    tx->swr_alarm);
+    GetPropI1("transmitter.%d.drive_level",                         tx->id,    tx->drive_level);
+    GetPropF1("transmitter.%d.drive_scale",                         tx->id,    tx->drive_scale);
+    GetPropF1("transmitter.%d.drive_iscal",                         tx->id,    tx->drive_iscal);
+    GetPropI1("transmitter.%d.do_scale",                            tx->id,    tx->do_scale);
+    GetPropI1("transmitter.%d.compressor",                          tx->id,    tx->compressor);
+    GetPropF1("transmitter.%d.compressor_level",                    tx->id,    tx->compressor_level);
+    GetPropI1("transmitter.%d.cfc",                                 tx->id,    tx->cfc);
+    GetPropI1("transmitter.%d.cfc_eq",                              tx->id,    tx->cfc_eq);
+    GetPropI1("transmitter.%d.dexp",                                tx->id,    tx->dexp);
+    GetPropI1("transmitter.%d.dexp_exp",                            tx->id,    tx->dexp_exp);
+    GetPropI1("transmitter.%d.dexp_filter",                         tx->id,    tx->dexp_filter);
+    GetPropI1("transmitter.%d.dexp_filter_low",                     tx->id,    tx->dexp_filter_low);
+    GetPropI1("transmitter.%d.dexp_filter_high",                    tx->id,    tx->dexp_filter_high);
+    GetPropI1("transmitter.%d.dexp_trigger",                        tx->id,    tx->dexp_trigger);
+    GetPropF1("transmitter.%d.dexp_hyst",                           tx->id,    tx->dexp_hyst);
+    GetPropF1("transmitter.%d.dexp_tau",                            tx->id,    tx->dexp_tau);
+    GetPropF1("transmitter.%d.dexp_attack",                         tx->id,    tx->dexp_attack);
+    GetPropF1("transmitter.%d.dexp_release",                        tx->id,    tx->dexp_release);
+    GetPropF1("transmitter.%d.dexp_hold",                           tx->id,    tx->dexp_hold);
+    GetPropI1("transmitter.%d.eq_enable",                           tx->id,    tx->eq_enable);
+
+    for (int i = 0; i < 11; i++) {
+      GetPropF2("transmitter.%d.eq_freq[%d]",                       tx->id, i, tx->eq_freq[i]);
+      GetPropF2("transmitter.%d.eq_gain[%d]",                       tx->id, i, tx->eq_gain[i]);
+      GetPropF2("transmitter.%d.cfc_freq[%d]",                      tx->id, i, tx->cfc_freq[i]);
+      GetPropF2("transmitter.%d.cfc_lvl[%d]",                       tx->id, i, tx->cfc_lvl[i]);
+      GetPropF2("transmitter.%d.cfc_post[%d]",                      tx->id, i, tx->cfc_post[i]);
+    }
   }
 }
 
 static double compute_power(double p) {
+  ASSERT_SERVER(0.0);
   double interval = 0.1 * pa_power_list[pa_power];
   int i = 0;
 
@@ -463,22 +499,18 @@ static double compute_power(double p) {
 }
 
 static gboolean tx_update_display(gpointer data) {
+  ASSERT_SERVER(FALSE);
   TRANSMITTER *tx = (TRANSMITTER *)data;
   int rc;
 
-  //t_print("tx_update_display: tx id=%d\n",tx->id);
+  if (tx->puresignal) {
+    tx_ps_getinfo(tx);
+  }
+
   if (tx->displaying) {
     // if "MON" button is active (tx->feedback is TRUE),
     // then obtain spectrum pixels from PS_RX_FEEDBACK,
     // that is, display the (attenuated) TX signal from the "antenna"
-    //
-    // POSSIBLE MISMATCH OF SAMPLE RATES IN ORIGINAL PROTOCOL:
-    // TX sample rate is fixed 48 kHz, but RX sample rate can be
-    // 2*, 4*, or even 8* larger. The analyzer has been set up to use
-    // more pixels in this case, so we just need to copy the
-    // inner part of the spectrum.
-    // If both spectra have the same number of pixels, this code
-    // just copies all of them
     //
     g_mutex_lock(&tx->display_mutex);
 
@@ -679,7 +711,7 @@ static gboolean tx_update_display(gpointer data) {
     // sense transformer: Exchange fwd and rev readings
     //
     if (device == DEVICE_HERMES_LITE || device == DEVICE_HERMES_LITE2 ||
-    device == NEW_DEVICE_HERMES_LITE || device == NEW_DEVICE_HERMES_LITE2) {
+        device == NEW_DEVICE_HERMES_LITE || device == NEW_DEVICE_HERMES_LITE2) {
       if (rev_power > fwd_power) {
         fwd_power   = alex_reverse_power;
         rev_power   = alex_forward_power;
@@ -789,7 +821,7 @@ void tx_create_dialog(TRANSMITTER *tx) {
   g_signal_connect (tx->dialog, "destroy", G_CALLBACK (close_cb), NULL);
   GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(tx->dialog));
   //t_print("create_dialog: add tx->panel\n");
-  gtk_widget_set_size_request (tx->panel, display_width / 4, display_height / 2);
+  gtk_widget_set_size_request (tx->panel, tx_dialog_width, tx_dialog_height);
   gtk_container_add(GTK_CONTAINER(content), tx->panel);
   gtk_widget_add_events(tx->dialog, GDK_KEY_PRESS_MASK);
   g_signal_connect(tx->dialog, "key_press_event", G_CALLBACK(keypress_cb), NULL);
@@ -822,7 +854,8 @@ static void tx_create_visual(TRANSMITTER *tx) {
   }
 }
 
-TRANSMITTER *tx_create_transmitter(int id, int width, int height) {
+TRANSMITTER *tx_create_transmitter(int id, int pixels, int width, int height) {
+  ASSERT_SERVER(NULL);
   TRANSMITTER *tx = g_new(TRANSMITTER, 1);
   //
   // This is to guard against programming errors
@@ -859,8 +892,8 @@ TRANSMITTER *tx_create_transmitter(int id, int width, int height) {
   case SOAPYSDR_PROTOCOL:
     tx->mic_sample_rate = 48000;
     tx->mic_dsp_rate = 96000;
-    tx->iq_output_rate = radio_sample_rate;  // MUST be a multiple of 48k
-    tx->ratio = radio_sample_rate / 48000;
+    tx->iq_output_rate = soapy_radio_sample_rate;  // MUST be a multiple of 48k
+    tx->ratio = soapy_radio_sample_rate / 48000;
     break;
   }
 
@@ -885,7 +918,7 @@ TRANSMITTER *tx_create_transmitter(int id, int width, int height) {
   }
 
   tx->output_samples = tx->buffer_size * tx->ratio;
-  tx->pixels = display_width * tx->ratio * 2;
+  tx->pixels = pixels;
   tx->width = width;
   tx->height = height;
   tx->display_panadapter = 1;
@@ -893,6 +926,14 @@ TRANSMITTER *tx_create_transmitter(int id, int width, int height) {
   tx->panadapter_high = 0;
   tx->panadapter_low = -70;
   tx->panadapter_step = 10;
+
+  tx->panadapter_peaks_on = 0;
+  tx->panadapter_num_peaks = 4;  // if the typical application is a two-tone test we need four
+  tx->panadapter_ignore_range_divider = 24;
+  tx->panadapter_ignore_noise_percentile = 50;
+  tx->panadapter_hide_noise_filled = 1;
+  tx->panadapter_peaks_in_passband_filled = 0;
+
   tx->displaying = 0;
   tx->alex_antenna = 0; // default: ANT1
   t_print("%s: id=%d buffer_size=%d mic_sample_rate=%d mic_dsp_rate=%d iq_output_rate=%d output_samples=%d width=%d height=%d\n",
@@ -1136,6 +1177,7 @@ TRANSMITTER *tx_create_transmitter(int id, int width, int height) {
 //////////////////////////////////////////////////////////////////////////
 
 static void tx_full_buffer(TRANSMITTER *tx) {
+  ASSERT_SERVER();
   long isample;
   long qsample;
   double gain;
@@ -1170,8 +1212,10 @@ static void tx_full_buffer(TRANSMITTER *tx) {
   if (cwmode) {
     //
     // clear VOX peak level in case is it non-zero.
+    // This prevents the "mic lvl" indicator in the VFO bar
+    // from freezing.
     //
-    clear_vox();
+    vox_clear();
     //
     // Note that WDSP is not needed, but we still call it (and discard the
     // results) since this  may help in correct slew-up and slew-down
@@ -1199,7 +1243,16 @@ static void tx_full_buffer(TRANSMITTER *tx) {
     // Old VOX code, to be applied BEFORE FM preemphasis
     // and the downward expander
     //
-    update_vox(tx);
+    double mypeak = 0.0;
+
+    for (int i = 0; i < tx->buffer_size; i++) {
+      double sample = tx->mic_input_buffer[2 * i];
+
+       if (sample > mypeak) { mypeak = sample; }
+
+       if (-sample > mypeak) { mypeak = sample; }
+    }
+    vox_update(mypeak);
 
     //
     // DL1YCF:
@@ -1220,7 +1273,7 @@ static void tx_full_buffer(TRANSMITTER *tx) {
     // compensated by ALC, so it is important to have FM pre-emphasis
     // before ALC (checkbox in tx_menu checked, that is, pre_emphasis==0).
     //
-    // Note that mic sample amplification has to be done after update_vox()
+    // Note that mic sample amplification has to be done after vox_update()
     //
     if (txmode == modeFMN && !tune) {
       for (int i = 0; i < 2 * tx->samples; i += 2) {
@@ -1394,13 +1447,69 @@ static void tx_full_buffer(TRANSMITTER *tx) {
   }
 }
 
-void tx_add_mic_sample(TRANSMITTER *tx, float mic_sample) {
-  int txmode = vfo_get_tx_mode();
-  double mic_sample_double;
-  int i, j;
-  mic_sample_double = (double)mic_sample;
+void tx_queue_cw_event(int down, int wait) {
+  if (radio_is_remote) {
+    send_cw(client_socket, down, wait);
+    return;
+  }
+  //
+  // Put a CW event into the ring buffer
+  // If buffer is nearly full, only queue key-up events
+  //
+  int num, newpt;
+
+  if ((num = cw_ring_inpt - cw_ring_outpt) < 0) num += CW_RING_SIZE;
 
   //
+  // If buffer is nearly full, make all events key-up
+  //
+  if (num + 16 > CW_RING_SIZE) { down = 0; }
+
+  newpt = cw_ring_inpt + 1;
+
+  if (newpt == CW_RING_SIZE) { newpt = 1; }
+
+  if (newpt != cw_ring_outpt) {
+    cw_ring_state[cw_ring_inpt] = down;
+    cw_ring_wait[cw_ring_inpt] = wait;
+    MEMORY_BARRIER;
+    cw_ring_inpt = newpt;
+  } else {
+    t_print("WARNING: CW ring buffer full.\n");
+  }
+}
+
+void tx_add_mic_sample(TRANSMITTER *tx, short next_mic_sample) {
+  ASSERT_SERVER();
+  int txmode = vfo_get_tx_mode();
+  double mic_sample_double;
+  static int keydown = 0;   // 1: key-down, 0: key-up
+  int i, j;
+
+  mic_sample_double = (double)next_mic_sample * 0.00003051;  // divide by 32768
+
+  //
+  // If we have local tx microphone, we normally *replace* the sample by data
+  // from the sound card. However, if PTT comes from  the radio, we  *add* both
+  // radio and sound card samples.
+  // This "trick" allows us to switch between SSB (with microphone attached to the
+  // radio) and DIGI (using a virtual audio cable) without going to the TX  menu.
+  //
+  if (tx->local_microphone) {
+    if (radio_ptt) {
+      mic_sample_double += audio_get_next_mic_sample();
+    } else {
+      mic_sample_double = audio_get_next_mic_sample();
+    }
+  }
+
+  //
+  // If we have a client, it overwrites 'local' microphone data.
+  //
+  if (remoteclient.running) {
+    mic_sample_double = remote_get_mic_sample() * 0.00003051;  // divide by 32768;
+  }
+
   // If there is captured data to re-play, replace incoming
   // mic samples by captured data.
   //
@@ -1425,15 +1534,24 @@ void tx_add_mic_sample(TRANSMITTER *tx, float mic_sample) {
   }
 
   //
+  //  CW events are obtained from a ring buffer. The variable
+  //  cw_delay_time measures the time since the last CW event
+  //  (key-up or key-down). For QRS, it is increased up to
+  //  a maximum value of It is increased up do a maximum value
+  //  of 99999 (21 seconds). To protect the hardware, a
+  //  key-down is canceled at 960000 (20 seconds) anyway.
+  //
+  static int cw_delay_time = 0;
+
+  if (cw_delay_time < 9999999) {
+    cw_delay_time++;
+  }
+
+  //
   // shape CW pulses when doing CW and transmitting, else nullify them
   //
   if ((txmode == modeCWL || txmode == modeCWU) && radio_is_transmitting()) {
-    int updown;
     float cwsample;
-    //
-    //  'piHPSDR' CW sets the variables cw_key_up and cw_key_down
-    //  to the number of samples for the next down/up sequence.
-    //  cw_key_down can be zero, for inserting some space
     //
     //  We HAVE TO shape the signal to avoid hard clicks to be
     //  heard way beside our frequency. The envelope (ramp function)
@@ -1452,17 +1570,24 @@ void tx_add_mic_sample(TRANSMITTER *tx, float mic_sample) {
     //  we have to produce tx->ratio RF samples and one sidetone
     //  sample.
     //
-    cw_not_ready = 0;
-
-    if (cw_key_down > 0 ) {
-      cw_key_down--;            // decrement key-up counter
-      updown = 1;
-    } else {
-      if (cw_key_up > 0) {
-        cw_key_up--;  // decrement key-down counter
+    if (keydown && cw_delay_time > 960000) {
+      keydown = 0;
+    }
+    if (cw_ring_inpt != cw_ring_outpt) {
+      //
+      // There is data in the ring buffer
+      //
+      if (cw_delay_time >= cw_ring_wait[cw_ring_outpt]) {
+        //
+        // Next event ready to be executed
+        //
+        cw_delay_time = 0;
+        keydown = cw_ring_state[cw_ring_outpt];
+        int newpt = cw_ring_outpt + 1;
+        if (newpt >= CW_RING_SIZE) { newpt -= CW_RING_SIZE; }
+        MEMORY_BARRIER;
+        cw_ring_outpt = newpt;
       }
-
-      updown = 0;
     }
 
     //
@@ -1473,7 +1598,7 @@ void tx_add_mic_sample(TRANSMITTER *tx, float mic_sample) {
     if (g_mutex_trylock(&tx->cw_ramp_mutex)) {
       double val;
 
-      if (updown) {
+      if (keydown) {
         if (tx->cw_ramp_audio_ptr < tx->cw_ramp_audio_len) {
           tx->cw_ramp_audio_ptr++;
         }
@@ -1571,12 +1696,9 @@ void tx_add_mic_sample(TRANSMITTER *tx, float mic_sample) {
     //
     //  If no longer transmitting, or no longer doing CW: reset pulse shaper.
     //  This will also swallow any pending CW and wipe out the buffers
-    //  In order to tell rigctl etc. that CW should be aborted, we also use the cw_not_ready flag.
     //
-    cw_not_ready = 1;
-    cw_key_up = 0;
-
-    if (cw_key_down > 0) { cw_key_down--; }  // in case it occured before the RX/TX transition
+    keydown = 0;
+    cw_ring_inpt = cw_ring_outpt = 0;
 
     tx->cw_ramp_audio_ptr = 0;
     tx->cw_ramp_rf_ptr = 0;
@@ -1600,6 +1722,7 @@ void tx_add_mic_sample(TRANSMITTER *tx, float mic_sample) {
 
 void tx_add_ps_iq_samples(const TRANSMITTER *tx, double i_sample_tx, double q_sample_tx, double i_sample_rx,
                           double q_sample_rx) {
+  ASSERT_SERVER();
   RECEIVER *tx_feedback = receiver[PS_TX_FEEDBACK];
   RECEIVER *rx_feedback = receiver[PS_RX_FEEDBACK];
 
@@ -1659,7 +1782,35 @@ void tx_add_ps_iq_samples(const TRANSMITTER *tx, double i_sample_tx, double q_sa
   }
 }
 
+void tx_remote_update_display(TRANSMITTER *tx) {
+  if (tx->displaying) {
+    if (tx->pixels > 0) {
+      g_mutex_lock(&tx->display_mutex);
+
+      if (tx->display_panadapter) {
+        tx_panadapter_update(tx);
+      }
+
+      g_mutex_unlock(&tx->display_mutex);
+
+      if (!duplex) {
+        meter_update(active_receiver, POWER, tx->fwd, tx->alc, tx->swr);
+      }
+    }
+  }
+}
+
+void tx_create_remote(TRANSMITTER *tx) {
+  //
+  // transmitter structure already setup via INFO_TRANSMITTER packet.
+  // since everything is done on the "local" side, we only need
+  // to set-up the panadapter
+  //
+  tx_create_visual(tx);
+}
+
 void tx_set_displaying(TRANSMITTER *tx) {
+  ASSERT_SERVER();
   if (tx->displaying) {
     if (tx->update_timer_id > 0) {
       g_source_remove(tx->update_timer_id);
@@ -1676,6 +1827,7 @@ void tx_set_displaying(TRANSMITTER *tx) {
 }
 
 void tx_set_filter(TRANSMITTER *tx) {
+  ASSERT_SERVER();
   int txmode = vfo_get_tx_mode();
   // load default values
   int low  = tx_filter_low;
@@ -1772,6 +1924,7 @@ void tx_set_filter(TRANSMITTER *tx) {
 }
 
 void tx_set_framerate(TRANSMITTER *tx) {
+  ASSERT_SERVER();
   //
   // When changing the TX display frame rate, the TX display update timer
   // has to be restarted, as well as the initializer
@@ -1800,16 +1953,18 @@ void tx_set_framerate(TRANSMITTER *tx) {
 //#define WDSPTXDEBUG
 
 void tx_close(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   CloseChannel(tx->id);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX CloseChannel id=%d\n", tx->id);
+  t_print("TX CloseChannel id=%d\n", tx->id);
 #endif
 }
 
 void tx_create_analyzer(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   int rc;
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX CreateAnalyzer id=%d\n", tx->id);
+  t_print("TX CreateAnalyzer id=%d\n", tx->id);
 #endif
   XCreateAnalyzer(tx->id, &rc, 262144, 1, 1, NULL);
 
@@ -1821,6 +1976,7 @@ void tx_create_analyzer(const TRANSMITTER *tx) {
 }
 
 double tx_get_alc(const TRANSMITTER *tx) {
+  ASSERT_SERVER(0.0);
   double alc;
 
   switch (tx->alcmode) {
@@ -1842,33 +1998,40 @@ double tx_get_alc(const TRANSMITTER *tx) {
 }
 
 int tx_get_pixels(TRANSMITTER *tx) {
+  ASSERT_SERVER(0);
   int rc;
   GetPixels(tx->id, 0, tx->pixel_samples, &rc);
   return rc;
 }
 
 void tx_set_analyzer(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   int flp[] = {0};
   const double keep_time = 0.1;
   const int n_pixout = 1;
   const int spur_elimination_ffts = 1;
   const int data_type = 1;
   const double kaiser_pi = 14.0;
-  const double fscLin = 0;
-  const double fscHin = 0;
+  //
+  // The TX spectrum is always 24k wide, which is a fraction of the TX IQ output rate
+  // This fraction determines how much to "clip" from both sides. The number of bins
+  // equals the analyzer FFTZ size
+  //
+  const int afft_size = 16384;
+  const double fscLin = afft_size * (0.5 - 12000.0 / tx->iq_output_rate);
+  const double fscHin = afft_size * (0.5 - 12000.0 / tx->iq_output_rate);
   const int stitches = 1;
   const int calibration_data_set = 0;
   const double span_min_freq = 0.0;
   const double span_max_freq = 0.0;
   const int clip = 0;
   const int window_type = 5;
-  const int afft_size = 16384;
   const int pixels = tx->pixels;
   int overlap;
   int max_w = afft_size + (int) min(keep_time * (double) tx->iq_output_rate,
                                     keep_time * (double) afft_size * (double) tx->fps);
   overlap = (int)max(0.0, ceil(afft_size - (double)tx->iq_output_rate / (double)tx->fps));
-  t_print("WDSP:TX SetAnalyzer id=%d buffer_size=%d overlap=%d pixels=%d\n", tx->id, tx->output_samples, overlap,
+  t_print("TX SetAnalyzer id=%d buffer_size=%d overlap=%d pixels=%d\n", tx->id, tx->output_samples, overlap,
           tx->pixels);
   SetAnalyzer(tx->id,                // id of the TXA channel
               n_pixout,              // 1 = "use same data for scope and waterfall"
@@ -1893,41 +2056,43 @@ void tx_set_analyzer(const TRANSMITTER *tx) {
 }
 
 void tx_off(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   // switch TX OFF, wait until slew-down completed
   SetChannelState(tx->id, 0, 1);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d Channel OFF\n", tx->id);
+  t_print("TX id=%d Channel OFF\n", tx->id);
 #endif
 }
 
 void tx_on(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   // switch TX ON
   SetChannelState(tx->id, 1, 0);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d Channel ON\n", tx->id);
+  t_print("TX id=%d Channel ON\n", tx->id);
 #endif
 }
 
-void tx_ps_getinfo(const TRANSMITTER *tx, int *info) {
-  GetPSInfo(tx->id, info);
+void tx_ps_getinfo(TRANSMITTER *tx) {
+  ASSERT_SERVER();
+  GetPSInfo(tx->id, tx->psinfo);
 }
 
-double tx_ps_getmx(const TRANSMITTER *tx) {
-  double mx;
-  GetPSMaxTX(tx->id, &mx);
-  return mx;
+void tx_ps_getmx(TRANSMITTER *tx) {
+  ASSERT_SERVER();
+  GetPSMaxTX(tx->id, &transmitter->ps_getmx);
 }
 
-double tx_ps_getpk(const TRANSMITTER *tx) {
-  double pk;
-  GetPSHWPeak(tx->id, &pk);
-  return pk;
+void tx_ps_getpk(TRANSMITTER *tx) {
+  ASSERT_SERVER();
+  GetPSHWPeak(tx->id, &transmitter->ps_getpk);
 }
 
 void tx_ps_mox(const TRANSMITTER *tx, int state) {
+  ASSERT_SERVER();
   SetPSMox(tx->id, state);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d PS mox=%d\n", tx->id, state);
+  t_print("TX id=%d PS mox=%d\n", tx->id, state);
 #endif
 }
 
@@ -1960,8 +2125,14 @@ void tx_ps_onoff(TRANSMITTER *tx, int state) {
   //     RX streams)
   //
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d PS OnOff=%d\n", tx->id, state);
+  t_print("TX id=%d PS OnOff=%d\n", tx->id, state);
 #endif
+  if (radio_is_remote) {
+    tx->puresignal = state;
+    send_psonoff(client_socket, state);
+    g_idle_add(ext_vfo_update, NULL);
+    return;
+  }
 
   if (!state) {
     // see above. Ensure some feedback samples still flow into
@@ -1973,7 +2144,7 @@ void tx_ps_onoff(TRANSMITTER *tx, int state) {
     } else {
       RECEIVER *rx_feedback = receiver[PS_RX_FEEDBACK];
 
-      if (rx_feedback != 0) {
+      if (rx_feedback) {
         memset(rx_feedback->iq_input_buffer, 0, rx_feedback->buffer_size * sizeof(double));
 
         //
@@ -2021,32 +2192,50 @@ void tx_ps_onoff(TRANSMITTER *tx, int state) {
 }
 
 void tx_ps_reset(const TRANSMITTER *tx) {
+  if (tx->puresignal) {
+    if (radio_is_remote) {
+      send_psreset(client_socket);
+      return;
+    }
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d PS Reset\n", tx->id);
+    t_print("TX id=%d PS Reset\n", tx->id);
 #endif
-  SetPSControl(tx->id, 1, 0, 0, 0);
+    SetPSControl(tx->id, 1, 0, 0, 0);
+  }
 }
 
 void tx_ps_resume(const TRANSMITTER *tx) {
+  if (tx->puresignal) {
+    if (radio_is_remote) {
+      send_psresume(client_socket);
+      return;
+    }
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d PS Resume OneShot=%d\n", tx->id, tx->ps_oneshot);
+    t_print("TX id=%d PS Resume OneShot=%d\n", tx->id, tx->ps_oneshot);
 #endif
 
-  if (tx->ps_oneshot) {
-    SetPSControl(tx->id, 0, 1, 0, 0);
-  } else {
-    SetPSControl(tx->id, 0, 0, 1, 0);
+    if (tx->ps_oneshot) {
+      SetPSControl(tx->id, 0, 1, 0, 0);
+    } else {
+      SetPSControl(tx->id, 0, 0, 1, 0);
+    }
   }
 }
 
 void tx_ps_set_sample_rate(const TRANSMITTER *tx, int rate) {
+  ASSERT_SERVER();
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d PS SampleRate=%d\n", tx->id, rate);
+  t_print("TX id=%d PS SampleRate=%d\n", tx->id, rate);
 #endif
   SetPSFeedbackRate (tx->id, rate);
 }
 
 void tx_ps_setparams(const TRANSMITTER *tx) {
+  if (radio_is_remote) {
+    send_psparams(client_socket, tx);
+    return;
+  }
+  SetPSHWPeak(tx->id, tx->ps_setpk);
   SetPSMapMode(tx->id, tx->ps_map);
   SetPSPtol(tx->id, tx->ps_ptol ? 0.4 : 0.8);
   SetPSIntsAndSpi(tx->id, tx->ps_ints, tx->ps_spi);
@@ -2057,27 +2246,22 @@ void tx_ps_setparams(const TRANSMITTER *tx) {
   SetPSTXDelay(tx->id, 1E-9 * tx->ps_ampdelay);
   SetPSLoopDelay(tx->id, tx->ps_loopdelay);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d PS map=%d ptol=%d ints=%d spi=%d stbl=%d pin=%d moxdelay=%g ampdelay=%g loopdelay=%g\n",
+  t_print("TX id=%d PS map=%d ptol=%d ints=%d spi=%d stbl=%d pin=%d moxdelay=%g ampdelay=%g loopdelay=%g\n",
           tx->id, tx->ps_map, tx->ps_ptol, tx->ps_ints, tx->ps_spi, tx->ps_stbl, tx->ps_pin, tx->ps_moxdelay,
           tx->ps_ampdelay, tx->ps_loopdelay);
 #endif
 }
 
-void tx_ps_setpk(const TRANSMITTER *tx, double peak) {
-  SetPSHWPeak(tx->id, peak);
-#ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d PS HWpeak=%g\n", tx->id, peak);
-#endif
-}
-
 void tx_set_am_carrier_level(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   SetTXAAMCarrierLevel(tx->id, tx->am_carrier_level);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d AM carrier level=%g\n", tx->id, tx->am_carrier_level);
+  t_print("TX id=%d AM carrier level=%g\n", tx->id, tx->am_carrier_level);
 #endif
 }
 
 void tx_set_average(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   //
   // avgmode refers to the _display_enum, while
   // wdspmode reflects the internal encoding in WDSP
@@ -2109,7 +2293,7 @@ void tx_set_average(const TRANSMITTER *tx) {
   }
 
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d Display BackMult=%g NumAvg=%d AvgMode=%d\n",
+  t_print("TX id=%d Display BackMult=%g NumAvg=%d AvgMode=%d\n",
           display_avb, display_average, wdspmode);
 #endif
   //
@@ -2123,13 +2307,15 @@ void tx_set_average(const TRANSMITTER *tx) {
 }
 
 void tx_set_bandpass(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   SetTXABandpassFreqs(tx->id, (double) tx->filter_low, (double) tx->filter_high);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d BandPass low=%d high=%d\n", tx->id, tx->filter_low, tx->filter_high);
+  t_print("TX id=%d BandPass low=%d high=%d\n", tx->id, tx->filter_low, tx->filter_high);
 #endif
 }
 
 void tx_set_compressor(TRANSMITTER *tx) {
+  ASSERT_SERVER();
   //
   // - Although I see not much juice therein, the
   //   usage of CFC alongside with the speech processor
@@ -2157,7 +2343,7 @@ void tx_set_compressor(TRANSMITTER *tx) {
   SetTXACompressorGain(tx->id, tx->compressor_level);
   SetTXACompressorRun(tx->id, tx->compressor);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d Compressor=%d Lvl=%g CFC=%d CFC-EQ=%d AllComp=%g AllGain=%g\n",
+  t_print("TX id=%d Compressor=%d Lvl=%g CFC=%d CFC-EQ=%d AllComp=%g AllGain=%g\n",
           tx->id, tx->compressor, tx->compressor_level, tx->cfc, tx->cfc_eq,
           tx->cfc_lvl[0], tx->cfc_post[0]);
 
@@ -2170,17 +2356,19 @@ void tx_set_compressor(TRANSMITTER *tx) {
 }
 
 void tx_set_ctcss(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   //
   // Apply CTCSS settings stored in tx
   //
   SetTXACTCSSFreq(tx->id, ctcss_frequencies[tx->ctcss]);
   SetTXACTCSSRun(tx->id, tx->ctcss_enabled);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d CTCSS enable=%d freq=%5g\n", tx->id, tx->ctcss_enabled, ctcss_frequencies[tx->ctcss]);
+  t_print("TX id=%d CTCSS enable=%d freq=%5g\n", tx->id, tx->ctcss_enabled, ctcss_frequencies[tx->ctcss]);
 #endif
 }
 
 void tx_set_detector(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   //
   // Apply display detector mode stored in tx
   //
@@ -2206,19 +2394,21 @@ void tx_set_detector(const TRANSMITTER *tx) {
   }
 
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d Display DetMode=%d\n", tx->id, wdspmode);
+  t_print("TX id=%d Display DetMode=%d\n", tx->id, wdspmode);
 #endif
   SetDisplayDetectorMode(tx->id, 0, wdspmode);
 }
 
 void tx_set_deviation(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   SetTXAFMDeviation(tx->id, (double)tx->deviation);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d FM Max Deviation=%d\n", tx->id, tx->deviation);
+  t_print("TX id=%d FM Max Deviation=%d\n", tx->id, tx->deviation);
 #endif
 }
 
 void tx_set_dexp(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   //
   // Set all the parameters of the Downward Expander
   // Note the DEXP number must be between 0 and 3, so
@@ -2237,7 +2427,7 @@ void tx_set_dexp(const TRANSMITTER *tx) {
   SetDEXPRunSideChannelFilter(0, tx->dexp_filter);
   SetDEXPRun(0, tx->dexp);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d DEXP=%d DoFilter=%d Low=%d High=%d ExpRatio(dB)=%d TriggerLvl(dB)=%d\n",
+  t_print("TX id=%d DEXP=%d DoFilter=%d Low=%d High=%d ExpRatio(dB)=%d TriggerLvl(dB)=%d\n",
           tx->id, tx->dexp, tx->dexp_filter, tx->dexp_filter_low, tx->dexp_filter_high, tx->dexp_exp, tx->dexp_trigger);
   t_print("... Tau=%g Attack=%g Release=%g Hold=%g Hyst=%g\n",
           tx->dexp_tau, tx->dexp_attack, tx->dexp_release, tx->dexp_hold, tx->dexp_hyst);
@@ -2245,10 +2435,14 @@ void tx_set_dexp(const TRANSMITTER *tx) {
 }
 
 void tx_set_equalizer(TRANSMITTER *tx) {
+  if (radio_is_remote) {
+    send_eq(client_socket, tx->id);
+    return;
+  }
   SetTXAEQProfile(tx->id, 10, tx->eq_freq, tx->eq_gain);
   SetTXAEQRun(tx->id, tx->eq_enable);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d Equalizer enable=%d allgain=%g\n", tx->id, tx->eq_enable, tx->eq_gain[0]);
+  t_print("TX id=%d Equalizer enable=%d allgain=%g\n", tx->id, tx->eq_enable, tx->eq_gain[0]);
 
   for (int i = 1; i < 11; i++) {
     t_print("... Chan=%2d Freq=%6g Gain=%4g\n", i, tx->eq_freq[i], tx->eq_gain[i]);
@@ -2258,20 +2452,26 @@ void tx_set_equalizer(TRANSMITTER *tx) {
 }
 
 void tx_set_fft_size(const TRANSMITTER *tx) {
+  if (radio_is_remote) {
+    send_tx_fft(client_socket, tx);
+    return;
+  }
   TXASetNC(tx->id, tx->fft_size);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d FFT size=%d\n", tx->id, tx->fft_size);
+  t_print("TX id=%d FFT size=%d\n", tx->id, tx->fft_size);
 #endif
 }
 
 void tx_set_mic_gain(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   SetTXAPanelGain1(tx->id, pow(10.0, tx->mic_gain * 0.05));
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d MicGain(dB)=%g\n", tx->id, tx->mic_gain);
+  t_print("TX id=%d MicGain(dB)=%g\n", tx->id, tx->mic_gain);
 #endif
 }
 
 void tx_set_mode(TRANSMITTER* tx, int mode) {
+  ASSERT_SERVER();
   if (tx != NULL) {
     if (mode == modeDIGU || mode == modeDIGL) {
       if (tx->drive > drive_digi_max + 0.5) {
@@ -2280,7 +2480,7 @@ void tx_set_mode(TRANSMITTER* tx, int mode) {
     }
 
 #ifdef WDSPTXDEBUG
-    t_print("WDSP:TX id=%d mode=%d\n", tx->id, mode);
+    t_print("TX id=%d mode=%d\n", tx->id, mode);
 #endif
     SetTXAMode(tx->id, mode);
     tx_set_filter(tx);
@@ -2288,18 +2488,20 @@ void tx_set_mode(TRANSMITTER* tx, int mode) {
 }
 
 void tx_set_pre_emphasize(const TRANSMITTER *tx) {
+  ASSERT_SERVER();
   SetTXAFMEmphPosition(tx->id, tx->pre_emphasize);
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d FM PreEmph=%d\n", tx->id, tx->pre_emphasize);
+  t_print("TX id=%d FM PreEmph=%d\n", tx->id, tx->pre_emphasize);
 #endif
 }
 
 void tx_set_singletone(const TRANSMITTER *tx, int state, double freq) {
+  ASSERT_SERVER();
   //
   // Produce the TX signal for TUNEing
   //
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d SingleTone=%d Freq=%g\n", tx->id, state, freq);
+  t_print("TX id=%d SingleTone=%d Freq=%g\n", tx->id, state, freq);
 #endif
 
   if (state) {
@@ -2320,13 +2522,14 @@ void tx_set_singletone(const TRANSMITTER *tx, int state, double freq) {
     SetTXAPostGenRun(tx->id, 0);
 
     if (device == DEVICE_HERMES_LITE2 || device == DEVICE_HERMES_LITE ||
-    device == DEVICE_HERMES || device == DEVICE_STEMLAB || device == DEVICE_STEMLAB_Z20) {
+        device == DEVICE_HERMES || device == DEVICE_STEMLAB || device == DEVICE_STEMLAB_Z20) {
       usleep(100000);
     }
   }
 }
 
 void tx_set_twotone(TRANSMITTER *tx, int state) {
+  ASSERT_SERVER();
   //
   // During a two-tone experiment, call a function periodically
   // (every 100 msec) that calibrates the TX attenuation value
@@ -2338,7 +2541,7 @@ void tx_set_twotone(TRANSMITTER *tx, int state) {
   if (state == tx->twotone) { return; }
 
 #ifdef WDSPTXDEBUG
-  t_print("WDSP:TX id=%d TwoTone=%d\n", tx->id, state);
+  t_print("TX id=%d TwoTone=%d\n", tx->id, state);
 #endif
   tx->twotone = state;
 
@@ -2376,7 +2579,7 @@ void tx_set_twotone(TRANSMITTER *tx, int state) {
     //
     //
     if (device == DEVICE_HERMES_LITE2 || device == DEVICE_HERMES_LITE ||
-    device == DEVICE_HERMES || device == DEVICE_STEMLAB || device == DEVICE_STEMLAB_Z20) {
+        device == DEVICE_HERMES || device == DEVICE_STEMLAB || device == DEVICE_STEMLAB_Z20) {
       usleep(100000);
     }
   }

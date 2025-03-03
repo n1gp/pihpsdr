@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "band.h"
+#include "client_server.h"
 #include "message.h"
 #include "new_menu.h"
 #include "pa_menu.h"
@@ -58,19 +59,24 @@ static gboolean close_cb () {
 }
 
 static void pa_value_changed_cb(GtkWidget *widget, gpointer data) {
-  BAND *band = (BAND *)data;
+  int b = GPOINTER_TO_INT(data);
+  BAND *band = band_get_band(b);
   band->pa_calibration = gtk_spin_button_get_value(GTK_SPIN_BUTTON(widget));
-  int txvfo = vfo_get_tx_vfo();
-  int b = vfo[txvfo].band;
-  const BAND *current = band_get_band(b);
 
-  if (band == current) {
+  if (radio_is_remote) {
+    send_band_data(client_socket, b);
+    return;
+  } else {
     radio_calc_drive_level();
   }
+
 }
 
 static void tx_out_of_band_cb(GtkWidget *widget, gpointer data) {
   tx_out_of_band_allowed = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  }
 }
 
 static void trim_changed_cb(GtkWidget *widget, gpointer data) {
@@ -105,6 +111,9 @@ static void trim_changed_cb(GtkWidget *widget, gpointer data) {
       gtk_spin_button_set_value(GTK_SPIN_BUTTON(spin[k]), (double)pa_trim[k]);
     }
   }
+  if (radio_is_remote) {
+    send_patrim(client_socket);
+  }
 }
 
 static void show_W(int watts, gboolean reset) {
@@ -117,6 +126,9 @@ static void show_W(int watts, gboolean reset) {
   if (reset) {
     for (i = 0; i < 11; i++) {
       pa_trim[i] = i * increment;
+    }
+    if (radio_is_remote) {
+      send_patrim(client_socket);
     }
   }
 
@@ -205,6 +217,9 @@ static void reset_cb(GtkWidget *widget, gpointer data) {
 static void max_power_changed_cb(GtkWidget *widget, gpointer data) {
   pa_power = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
   t_print("max_power_changed_cb: %d\n", pa_power_list[pa_power]);
+  if (radio_is_remote) {
+    send_patrim(client_socket);
+  }
   clear_W();
   new_calib(TRUE);
   gtk_widget_show_all(calibgrid);
@@ -272,7 +287,7 @@ void pa_menu(GtkWidget *parent) {
       gtk_spin_button_set_value(GTK_SPIN_BUTTON(pa_r), (double)band->pa_calibration);
       gtk_widget_show(pa_r);
       gtk_grid_attach(GTK_GRID(grid), pa_r, ((b / 6) * 2) + 1, (b % 6) + 1, 1, 1);
-      g_signal_connect(pa_r, "value_changed", G_CALLBACK(pa_value_changed_cb), band);
+      g_signal_connect(pa_r, "value_changed", G_CALLBACK(pa_value_changed_cb), GINT_TO_POINTER(bandGen));
       b++;
     }
 
@@ -286,7 +301,7 @@ void pa_menu(GtkWidget *parent) {
       gtk_spin_button_set_value(GTK_SPIN_BUTTON(pa_r), (double)band->pa_calibration);
       gtk_widget_show(pa_r);
       gtk_grid_attach(GTK_GRID(grid), pa_r, ((b / 6) * 2) + 1, (b % 6) + 1, 1, 1);
-      g_signal_connect(pa_r, "value_changed", G_CALLBACK(pa_value_changed_cb), band);
+      g_signal_connect(pa_r, "value_changed", G_CALLBACK(pa_value_changed_cb), GINT_TO_POINTER(i));
       b++;
     }
 
@@ -302,7 +317,7 @@ void pa_menu(GtkWidget *parent) {
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(pa_r), (double)band->pa_calibration);
         gtk_widget_show(pa_r);
         gtk_grid_attach(GTK_GRID(grid), pa_r, ((b / 6) * 2) + 1, (b % 6) + 1, 1, 1);
-        g_signal_connect(pa_r, "value_changed", G_CALLBACK(pa_value_changed_cb), band);
+        g_signal_connect(pa_r, "value_changed", G_CALLBACK(pa_value_changed_cb), GINT_TO_POINTER(i));
         b++;
       }
     }

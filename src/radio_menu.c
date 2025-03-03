@@ -26,9 +26,7 @@
 #include "actions.h"
 #include "adc.h"
 #include "band.h"
-#ifdef CLIENT_SERVER
   #include "client_server.h"
-#endif
 #include "discovered.h"
 #include "ext.h"
 #include "filter.h"
@@ -76,7 +74,7 @@ static void rx_gain_element_changed_cb(GtkWidget *widget, gpointer data) {
 static void tx_gain_element_changed_cb(GtkWidget *widget, gpointer data) {
   if (can_transmit && device == SOAPYSDR_USB_DEVICE) {
     double gain = gtk_spin_button_get_value(GTK_SPIN_BUTTON(widget));
-    dac[0].gain = gain;
+    dac.gain = gain;
     soapy_protocol_set_tx_gain_element(transmitter, (char *)gtk_widget_get_name(widget), (int) gain);
   }
 }
@@ -95,10 +93,16 @@ static void agc_changed_cb(GtkWidget *widget, gpointer data) {
 
 static void calibration_value_changed_cb(GtkWidget *widget, gpointer data) {
   frequency_calibration = (long long)gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  }
 }
 
 static void rx_gain_calibration_value_changed_cb(GtkWidget *widget, gpointer data) {
   rx_gain_calibration = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  }
 }
 
 static void vfo_divisor_value_changed_cb(GtkWidget *widget, gpointer data) {
@@ -110,7 +114,11 @@ static void ptt_ring_cb(GtkWidget *widget, gpointer data) {
     mic_ptt_tip_bias_ring = 0;
   }
 
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  } else {
   schedule_transmit_specific();
+}
 }
 
 static void ptt_tip_cb(GtkWidget *widget, gpointer data) {
@@ -118,27 +126,41 @@ static void ptt_tip_cb(GtkWidget *widget, gpointer data) {
     mic_ptt_tip_bias_ring = 1;
   }
 
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  } else {
   schedule_transmit_specific();
+}
 }
 
 static void toggle_cb(GtkWidget *widget, gpointer data) {
   int *value = (int *) data;
   *value = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  } else {
   schedule_general();
   schedule_transmit_specific();
   schedule_high_priority();
+  }
 }
 
 static void anan10e_cb(GtkWidget *widget, gpointer data) {
-  radio_protocol_stop();
-  usleep(200000);
-  anan10E = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
-  radio_protocol_run();
+  int new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_anan10E(client_socket, new);
+  } else {
+    radio_set_anan10E(new);
+  }
 }
 
 static void split_cb(GtkWidget *widget, gpointer data) {
   int new = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_split(client_socket, new);
+  } else {
   radio_set_split(new);
+}
 }
 
 //
@@ -147,10 +169,13 @@ static void split_cb(GtkWidget *widget, gpointer data) {
 void setDuplex() {
   if (!can_transmit) { return; }
 
+  if (radio_is_remote) {
+    send_duplex(client_socket, duplex);
+  }
   if (duplex) {
     // TX is in separate window, also in full-screen mode
     gtk_container_remove(GTK_CONTAINER(fixed), transmitter->panel);
-    tx_reconfigure(transmitter, display_width / 4, display_height / 2);
+    tx_reconfigure(transmitter, 4*tx_dialog_width, tx_dialog_width,  tx_dialog_height);
     tx_create_dialog(transmitter);
   } else {
     GtkWidget *content = gtk_dialog_get_content_area(GTK_DIALOG(transmitter->dialog));
@@ -158,7 +183,7 @@ void setDuplex() {
     gtk_widget_destroy(transmitter->dialog);
     transmitter->dialog = NULL;
     int width = full_screen ? screen_width : display_width;
-    tx_reconfigure(transmitter, width, rx_height);
+    tx_reconfigure(transmitter, width, width, rx_height);
   }
 
   g_idle_add(ext_vfo_update, NULL);
@@ -179,10 +204,14 @@ static void duplex_cb(GtkWidget *widget, gpointer data) {
 
 static void sat_cb(GtkWidget *widget, gpointer data) {
   sat_mode = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  }
   g_idle_add(ext_vfo_update, NULL);
 }
 
 void n2adr_oc_settings() {
+  ASSERT_SERVER();
   //
   // set OC outputs for each band according to the N2ADR board requirements
   // unlike load_filters(), this can be executed outside the GTK queue
@@ -212,6 +241,10 @@ void n2adr_oc_settings() {
 }
 
 void load_filters() {
+  if (radio_is_remote) {
+    send_filter_board(client_socket, filter_board);
+    return;
+  }
   switch (filter_board) {
   case N2ADR:
     n2adr_oc_settings();
@@ -281,7 +314,11 @@ static void mic_input_cb(GtkWidget *widget, gpointer data) {
     break;
   }
 
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  } else {
   schedule_transmit_specific();
+}
 }
 
 static void sample_rate_cb(GtkToggleButton *widget, gpointer data) {
@@ -295,9 +332,7 @@ static void sample_rate_cb(GtkToggleButton *widget, gpointer data) {
   if (sscanf(p, "%d", &samplerate) != 1) { return; }
 
   if (radio_is_remote) {
-#ifdef CLIENT_SERVER
-    send_sample_rate(client_socket, -1, samplerate);
-#endif
+    send_sample_rate(client_socket, 0, samplerate);
   } else {
     radio_change_sample_rate(samplerate);
   }
@@ -316,16 +351,19 @@ static void receivers_cb(GtkToggleButton *widget, gpointer data) {
   }
 
   if (radio_is_remote) {
-#ifdef CLIENT_SERVER
     send_receivers(client_socket, val);
-#endif
   } else {
     radio_change_receivers(val);
   }
 }
 
 static void region_cb(GtkWidget *widget, gpointer data) {
-  radio_change_region(gtk_combo_box_get_active (GTK_COMBO_BOX(widget)));
+  int r = gtk_combo_box_get_active (GTK_COMBO_BOX(widget));
+  if (radio_is_remote) {
+    send_region(client_socket, r);
+  } else {
+    radio_change_region(r);
+  }
 }
 
 static void rit_cb(GtkWidget *widget, gpointer data) {
@@ -334,33 +372,45 @@ static void rit_cb(GtkWidget *widget, gpointer data) {
   switch (val) {
   case 0:
   default:
-    rit_increment = 1;
+    vfo_set_rit_step(1);
     break;
 
   case 1:
-    rit_increment = 10;
+    vfo_set_rit_step(10);
     break;
 
   case 2:
-    rit_increment = 100;
+    vfo_set_rit_step(100);
     break;
   }
 }
 
 static void ck10mhz_cb(GtkWidget *widget, gpointer data) {
   atlas_clock_source_10mhz = gtk_combo_box_get_active (GTK_COMBO_BOX(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  }
 }
 
 static void ck128mhz_cb(GtkWidget *widget, gpointer data) {
   atlas_clock_source_128mhz = gtk_combo_box_get_active (GTK_COMBO_BOX(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  }
 }
 
 static void micsource_cb(GtkWidget *widget, gpointer data) {
   atlas_mic_source = gtk_combo_box_get_active (GTK_COMBO_BOX(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  }
 }
 
 static void tx_cb(GtkWidget *widget, gpointer data) {
   atlas_penelope = gtk_combo_box_get_active (GTK_COMBO_BOX(widget));
+  if (radio_is_remote) {
+    send_radiomenu(client_socket);
+  }
 }
 
 void radio_menu(GtkWidget *parent) {
@@ -491,10 +541,10 @@ void radio_menu(GtkWidget *parent) {
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(rit_combo), NULL, "10");
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(rit_combo), NULL, "100");
 
-  switch (rit_increment) {
+  switch (vfo[active_receiver->id].rit_step) {
   default:
     // we should not arrive here, but just in case ...
-    rit_increment = 1;
+    vfo_set_rit_step(1);
     gtk_combo_box_set_active(GTK_COMBO_BOX(rit_combo), 0);
     break;
 
@@ -811,6 +861,12 @@ void radio_menu(GtkWidget *parent) {
     gtk_grid_attach(GTK_GRID(grid), ChkBtn, col, row, 1, 1);
     g_signal_connect(ChkBtn, "toggled", G_CALLBACK(toggle_cb), &hl2_audio_codec);
     col++;
+    ChkBtn = gtk_check_button_new_with_label("HL2 CL1/2");
+    gtk_widget_set_name(ChkBtn, "boldlabel");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(ChkBtn), hl2_cl1_input);
+    gtk_grid_attach(GTK_GRID(grid), ChkBtn, col, row, 1, 1);
+    g_signal_connect(ChkBtn, "toggled", G_CALLBACK(toggle_cb), &hl2_cl1_input);
+    col++;
   }
   break;
 
@@ -830,9 +886,9 @@ void radio_menu(GtkWidget *parent) {
   case SOAPYSDR_USB_DEVICE: {
     ChkBtn = gtk_check_button_new_with_label("Swap IQ");
     gtk_widget_set_name(ChkBtn, "boldlabel");
-    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ChkBtn), iqswap);
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (ChkBtn), soapy_iqswap);
     gtk_grid_attach(GTK_GRID(grid), ChkBtn, col, row, 1, 1);
-    g_signal_connect(ChkBtn, "toggled", G_CALLBACK(toggle_cb), &iqswap);
+    g_signal_connect(ChkBtn, "toggled", G_CALLBACK(toggle_cb), &soapy_iqswap);
     col++;
 
     if (radio->info.soapy.rx_has_automatic_gain) {

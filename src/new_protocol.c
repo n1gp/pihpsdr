@@ -313,24 +313,28 @@ static mybuffer *get_my_buffer() {
 }
 
 void schedule_high_priority() {
+  ASSERT_SERVER();
   if (protocol == NEW_PROTOCOL) {
     new_protocol_high_priority();
   }
 }
 
 void schedule_general() {
+  ASSERT_SERVER();
   if (protocol == NEW_PROTOCOL) {
     new_protocol_general();
   }
 }
 
 void schedule_receive_specific() {
+  ASSERT_SERVER();
   if (protocol == NEW_PROTOCOL) {
     new_protocol_receive_specific();
   }
 }
 
 void schedule_transmit_specific() {
+  ASSERT_SERVER();
   if (protocol == NEW_PROTOCOL) {
     new_protocol_transmit_specific();
   }
@@ -344,7 +348,8 @@ void update_action_table() {
   int flag = 0;
   int xmit = radio_is_transmitting(); // store such that it cannot change while building the flag
   int newdev = (device == NEW_DEVICE_ANGELIA  || device == NEW_DEVICE_ORION ||
-                device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN || device == NEW_DEVICE_ATLAS);
+                device == NEW_DEVICE_ORION2 || device == NEW_DEVICE_SATURN ||
+                device == NEW_DEVICE_ATLAS);
 
   if (duplex && xmit) { flag += 10000; }
 
@@ -765,9 +770,9 @@ static void new_protocol_high_priority() {
   for (int id = 0; id < 2; id++) {
     DDCfrequency[id] = vfo[id].frequency - vfo[id].lo;
 
-    if (vfo[id].rit_enabled) {
-      DDCfrequency[id] += vfo[id].rit;
-    }
+    //if (vfo[id].rit_enabled) {
+    //  DDCfrequency[id] += vfo[id].rit;
+    //}
 
     if (vfo[id].mode == modeCWU) {
       DDCfrequency[id] -= (long long)cw_keyer_sidetone_frequency;
@@ -2562,23 +2567,7 @@ static void process_high_priority() {
   }
 
   if (previous_ptt != radio_ptt) {
-    int m = vfo_get_tx_mode();
-    if (radio_ptt || m == modeCWU || m == modeCWL) {
-      //
-      // If "PTT on" comes from the radio, or we are doing CW: go TX without delay
-      // We need a timeout_add here because sometimes there is a "spike" on the
-      // PTT line and we have to guarantee that the mox_update that is scheduled
-      // first will be executed first.
-      //
-      g_timeout_add(5,ext_mox_update, GINT_TO_POINTER(radio_ptt));
-    } else {
-      //
-      // If "PTT off" comes from the radio and no CW:
-      // delay the TX/RX transistion a little bit to avoid
-      // clipping the last bits of the TX signal
-      //
-      g_timeout_add(50,ext_mox_update, GINT_TO_POINTER(radio_ptt));
-    }
+    g_idle_add(ext_mox_update, GINT_TO_POINTER(radio_ptt));
   }
 
   if (enable_tx_inhibit) {
@@ -2614,7 +2603,6 @@ static void process_mic_data(const unsigned char *buffer) {
   unsigned long sequence;
   int b;
   int i;
-  float fsample;
   sequence = ((buffer[0] & 0xFF) << 24) + ((buffer[1] & 0xFF) << 16) + ((buffer[2] & 0xFF) << 8) + (buffer[3] & 0xFF);
 
   if (sequence != micsamples_sequence) {
@@ -2626,22 +2614,9 @@ static void process_mic_data(const unsigned char *buffer) {
   b = 4;
 
   for (i = 0; i < MIC_SAMPLES; i++) {
-    short sample = (short)(buffer[b++] << 8);
-    sample |= (short) (buffer[b++] & 0xFF);
-
-    //
-    // If PTT comes from the radio, possibly use audio from BOTH sources
-    // we just add on since in most cases, only one souce will be "active"
-    //
-    if (radio_ptt) {
-      fsample = (float) sample * 0.00003051;
-
-      if (transmitter->local_microphone) { fsample +=  audio_get_next_mic_sample(); }
-    } else {
-      fsample = transmitter->local_microphone ? audio_get_next_mic_sample() : (float) sample * 0.00003051;
-    }
-
-    tx_add_mic_sample(transmitter, fsample);
+    short next_mic_sample = (short)(buffer[b++] << 8);
+    next_mic_sample |= (short) (buffer[b++] & 0xFF);
+    tx_add_mic_sample(transmitter, next_mic_sample);
   }
 }
 

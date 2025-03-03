@@ -258,7 +258,7 @@ int *g2panel_default_encoders(int andromeda_type) {
   return result;
 }
 
-void g2panel_execute_button(int type, int *vec, int button, int tr01, int tr10, int tr12, int tr20) {
+void g2panel_execute_button(int type, const int *vec, int button, int tr01, int tr10, int tr12, int tr20) {
   enum ACTION action;
 
   if (vec == NULL || button < 0 || button > 99) { return; }
@@ -321,7 +321,7 @@ void g2panel_execute_button(int type, int *vec, int button, int tr01, int tr10, 
   }
 }
 
-void g2panel_execute_encoder(int type, int *vec, int encoder, int val) {
+void g2panel_execute_encoder(int type, const int *vec, int encoder, int val) {
   enum ACTION action;
 
   if (vec == NULL || encoder < 0 || encoder > 49) { return; }
@@ -336,7 +336,7 @@ void g2panel_execute_encoder(int type, int *vec, int encoder, int val) {
 //
 // Save ANDROMEDA state to props data base
 //
-void g2panelSaveState(int andromeda_type, int *buttonvec, int *encodervec) {
+void g2panelSaveState(int andromeda_type, const int *buttonvec, const int *encodervec) {
   if (buttonvec != NULL) {
     for (int i = 0; i < 100; i++) {
       SetPropA2("andromeda[%d].button[%d].action", andromeda_type, i, buttonvec[i]);

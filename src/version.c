@@ -31,7 +31,7 @@ char build_options[] =
   "SATURN "
 #endif
 #ifdef TCI
- "TCI "
+  "TCI "
 #endif
 #ifdef USBOZY
   "USBOZY "
@@ -44,9 +44,6 @@ char build_options[] =
 #endif
 #ifdef EXTNR
   "EXTNR "
-#endif
-#ifdef CLIENT_SERVER
-  "SERVER "
 #endif
   "";
 

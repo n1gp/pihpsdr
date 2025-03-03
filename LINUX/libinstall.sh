@@ -186,8 +186,7 @@ sudo cp $PIHPSDR/60-xdma.rules        /etc/udev/rules.d/
 sudo cp $PIHPSDR/xdma-udev-command.sh /etc/udev/rules.d/
 sudo cp $PIHPSDR/61-g2-serial.rules   /etc/udev/rules.d/
 #
-sudo udevadm control --reload-rules
-sudo udevadm trigger
+sudo udevadm control --reload-rules && sudo udevadm trigger
 
 echo
 echo "=============================================================="

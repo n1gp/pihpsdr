@@ -50,11 +50,10 @@ enum _pa_power_enum {
 #define TOGGLE(a) a = (a) ? 0 : 1
 
 extern DISCOVERED *radio;
-extern gboolean radio_is_remote;
+extern int radio_is_remote;
 
 extern GtkWidget *fixed;
 
-extern long long frequency_calibration;
 
 enum _filter_board_enum {
   NO_FILTER_BOARD = 0,
@@ -102,6 +101,7 @@ enum _display_enum {
   AVG_TIMEWINDOW
 };
 
+extern long long frequency_calibration;
 extern int region;
 
 extern int RECEIVERS;
@@ -132,8 +132,8 @@ enum _sat_mode_enum {
 
 extern int sat_mode;
 
-extern int radio_sample_rate;
-extern gboolean iqswap;
+extern int soapy_radio_sample_rate;
+extern gboolean soapy_iqswap;
 
 extern int atlas_penelope;
 extern int atlas_clock_source_10mhz;
@@ -142,7 +142,6 @@ extern int atlas_config;
 extern int atlas_mic_source;
 extern int atlas_janus;
 
-extern int classE;
 
 extern int tx_out_of_band_allowed;
 
@@ -167,11 +166,10 @@ extern int mic_input_xlr;
 extern int receivers;
 
 extern ADC adc[2];
-extern DAC dac[2];
+extern DAC dac;
 
 extern int locked;
 
-extern int rit_increment;
 
 extern gboolean duplex;
 extern gboolean mute_rx_while_transmitting;
@@ -234,8 +232,6 @@ extern long long tune_timeout;
 
 extern int analog_meter;
 
-extern int eer_pwm_min;
-extern int eer_pwm_max;
 
 extern int tx_filter_low;
 extern int tx_filter_high;
@@ -270,6 +266,8 @@ extern int have_preamp;          // switchable preamp
 extern int have_dither;          // Dither bit can be used
 extern int have_alex_att;        // ALEX board does have 0/10/20/30 dB attenuator
 extern int have_saturn_xdma;     // Saturn can use Network or XDMA interface
+extern int have_radioberry1;     // RadioBerry with first-generation  firmware
+extern int have_radioberry2;     // RadioBerry with second-generation firmware
 extern int rx_gain_calibration;  // used to calibrate the input signal
 
 extern double drive_max;         // maximum value of the drive slider
@@ -279,6 +277,7 @@ extern gboolean display_warnings;
 extern gboolean display_pacurr;
 
 extern int hl2_audio_codec;
+extern int hl2_cl1_input;
 extern int anan10E;
 
 extern int adc0_filter_bypass;   // Bypass ADC0 filters on receive
@@ -291,9 +290,11 @@ extern const int MIN_METER_WIDTH;
 extern int METER_WIDTH;
 extern int METER_HEIGHT;
 extern int MENU_WIDTH;
-extern int rx_stack_horizontal;
 
+extern int rx_stack_horizontal;
 extern int suppress_popup_sliders;
+extern const int tx_dialog_width;
+extern const int tx_dialog_height;
 //
 // All global functions declared here start with "radio_",
 // exception: my_combo_attach()
@@ -312,6 +313,7 @@ extern void   radio_tx_vfo_changed(void);
 extern void   radio_split_toggle(void);
 extern void   radio_set_split(int v);
 extern void   radio_set_mox(int state);
+extern void   radio_set_twotone(TRANSMITTER *tx, int state);
 extern int    radio_get_mox(void);
 extern void   radio_set_tune(int state);
 extern int    radio_get_tune(void);
@@ -334,18 +336,33 @@ extern void   radio_protocol_run(void);
 extern void   radio_protocol_stop(void);
 extern void   radio_protocol_restart(void);
 extern void   radio_start_auto_tune(void);
+extern void   radio_set_anan10E(int new);
 
-#ifdef CLIENT_SERVER
+extern int compare_doubles(const void *a, const void *b);
+
+extern void radio_remote_change_receivers(int r);
   extern int radio_remote_start(void *data);
-#endif
+extern void radio_remote_set_mox(int state);
+extern void radio_remote_set_vox(int state);
+extern void radio_remote_set_tune(int state);
+extern void radio_remote_set_twotone(int state);
 
 extern int optimize_for_touchscreen;
 extern void my_combo_attach(GtkGrid *grid, GtkWidget *combo, int row, int col, int spanrow, int spancol);
 
 //
-// Macro to flag an unimplemented client/server feature
+// Macro to flag an unimplemented client/server feature,
+// or a client trying to do things only a server should do.
 //
-#define CLIENT_MISSING if (radio_is_remote) { t_print("%s: TODO: CLIENT/SERVER\n", __FUNCTION__); return; }
+// This results in a fatal error with a dialog box
+//
+#define ASSERT_SERVER(ret)                                                    \
+    if (radio_is_remote) {                                                    \
+      char *msg = g_new(char, 512);                                           \
+      snprintf(msg, 512, "%s: Client/Server Not Implemented!", __FUNCTION__); \
+      g_idle_add(fatal_error, msg);                                           \
+      return ret;                                                             \
+   }
 
 //
 // Macro for a memory barrier, preventing changing the execution order

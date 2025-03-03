@@ -24,6 +24,7 @@
 
 #include "audio.h"
 #include "band.h"
+#include "client_server.h"
 #include "discovered.h"
 #include "filter.h"
 #include "message.h"
@@ -57,11 +58,19 @@ static gboolean close_cb () {
 
 static void dither_cb(GtkWidget *widget, gpointer data) {
   active_receiver->dither = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_rxmenu(client_socket, active_receiver->id);
+    return;
+  }
   schedule_receive_specific();
 }
 
 static void random_cb(GtkWidget *widget, gpointer data) {
   active_receiver->random = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_rxmenu(client_socket, active_receiver->id);
+    return;
+  }
   schedule_receive_specific();
 }
 
@@ -72,6 +81,10 @@ static void preamp_cb(GtkWidget *widget, gpointer data) {
   } else {
     active_receiver->preamp = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
   }
+  if (radio_is_remote) {
+    send_rxmenu(client_socket, active_receiver->id);
+  }
+  schedule_receive_specific();
 }
 
 static void alex_att_cb(GtkWidget *widget, gpointer data) {
@@ -91,11 +104,19 @@ static void sample_rate_cb(GtkToggleButton *widget, gpointer data) {
   //
   if (sscanf(p, "%d", &samplerate) != 1) { return; }
 
+  if (radio_is_remote) {
+    send_sample_rate(client_socket, active_receiver->id, samplerate);
+  } else {
   rx_change_sample_rate(active_receiver, samplerate);
+}
 }
 
 static void adc_cb(GtkToggleButton *widget, gpointer data) {
   active_receiver->adc = gtk_combo_box_get_active(GTK_COMBO_BOX(widget));
+  if (radio_is_remote) {
+    send_adc(client_socket, active_receiver->id, active_receiver->adc);
+    return;
+  }
   rx_change_adc(active_receiver);
 }
 
@@ -130,12 +151,20 @@ static void mute_radio_cb(GtkWidget *widget, gpointer data) {
 
 static void adc0_filter_bypass_cb(GtkWidget *widget, gpointer data) {
   adc0_filter_bypass = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_rxmenu(client_socket, active_receiver->id);
+  } else {
   schedule_high_priority();
+}
 }
 
 static void adc1_filter_bypass_cb(GtkWidget *widget, gpointer data) {
   adc1_filter_bypass = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_rxmenu(client_socket, active_receiver->id);
+  } else {
   schedule_high_priority();
+}
 }
 
 //
@@ -338,7 +367,7 @@ void rx_menu(GtkWidget *parent) {
   g_signal_connect(mute_audio_b, "toggled", G_CALLBACK(mute_audio_cb), NULL);
 
   if (protocol == ORIGINAL_PROTOCOL || protocol  == NEW_PROTOCOL) {
-    GtkWidget *mute_radio_b = gtk_check_button_new_with_label("Mute Audio to Radio");
+    GtkWidget *mute_radio_b = gtk_check_button_new_with_label("Mute Receiver");
     gtk_widget_set_name(mute_radio_b, "boldlabel");
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (mute_radio_b), active_receiver->mute_radio);
     gtk_widget_show(mute_radio_b);

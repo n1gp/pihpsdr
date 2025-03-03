@@ -396,7 +396,7 @@ void saturn_discovery() {
               FIRMWARE_MAX_MAJOR,
               FIRMWARE_MIN_MINOR,
               FIRMWARE_MAX_MINOR
-              );
+             );
       discovered[devices].status = STATE_INCOMPATIBLE;
     }
 
@@ -407,7 +407,6 @@ void saturn_discovery() {
     STRLCPY(discovered[devices].name, "saturn",  sizeof(discovered[devices].name));
     discovered[devices].frequency_min = 0.0;
     discovered[devices].frequency_max = 61440000.0;
-
     //
     // Try to obtain the hardware MAC address of the local eth0.
     // This is for diagnostic purposes only, so if it fails,
@@ -1222,7 +1221,7 @@ static gpointer saturn_rx_thread(gpointer arg) {
 
       while (DecodeByteCount >= 16) {                     // minimum size to try!
         if (*(DMAReadPtr + 7) != 0x80) {
-          t_print("%s: header not found for rate word at addr %hhn\n", __FUNCTION__, DMAReadPtr);
+          t_print("%s: header not found for rate word at addr %p\n", __FUNCTION__, DMAReadPtr);
           exit(1);
         } else {                                                                          // analyse word, then process
           // cppcheck-suppress constVariablePointer
@@ -1359,6 +1358,8 @@ void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer) {
     } else {
       SDRActive = false;
       SetTXEnable(false);
+      IsTXMode = false;
+      SetMOX(false);
       EnableCW(false, false);
     }
 
@@ -1381,6 +1382,7 @@ void saturn_handle_high_priority(bool FromNetwork, unsigned char *UDPInBuffer) {
   //t_print("CAT over TCP port = %x\n", Word);
   //
   // transverter, speaker mute, open collector, user outputs
+  // open collector data is in bits 7:1; move to 6:0
   //
   Byte = (uint8_t)(UDPInBuffer[1400]);
   SetXvtrEnable((bool)(Byte & 1));
@@ -1702,6 +1704,9 @@ void saturn_handle_duc_specific(bool FromNetwork, unsigned char *UDPInBuffer) {
 // Some functions calls to get the "allowed" SATURN FPGA version numbers
 //
 int saturn_minor_version_min() { return FIRMWARE_MIN_MINOR; }
+
 int saturn_minor_version_max() { return FIRMWARE_MAX_MINOR; }
+
 int saturn_major_version_min() { return FIRMWARE_MIN_MAJOR; }
+
 int saturn_major_version_max() { return FIRMWARE_MAX_MAJOR; }

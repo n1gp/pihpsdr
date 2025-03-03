@@ -153,7 +153,7 @@ typedef struct _receiver {
   double nr4_smoothing_factor;
   double nr4_whitening_factor;
   double nr4_noise_rescale;
-  double nr4_post_filter_threshold;
+  double nr4_post_threshold;
 #endif
 
   int alex_antenna;
@@ -172,6 +172,12 @@ typedef struct _receiver {
   int panadapter_low;
   int panadapter_high;
   int panadapter_step;
+  int panadapter_peaks_on;
+  int panadapter_num_peaks;
+  int panadapter_ignore_range_divider;
+  int panadapter_ignore_noise_percentile;
+  int panadapter_hide_noise_filled;
+  int panadapter_peaks_in_passband_filled;
 
   int waterfall_low;
   int waterfall_high;
@@ -313,9 +319,7 @@ extern void   rx_set_squelch(const RECEIVER *rx);
 extern void   rx_vfo_changed(RECEIVER *rx);
 extern void   rx_update_zoom(RECEIVER *rx);
 
-#ifdef CLIENT_SERVER
-  extern void rx_create_remote(RECEIVER *rx);
-  extern void rx_remote_update_display(RECEIVER *rx);
-#endif
+extern void rx_create_remote(RECEIVER *rx);
+extern void rx_remote_update_display(RECEIVER *rx);
 
 #endif

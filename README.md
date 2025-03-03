@@ -19,6 +19,7 @@ Consult the Manual (**link given above**) on how to compile/install piHPSDR on y
 
 Latest features:
 
+- full support for Anan G2-Ultra radios, including customizable panel button/encoder functions
 - added continuous frequency compressor (**CFC**) and downward expander (**DEXP**) to the TX chain
 - in-depth manual (**link given above**)
 - HermesLite-II I/O-board support

@@ -25,9 +25,7 @@
 #include "band.h"
 #include "bandstack.h"
 #include "band_menu.h"
-#ifdef CLIENT_SERVER
-  #include "client_server.h"
-#endif
+#include "client_server.h"
 #include "filter.h"
 #include "new_menu.h"
 #include "radio.h"
@@ -82,13 +80,11 @@ gboolean band_select_cb (GtkWidget *widget, gpointer data) {
   // band stack
   //
   if (radio_is_remote) {
-#ifdef CLIENT_SERVER
     send_band(client_socket, id, choice->info);
-#endif
     // We have to assume that the band change succeeded, we just cannot know.
     newband = choice->info;
   } else {
-    vfo_band_changed(id, choice->info);
+    vfo_id_band_changed(id, choice->info);
     newband = vfo[id].band;
   }
 

@@ -347,7 +347,7 @@ const VFO_BAR_LAYOUT vfo_layout_list[] = {
 
     .eq_x = 240,
     .eq_y = 31,
-    .ps_x = 282,
+    .ps_x = 280,
     .ps_y = 31,
 
     .vox_x = 240,

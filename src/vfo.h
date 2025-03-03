@@ -44,6 +44,7 @@ struct _vfo {
   long long ctun_frequency;
 
   int rit_enabled;
+  int rit_step;
   long long rit;
   int xit_enabled;
   long long xit;
@@ -87,6 +88,7 @@ struct _mode_settings {
   //
   int    filter;                    // actual filter used
   int    cwPeak;                    // CW peak filter on/off
+  int    rit_step;                  // RIT step size
   long long step;                   // VFO step size
   //
   // RX (noise, EQ, AGC mode) settings
@@ -109,7 +111,7 @@ struct _mode_settings {
   double nr4_smoothing_factor;
   double nr4_whitening_factor;
   double nr4_noise_rescale;
-  double nr4_post_filter_threshold;
+  double nr4_post_threshold;
 #endif
   int anf;                          // Automatic notch filter
   int snb;                          // Spectral noise blanker
@@ -154,11 +156,13 @@ extern char *step_labels[];
 // Global functions declared in vfo.h start with "vfo_"
 //
 extern GtkWidget* vfo_init(int width, int height);
-extern int        vfo_get_stepindex(int id);
-extern void       vfo_set_step_from_index(int id, int index);
+extern int        vfo_id_get_stepindex(int id);
+extern void       vfo_id_set_step_from_index(int id, int index);
 extern int        vfo_get_step_from_index(int index);
 extern void       vfo_step(int steps);
 extern void       vfo_id_step(int id, int steps);
+extern void       vfo_set_rit_step(int step);
+extern void       vfo_id_set_rit_step(int id, int step);
 extern void       vfo_move(long long hz, int round);
 extern void       vfo_id_move(int id, long long hz, int round);
 extern void       vfo_id_move_to(int id, long long hz);
@@ -166,7 +170,7 @@ extern void       vfo_move_to(long long hz);
 extern void       vfo_update(void);
 extern void       vfo_save_state(void);
 extern void       vfo_restore_state(void);
-extern void       vfo_band_changed(int id, int b);
+extern void       vfo_id_band_changed(int id, int b);
 extern void       vfo_bandstack_changed(int b);
 extern void       vfo_id_mode_changed(int id, int m);
 extern void       vfo_mode_changed(int m);
@@ -182,15 +186,19 @@ extern int        vfo_get_tx_mode(void);
 extern long long  vfo_get_tx_freq(void);
 extern void       vfo_xvtr_changed(void);
 extern void       vfo_xit_toggle(void);
+extern void       vfo_id_xit_toggle(int id);
 extern void       vfo_xit_incr(int incr);
+extern void       vfo_id_xit_incr(int id, int incr);
 extern void       vfo_xit_onoff(int enable);
+extern void       vfo_id_xit_onoff(int id, int enable);
 extern void       vfo_xit_value(long long value);
-extern void       vfo_rit_toggle(int rx);
-extern void       vfo_rit_onoff(int rx, int enable);
-extern void       vfo_rit_incr(int rx, int incr);
-extern void       vfo_rit_value(int rx, long long value);
-extern void       vfo_set_frequency(int vfo, long long f);
-extern void       vfo_ctun_update(int id, int state);
+extern void       vfo_id_xit_value(int id, long long value);
+extern void       vfo_id_rit_toggle(int id);
+extern void       vfo_id_rit_onoff(int id, int enable);
+extern void       vfo_id_rit_incr(int id, int incr);
+extern void       vfo_id_rit_value(int id, long long value);
+extern void       vfo_id_set_frequency(int id, long long f);
+extern void       vfo_id_ctun_update(int id, int state);
 extern void       vfo_apply_mode_settings(RECEIVER *rx);
 extern void       vfo_vfos_changed(void);
 extern void       vfo_num_pad(int val, int vfo);

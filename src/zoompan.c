@@ -24,9 +24,7 @@
 
 #include "actions.h"
 #include "appearance.h"
-#ifdef CLIENT_SERVER
-  #include "client_server.h"
-#endif
+#include "client_server.h"
 #include "ext.h"
 #include "main.h"
 #include "message.h"
@@ -57,7 +55,7 @@ int zoompan_active_receiver_changed(void *data) {
     g_signal_handler_block(G_OBJECT(pan_scale), pan_signal_id);
     gtk_range_set_value(GTK_RANGE(zoom_scale), active_receiver->zoom);
     gtk_range_set_range(GTK_RANGE(pan_scale), 0.0,
-    (double)(active_receiver->zoom == 1 ? active_receiver->pixels : active_receiver->pixels - active_receiver->width));
+                        (double)(active_receiver->zoom == 1 ? active_receiver->pixels : active_receiver->pixels - active_receiver->width));
     gtk_range_set_value (GTK_RANGE(pan_scale), active_receiver->pan);
 
     if (active_receiver->zoom == 1) {
@@ -79,16 +77,14 @@ static void zoom_value_changed_cb(GtkWidget *widget, gpointer data) {
   active_receiver->zoom = (int)(gtk_range_get_value(GTK_RANGE(zoom_scale)) + 0.5);
 
   if (radio_is_remote) {
-#ifdef CLIENT_SERVER
-    send_zoom(client_socket, active_receiver->id, active_receiver->zoom);
-#endif
+    send_zoom(client_socket, active_receiver);
   } else {
     rx_update_zoom(active_receiver);
   }
 
   g_signal_handler_block(G_OBJECT(pan_scale), pan_signal_id);
   gtk_range_set_range(GTK_RANGE(pan_scale), 0.0,
-  (double)(active_receiver->zoom == 1 ? active_receiver->pixels : active_receiver->pixels - active_receiver->width));
+                      (double)(active_receiver->zoom == 1 ? active_receiver->pixels : active_receiver->pixels - active_receiver->width));
   gtk_range_set_value (GTK_RANGE(pan_scale), active_receiver->pan);
   g_signal_handler_unblock(G_OBJECT(pan_scale), pan_signal_id);
 
@@ -147,9 +143,7 @@ static void pan_value_changed_cb(GtkWidget *widget, gpointer data) {
     active_receiver->pan = (int)(gtk_range_get_value(GTK_RANGE(pan_scale)) + 0.5);
 
     if (radio_is_remote) {
-#ifdef CLIENT_SERVER
-      send_pan(client_socket, active_receiver->id, active_receiver->pan);
-#endif
+      send_pan(client_socket, active_receiver);
     }
   }
 
@@ -189,7 +183,7 @@ void remote_set_pan(int rx, double value) {
   g_mutex_lock(&pan_zoom_mutex);
   g_signal_handler_block(G_OBJECT(pan_scale), pan_signal_id);
   gtk_range_set_range(GTK_RANGE(pan_scale), 0.0,
-  (double)(receiver[rx]->zoom == 1 ? receiver[rx]->pixels : receiver[rx]->pixels - receiver[rx]->width));
+                      (double)(receiver[rx]->zoom == 1 ? receiver[rx]->pixels : receiver[rx]->pixels - receiver[rx]->width));
   set_pan(rx, value);
   g_signal_handler_unblock(G_OBJECT(pan_scale), pan_signal_id);
   g_mutex_unlock(&pan_zoom_mutex);
@@ -261,7 +255,7 @@ GtkWidget *zoompan_init(int my_width, int my_height) {
   gtk_widget_show(pan_label);
   gtk_grid_attach(GTK_GRID(zoompan), pan_label, t2pos, 0, twidth, 1);
   pan_scale = gtk_scale_new_with_range(GTK_ORIENTATION_HORIZONTAL, 0.0,
-  active_receiver->zoom == 1 ? active_receiver->width : active_receiver->width * (active_receiver->zoom - 1), 1.0);
+                                       active_receiver->zoom == 1 ? active_receiver->width : active_receiver->width * (active_receiver->zoom - 1), 1.0);
   gtk_widget_set_size_request(pan_scale, 0, height);
   gtk_widget_set_valign(pan_scale, GTK_ALIGN_CENTER);
   gtk_scale_set_draw_value (GTK_SCALE(pan_scale), FALSE);

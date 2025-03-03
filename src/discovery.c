@@ -29,9 +29,7 @@
 #include <sys/stat.h>
 
 #include "actions.h"
-#ifdef CLIENT_SERVER
-  #include "client_server.h"
-#endif
+#include "client_server.h"
 #ifdef GPIO
   #include "configure.h"
 #endif
@@ -70,13 +68,11 @@ int discover_only_stemlab = 0;
 
 int delayed_discovery(gpointer data);
 
-#ifdef CLIENT_SERVER
-  GtkWidget *host_addr_entry;
-  static char host_addr_buffer[128] = "";
-  char *host_addr = &host_addr_buffer[0];
-  GtkWidget *host_port_spinner;
-  int host_port = 50000; // default listening port
-#endif
+GtkWidget *host_addr_entry;
+static char host_addr_buffer[128] = "";
+char *host_addr = &host_addr_buffer[0];
+GtkWidget *host_port_spinner;
+int host_port = 50000; // default listening port
 
 static gboolean close_cb() {
   // There is nothing to clean up
@@ -196,7 +192,6 @@ static gboolean radio_ip_cb (GtkWidget *widget, GdkEventButton *event, gpointer 
   return FALSE;
 }
 
-#ifdef CLIENT_SERVER
 static gboolean connect_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) {
   // connect to remote host running piHPSDR
   strncpy(host_addr, gtk_entry_get_text(GTK_ENTRY(host_addr_entry)), 30);
@@ -224,8 +219,6 @@ static gboolean connect_cb (GtkWidget *widget, GdkEventButton *event, gpointer d
 
   return TRUE;
 }
-
-#endif
 
 void discovery() {
   //
@@ -377,7 +370,7 @@ void discovery() {
       case NEW_PROTOCOL:
         if (d->device == DEVICE_OZY) {
           snprintf(text, sizeof(text), "%s (%s via USB)", d->name,
-          d->protocol == ORIGINAL_PROTOCOL ? "Protocol 1" : "Protocol 2");
+                   d->protocol == ORIGINAL_PROTOCOL ? "Protocol 1" : "Protocol 2");
         } else if (d->device == NEW_DEVICE_SATURN && strcmp(d->info.network.interface_name, "XDMA") == 0) {
           snprintf(text, sizeof(text), "%s (%s v%d) fpga:%x (%s) on /dev/xdma*", d->name,
                    d->protocol == ORIGINAL_PROTOCOL ? "Protocol 1" : "Protocol 2", d->software_version,
@@ -449,7 +442,7 @@ void discovery() {
         if (d->use_routing) { can_connect = 1; }
 
         if ((d->info.network.interface_address.sin_addr.s_addr & d->info.network.interface_netmask.sin_addr.s_addr) ==
-              (d->info.network.address.sin_addr.s_addr & d->info.network.interface_netmask.sin_addr.s_addr)) { can_connect = 1; }
+            (d->info.network.address.sin_addr.s_addr & d->info.network.interface_netmask.sin_addr.s_addr)) { can_connect = 1; }
 
         if (!can_connect) {
           gtk_button_set_label(GTK_BUTTON(start_button), "Subnet!");
@@ -502,7 +495,6 @@ void discovery() {
     }
   }
 
-#ifdef CLIENT_SERVER
   loadProperties("remote.props");
   GetPropS0("host",   host_addr_buffer);
   GetPropI0("port",   host_port);
@@ -522,7 +514,6 @@ void discovery() {
   gtk_widget_show(host_port_spinner);
   gtk_grid_attach(GTK_GRID(grid), host_port_spinner, 3, row, 1, 1);
   row++;
-#endif
   controller = NO_CONTROLLER;
   gpioRestoreState();
   gpio_set_defaults(controller);

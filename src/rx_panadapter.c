@@ -29,11 +29,10 @@
 #include "agc.h"
 #include "appearance.h"
 #include "band.h"
-#ifdef CLIENT_SERVER
-  #include "client_server.h"
-#endif
+#include "client_server.h"
 #include "discovered.h"
 #include "gpio.h"
+#include "message.h"
 #include "mode.h"
 #include "radio.h"
 #ifdef USBOZY
@@ -103,7 +102,6 @@ static gboolean panadapter_scroll_event_cb(GtkWidget *widget, GdkEventScroll *ev
 }
 
 void rx_panadapter_update(RECEIVER *rx) {
-  int i;
   float *samples;
   cairo_text_extents_t extents;
   long long f;
@@ -122,7 +120,8 @@ void rx_panadapter_update(RECEIVER *rx) {
   int mode = vfo[rx->id].mode;
   long long frequency = vfo[rx->id].frequency;
   int vfoband = vfo[rx->id].band;
-  long long offset = vfo[rx->id].ctun ? vfo[rx->id].offset : 0;
+  long long offset;
+
   //
   // soffset contains all corrections for attenuation and preamps
   // Perhaps some adjustment is necessary for those old radios which have
@@ -131,6 +130,16 @@ void rx_panadapter_update(RECEIVER *rx) {
   const BAND *band = band_get_band(vfoband);
   int calib = rx_gain_calibration - band->gain;
   soffset = (double) calib + (double)adc[rx->adc].attenuation - adc[rx->adc].gain;
+
+  //
+  // offset is used to calculate the filter edges. They move  with the RIT value
+  //
+
+  if (vfo[rx->id].ctun) {
+    offset = vfo[rx->id].offset;
+  } else {
+    offset = vfo[rx->id].rit_enabled ? vfo[rx->id].rit : 0;
+  }
 
   if (filter_board == ALEX && rx->adc == 0) {
     soffset += (double)(10 * rx->alex_attenuation - 20 * rx->preamp);
@@ -169,7 +178,7 @@ void rx_panadapter_update(RECEIVER *rx) {
   long long max_display = min_display + (long long)((double)rx->width * HzPerPixel);
 
   if (vfoband == band60) {
-    for (i = 0; i < channel_entries; i++) {
+    for (int i = 0; i < channel_entries; i++) {
       long long low_freq = band_channels_60m[i].frequency - (band_channels_60m[i].width / (long long)2);
       long long hi_freq = band_channels_60m[i].frequency + (band_channels_60m[i].width / (long long)2);
       double x1 = (double) (low_freq - min_display) / HzPerPixel;
@@ -180,7 +189,9 @@ void rx_panadapter_update(RECEIVER *rx) {
     }
   }
 
-  // filter
+  //
+  // Filter edges.
+  //
   cairo_set_source_rgba (cr, COLOUR_PAN_FILTER);
   double filter_left = ((double)rx->pixels * 0.5) - (double)rx->pan + (((double)rx->filter_low + offset) / HzPerPixel);
   double filter_right = ((double)rx->pixels * 0.5) - (double)rx->pan + (((double)rx->filter_high + offset) / HzPerPixel);
@@ -200,7 +211,7 @@ void rx_panadapter_update(RECEIVER *rx) {
   cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
   char v[32];
 
-  for (i = rx->panadapter_high; i >= rx->panadapter_low; i--) {
+  for (int i = rx->panadapter_high; i >= rx->panadapter_low; i--) {
     int mod = abs(i) % rx->panadapter_step;
 
     if (mod == 0) {
@@ -305,20 +316,16 @@ void rx_panadapter_update(RECEIVER *rx) {
     }
   }
 
-#ifdef CLIENT_SERVER
-
-  if (remoteclients != NULL) {
+  if (remoteclient.running) {
     char text[64];
     cairo_select_font_face(cr, DISPLAY_FONT_FACE, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_source_rgba(cr, COLOUR_SHADE);
     cairo_set_font_size(cr, DISPLAY_FONT_SIZE4);
-    inet_ntop(AF_INET, &(((struct sockaddr_in *)&remoteclients->address)->sin_addr), text, 64);
+    inet_ntop(AF_INET, &(((struct sockaddr_in *)&remoteclient.address)->sin_addr), text, 64);
     cairo_text_extents(cr, text, &extents);
     cairo_move_to(cr, ((double)mywidth / 2.0) - (extents.width / 2.0), (double)myheight / 2.0);
     cairo_show_text(cr, text);
   }
-
-#endif
 
   // agc
   if (rx->agc != AGC_OFF) {
@@ -383,6 +390,9 @@ void rx_panadapter_update(RECEIVER *rx) {
   int pan = rx->pan;
 
   if (radio_is_remote) {
+    //
+    // A client will only hold as many samples as there are pixels
+    //
     pan = 0;
   }
 
@@ -397,7 +407,7 @@ void rx_panadapter_update(RECEIVER *rx) {
              / (rx->panadapter_high - rx->panadapter_low));
   cairo_move_to(cr, 0.0, s1);
 
-  for (i = 1; i < mywidth; i++) {
+  for (int i = 1; i < mywidth; i++) {
     double s2;
     s2 = (double)samples[i + pan] + soffset;
     s2 = floor((rx->panadapter_high - s2)
@@ -468,32 +478,170 @@ void rx_panadapter_update(RECEIVER *rx) {
     cairo_pattern_destroy(gradient);
   }
 
-  /*
-  #ifdef GPIO
-    if(rx->id==0 && controller==CONTROLLER1) {
+  if(rx->panadapter_peaks_on !=0) {
+    int num_peaks = rx->panadapter_num_peaks;
+    gboolean peaks_in_passband = SET(rx->panadapter_peaks_in_passband_filled);
+    gboolean hide_noise = SET(rx->panadapter_hide_noise_filled);
+    double noise_percentile = (double)rx->panadapter_ignore_noise_percentile;
+    int ignore_range_divider = rx->panadapter_ignore_range_divider;
+    int ignore_range = (mywidth + ignore_range_divider - 1) / ignore_range_divider; // Round up
 
-      cairo_set_source_rgba(cr,COLOUR_ATTN);
-      cairo_set_font_size(cr,DISPLAY_FONT_SIZE3);
-      if(ENABLE_E2_ENCODER) {
-        cairo_move_to(cr, mywidth-200,70);
-        snprintf(text,"%s (%s)",encoder_string[e2_encoder_action],sw_string[e2_sw_action]);
-        cairo_show_text(cr, text);
-      }
+    double peaks[num_peaks];
+    int peak_positions[num_peaks];
+    for(int a=0;a<num_peaks;a++){
+      peaks[a] = -200;
+      peak_positions[a] = 0;
+    }
 
-      if(ENABLE_E3_ENCODER) {
-        cairo_move_to(cr, mywidth-200,90);
-        snprintf(text, 64, "%s (%s)",encoder_string[e3_encoder_action],sw_string[e3_sw_action]);
-        cairo_show_text(cr, text);
-      }
-
-      if(ENABLE_E4_ENCODER) {
-        cairo_move_to(cr, mywidth-200,110);
-        snprintf(text, 64, "%s (%s)",encoder_string[e4_encoder_action],sw_string[e4_sw_action]);
-        cairo_show_text(cr, text);
+    // Calculate the noise level if needed
+    double noise_level = 0.0;
+    if (hide_noise) {
+      // Dynamically allocate a copy of samples for sorting
+      double *sorted_samples = malloc(mywidth * sizeof(double));
+      if (sorted_samples != NULL) {
+        for (int i = 0; i < mywidth; i++) {
+          sorted_samples[i] = (double)samples[i + pan] + soffset;
+        }
+        qsort(sorted_samples, mywidth, sizeof(double), compare_doubles);
+        int index = (int)((noise_percentile / 100.0) * mywidth);
+        noise_level = sorted_samples[index] + 3.0;
+        free(sorted_samples); // Free memory after use
       }
     }
-  #endif
-  */
+
+    // Detect peaks
+    double filter_left_bound = peaks_in_passband ? filter_left : 0;
+    double filter_right_bound = peaks_in_passband ? filter_right : mywidth;
+
+    for (int i = 1; i < mywidth - 1; i++) {
+        if (i >= filter_left_bound && i <= filter_right_bound) {
+            double s = (double)samples[i + pan] + soffset;
+
+            // Check if the point is a peak
+            if ((!hide_noise || s >= noise_level) && s > samples[i - 1 + pan] && s > samples[i + 1 + pan]) {
+                int replace_index = -1;
+                int start_range = i - ignore_range;
+                int end_range = i + ignore_range;
+
+                // Check if the peak is within the ignore range of any existing peak
+                for (int j = 0; j < num_peaks; j++) {
+                    if (peak_positions[j] >= start_range && peak_positions[j] <= end_range) {
+                        if (s > peaks[j]) {
+                            replace_index = j;
+                            break;
+                        } else {
+                            replace_index = -2;
+                            break;
+                        }
+                    }
+                }
+
+                // Replace the existing peak if a higher peak is found within the ignore range
+                if (replace_index >= 0) {
+                    peaks[replace_index] = s;
+                    peak_positions[replace_index] = i;
+                }
+                // Add the peak if no peaks are found within the ignore range
+                else if (replace_index == -1) {
+                    // Find the index of the lowest peak
+                    int lowest_peak_index = 0;
+                    for (int j = 1; j < num_peaks; j++) {
+                        if (peaks[j] < peaks[lowest_peak_index]) {
+                            lowest_peak_index = j;
+                        }
+                    }
+
+                    // Replace the lowest peak if the current peak is higher
+                    if (s > peaks[lowest_peak_index]) {
+                        peaks[lowest_peak_index] = s;
+                        peak_positions[lowest_peak_index] = i;
+                    }
+                }
+            }
+        }
+    }
+
+    // Sort peaks in descending order
+    for (int i = 0; i < num_peaks - 1; i++) {
+        for (int j = i + 1; j < num_peaks; j++) {
+            if (peaks[i] < peaks[j]) {
+                double temp_peak = peaks[i];
+                peaks[i] = peaks[j];
+                peaks[j] = temp_peak;
+
+                int temp_pos = peak_positions[i];
+                peak_positions[i] = peak_positions[j];
+                peak_positions[j] = temp_pos;
+            }
+        }
+    }
+
+    // Draw peak values on the chart
+    cairo_set_source_rgba(cr, COLOUR_PAN_TEXT); // Set text color
+    cairo_select_font_face(cr, DISPLAY_FONT_FACE, CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_BOLD);
+    cairo_set_font_size(cr, DISPLAY_FONT_SIZE2);
+
+    double previous_text_positions[num_peaks][2]; // Store previous text positions (x, y)
+    for (int j = 0; j < num_peaks; j++) {
+        previous_text_positions[j][0] = -1; // Initialize x positions
+        previous_text_positions[j][1] = -1; // Initialize y positions
+    }
+
+    for (int j = 0; j < num_peaks; j++) {
+        if (peak_positions[j] > 0) {
+            char peak_label[32];
+            //snprintf(peak_label, sizeof(peak_label), "%.1f dBm", peaks[j]);
+            snprintf(peak_label, sizeof(peak_label), "%.1f", peaks[j]);
+            cairo_text_extents(cr, peak_label, &extents);
+
+            // Calculate initial text position: slightly above the peak
+            double text_x = peak_positions[j];
+            double text_y = floor((rx->panadapter_high - peaks[j])
+                                  * (double)myheight
+                                  / (rx->panadapter_high - rx->panadapter_low)) - 5;
+
+            // Ensure text stays within the drawing area
+            if (text_y < extents.height) {
+                text_y = extents.height; // Push text down to fit inside the top boundary
+            }
+
+            // Adjust position to avoid overlap with previous labels
+            for (int k = 0; k < j; k++) {
+                double prev_x = previous_text_positions[k][0];
+                double prev_y = previous_text_positions[k][1];
+
+                if (prev_x >= 0 && prev_y >= 0) {
+                    double distance_x = fabs(text_x - prev_x);
+                    double distance_y = fabs(text_y - prev_y);
+
+                    if (distance_y < extents.height && distance_x < extents.width) {
+                        // Try moving vertically first
+                        if (text_y + extents.height < myheight) {
+                            text_y += extents.height + 5; // Move below
+                        } else if (text_y - extents.height > 0) {
+                            text_y -= extents.height + 5; // Move above
+                        } else {
+                            // Move horizontally if no vertical space is available
+                            if (text_x + extents.width < mywidth) {
+                                text_x += extents.width + 5; // Move right
+                            } else if (text_x - extents.width > 0) {
+                                text_x -= extents.width + 5; // Move left
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Draw text
+            cairo_move_to(cr, text_x - (extents.width / 2.0), text_y);
+            cairo_show_text(cr, peak_label);
+
+            // Store current text position for overlap checks
+            previous_text_positions[j][0] = text_x;
+            previous_text_positions[j][1] = text_y;
+        }
+    }
+  }
   if (rx->id == 0 && !radio_is_remote) {
     display_panadapter_messages(cr, mywidth, rx->fps);
   }
@@ -526,19 +674,16 @@ void rx_panadapter_init(RECEIVER *rx, int width, int height) {
   rx->panadapter = gtk_drawing_area_new ();
   gtk_widget_set_size_request (rx->panadapter, width, height);
   /* Signals used to handle the backing surface */
-  g_signal_connect (rx->panadapter, "draw",
-                    G_CALLBACK (panadapter_draw_cb), rx);
-  g_signal_connect (rx->panadapter, "configure-event",
-                    G_CALLBACK (panadapter_configure_event_cb), rx);
+  g_signal_connect (rx->panadapter, "draw", G_CALLBACK (panadapter_draw_cb), rx);
+  g_signal_connect (rx->panadapter, "configure-event", G_CALLBACK (panadapter_configure_event_cb), rx);
   /* Event signals */
-  g_signal_connect (rx->panadapter, "motion-notify-event",
-                    G_CALLBACK (panadapter_motion_notify_event_cb), rx);
-  g_signal_connect (rx->panadapter, "button-press-event",
-                    G_CALLBACK (panadapter_button_press_event_cb), rx);
-  g_signal_connect (rx->panadapter, "button-release-event",
-                    G_CALLBACK (panadapter_button_release_event_cb), rx);
-  g_signal_connect(rx->panadapter, "scroll_event",
-                   G_CALLBACK(panadapter_scroll_event_cb), rx);
+  g_signal_connect (rx->panadapter, "motion-notify-event", G_CALLBACK (panadapter_motion_notify_event_cb), rx);
+  g_signal_connect (rx->panadapter, "button-press-event", G_CALLBACK (panadapter_button_press_event_cb), rx);
+  g_signal_connect (rx->panadapter, "button-release-event", G_CALLBACK (panadapter_button_release_event_cb), rx);
+  //
+  // Note the scroll event is generated from  to both RX1/RX2 AND the vfo panel and will scroll the active receiver only
+  //
+  g_signal_connect(rx->panadapter, "scroll_event", G_CALLBACK(panadapter_scroll_event_cb), NULL);
   /* Ask to receive events the drawing area doesn't normally
    * subscribe to. In particular, we need to ask for the
    * button press and motion notify events that want to handle.

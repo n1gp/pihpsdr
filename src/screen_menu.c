@@ -55,10 +55,15 @@ static int apply(gpointer data) {
   apply_timeout = 0;
   display_width       = my_display_width;
   display_height      = my_display_height;
-  full_screen         = my_full_screen;
+  if (!radio_is_remote) {
+    full_screen         = my_full_screen;
+  }
   vfo_layout          = my_vfo_layout;
   rx_stack_horizontal = my_rx_stack_horizontal;
   radio_reconfigure_screen();
+  if (radio_is_remote) {
+    send_screen(client_socket, rx_stack_horizontal, display_width);
+  }
 
   //
   // VFO layout may have been re-adjusted so update combo-box
@@ -251,11 +256,14 @@ void screen_menu(GtkWidget *parent) {
   gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(button), my_rx_stack_horizontal);
   gtk_grid_attach(GTK_GRID(grid), button, 0, row, 2, 1);
   g_signal_connect(button, "toggled", G_CALLBACK(horizontal_cb), NULL);
-  full_b = gtk_check_button_new_with_label("Full Screen Mode");
-  gtk_widget_set_name(full_b, "boldlabel");
-  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(full_b), my_full_screen);
-  gtk_grid_attach(GTK_GRID(grid), full_b, 2, row, 1, 1);
-  g_signal_connect(full_b, "toggled", G_CALLBACK(full_cb), NULL);
+
+  if (!radio_is_remote) {
+    full_b = gtk_check_button_new_with_label("Full Screen Mode");
+    gtk_widget_set_name(full_b, "boldlabel");
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(full_b), my_full_screen);
+    gtk_grid_attach(GTK_GRID(grid), full_b, 2, row, 1, 1);
+    g_signal_connect(full_b, "toggled", G_CALLBACK(full_cb), NULL);
+  }
   row++;
   GtkWidget *b_display_zoompan = gtk_check_button_new_with_label("Display Zoom/Pan");
   gtk_widget_set_name (b_display_zoompan, "boldlabel");
@@ -275,19 +283,23 @@ void screen_menu(GtkWidget *parent) {
   gtk_widget_show(b_display_toolbar);
   gtk_grid_attach(GTK_GRID(grid), b_display_toolbar, 2, row, 1, 1);
   g_signal_connect(b_display_toolbar, "toggled", G_CALLBACK(display_toolbar_cb), NULL);
-  row++;
-  GtkWidget *b_display_warnings = gtk_check_button_new_with_label("Display Warnings");
-  gtk_widget_set_name (b_display_warnings, "boldlabel");
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (b_display_warnings), display_warnings);
-  gtk_widget_show(b_display_warnings);
-  gtk_grid_attach(GTK_GRID(grid), b_display_warnings, 0, row, 1, 1);
-  g_signal_connect(b_display_warnings, "toggled", G_CALLBACK(display_warnings_cb), NULL);
-  GtkWidget *b_display_pacurr = gtk_check_button_new_with_label("Display PA current");
-  gtk_widget_set_name (b_display_pacurr, "boldlabel");
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (b_display_pacurr), display_pacurr);
-  gtk_widget_show(b_display_pacurr);
-  gtk_grid_attach(GTK_GRID(grid), b_display_pacurr, 1, row, 1, 1);
-  g_signal_connect(b_display_pacurr, "toggled", G_CALLBACK(display_pacurr_cb), NULL);
+
+  if (!radio_is_remote) {
+    row++;
+    GtkWidget *b_display_warnings = gtk_check_button_new_with_label("Display Warnings");
+    gtk_widget_set_name (b_display_warnings, "boldlabel");
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (b_display_warnings), display_warnings);
+    gtk_widget_show(b_display_warnings);
+    gtk_grid_attach(GTK_GRID(grid), b_display_warnings, 0, row, 1, 1);
+    g_signal_connect(b_display_warnings, "toggled", G_CALLBACK(display_warnings_cb), NULL);
+    GtkWidget *b_display_pacurr = gtk_check_button_new_with_label("Display PA current");
+    gtk_widget_set_name (b_display_pacurr, "boldlabel");
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (b_display_pacurr), display_pacurr);
+    gtk_widget_show(b_display_pacurr);
+    gtk_grid_attach(GTK_GRID(grid), b_display_pacurr, 1, row, 1, 1);
+    g_signal_connect(b_display_pacurr, "toggled", G_CALLBACK(display_pacurr_cb), NULL);
+  }
+
   gtk_container_add(GTK_CONTAINER(content), grid);
   sub_menu = dialog;
   gtk_widget_show_all(dialog);

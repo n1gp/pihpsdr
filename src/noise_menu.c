@@ -57,18 +57,10 @@ static gboolean close_cb () {
 
 void update_noise() {
   int id = active_receiver->id;
-
-  if (radio_is_remote) {
-#ifdef CLIENT_SERVER
-    send_noise(client_socket, active_receiver);
-#endif
-    return;
-  }
-
   //
   // Update the mode settings
   //
-  if (id == 0) {
+  if (id == 0 && !radio_is_remote) {
     int mode = vfo[id].mode;
     mode_settings[mode].nr = active_receiver->nr;
     mode_settings[mode].nb = active_receiver->nb;
@@ -90,7 +82,7 @@ void update_noise() {
     mode_settings[mode].nr4_smoothing_factor = active_receiver->nr4_smoothing_factor;
     mode_settings[mode].nr4_whitening_factor = active_receiver->nr4_whitening_factor;
     mode_settings[mode].nr4_noise_rescale = active_receiver->nr4_noise_rescale;
-    mode_settings[mode].nr4_post_filter_threshold = active_receiver->nr4_post_filter_threshold;
+    mode_settings[mode].nr4_post_threshold = active_receiver->nr4_post_threshold;
 #endif
     copy_mode_settings(mode);
   }
@@ -223,7 +215,7 @@ static void nr4_rescale_cb(GtkWidget *widget, gpointer data) {
 }
 
 static void nr4_threshold_cb(GtkWidget *widget, gpointer data) {
-  active_receiver->nr4_post_filter_threshold = gtk_spin_button_get_value(GTK_SPIN_BUTTON(widget));
+  active_receiver->nr4_post_threshold = gtk_spin_button_get_value(GTK_SPIN_BUTTON(widget));
   update_noise();
 }
 
@@ -407,7 +399,7 @@ void noise_menu(GtkWidget *parent) {
   GtkWidget *trained_t2_b = gtk_spin_button_new_with_range(0.02, 0.3, 0.01);
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(trained_t2_b), active_receiver->nr2_trained_t2);
   gtk_grid_attach(GTK_GRID(nr_grid), trained_t2_b, 3, 2, 1, 1);
-  g_signal_connect(trained_thr_b, "changed", G_CALLBACK(trained_t2_cb), NULL);
+  g_signal_connect(trained_t2_b, "changed", G_CALLBACK(trained_t2_cb), NULL);
   //
   gtk_container_add(GTK_CONTAINER(nr_container), nr_grid);
   //
@@ -524,7 +516,7 @@ void noise_menu(GtkWidget *parent) {
   gtk_widget_set_halign(nr4_threshold_title, GTK_ALIGN_END);
   gtk_grid_attach(GTK_GRID(nr4_grid), nr4_threshold_title, 1, 2, 2, 1);
   GtkWidget *nr4_threshold_b = gtk_spin_button_new_with_range(-10.0, 10.0, 0.1);
-  gtk_spin_button_set_value (GTK_SPIN_BUTTON(nr4_threshold_b), active_receiver->nr4_post_filter_threshold);
+  gtk_spin_button_set_value (GTK_SPIN_BUTTON(nr4_threshold_b), active_receiver->nr4_post_threshold);
   gtk_grid_attach(GTK_GRID(nr4_grid), nr4_threshold_b, 3, 2, 1, 1);
   g_signal_connect(G_OBJECT(nr4_threshold_b), "changed", G_CALLBACK(nr4_threshold_cb), NULL);
   //

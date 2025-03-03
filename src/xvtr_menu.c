@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "band.h"
+#include "client_server.h"
 #include "filter.h"
 #include "message.h"
 #include "mystring.h"
@@ -128,7 +129,19 @@ static void save_xvtr () {
     }
   }
 
-  vfo_xvtr_changed();
+  if (radio_is_remote) {
+    for (int b = BANDS; b < BANDS + XVTRS; b++) {
+      send_band_data(client_socket, b);
+      const BAND *band = band_get_band(b);
+
+      for (int s = 0; s < band->bandstack->entries; s++) {
+        send_bandstack_data(client_socket, b, s);
+      }
+    }
+    send_xvtr_changed(client_socket);
+  } else {
+    vfo_xvtr_changed();
+  }
 }
 
 void pa_disable_cb(GtkWidget *widget, gpointer data) {

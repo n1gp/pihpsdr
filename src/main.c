@@ -252,7 +252,15 @@ gboolean keypress_cb(GtkWidget *widget, GdkEventKey *event, gpointer data) {
     vfo_num_pad(-4, active_receiver->id);
     break;
 
+  //
+  // LOCALE problem: in countries where the "decimal point" is
+  // something else (e.g. a comma in Germany), the corresponding
+  // Numpad key may not report GDK_KEY_KP_Decimal.
+  // For a comma, we get GDK_KEY_KP_Separator so as a
+  // quick-and-dirty fix, we just treat both cases as a
+  // "decimal point"
   case GDK_KEY_KP_Decimal:
+  case GDK_KEY_KP_Separator:
     vfo_num_pad(-5, active_receiver->id);
     break;
 

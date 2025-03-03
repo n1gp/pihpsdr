@@ -315,9 +315,9 @@ void keyer_event(int left, int state) {
 
 static void* keyer_thread(void *arg) {
   struct timespec loop_delay;
-  int interval = 1000000; // 1 ms
+  double tdown;
   int i;
-  int kdelay = 0;
+  int kdelay;
   int txmode;
   int moxbefore;
   int cwvox;
@@ -367,13 +367,12 @@ static void* keyer_thread(void *arg) {
       //
       i = 200;
 
-      while ((!mox || cw_not_ready) && i-- > 0) { usleep(1000L); }
+      while (!mox && i-- > 0) { usleep(1000L); }
 
       cwvox = (int) cw_keyer_hang_time;
     }
 
     key_state = CHECK;
-    clock_gettime(CLOCK_MONOTONIC, &loop_delay);
 
     while (key_state != EXITLOOP || cwvox > 0) {
       //
@@ -385,6 +384,7 @@ static void* keyer_thread(void *arg) {
       //
       if (cwvox > 0 && key_state != EXITLOOP && key_state != CHECK) { cwvox = (int) cw_keyer_hang_time; }
 
+      clock_gettime(CLOCK_MONOTONIC, &loop_delay);
       switch (key_state) {
       case EXITLOOP:
         // If we arrive here, cwvox is greater than zero, since key_state==EXITLOOP
@@ -408,7 +408,8 @@ static void* keyer_thread(void *arg) {
         } else {
           key_state = CHECK;
         }
-
+        // wait 1 msec
+        loop_delay.tv_nsec += 1000000;
         break;
 
       case CHECK: // check for key press
@@ -427,9 +428,9 @@ static void* keyer_thread(void *arg) {
           // If both paddles are pressed (should not happen), then
           // the dash paddle wins.
           if (*kdash) {                  // send manual dashes
+            tdown = loop_delay.tv_sec + 1.0E-9 * loop_delay.tv_nsec;
+            tx_queue_cw_event(1, 0);
             gpio_set_cw(1);
-            cw_key_down = 960000; // max. 20 sec to protect hardware
-            cw_key_up = 0;
             key_state = STRAIGHT;
           }
         } else {
@@ -442,6 +443,10 @@ static void* keyer_thread(void *arg) {
           if (*kdot) { key_state = PREDOT; }
         }
 
+        if (key_state == CHECK) {
+          // wait 1 msec
+          loop_delay.tv_nsec += 1000000;
+        }
         break;
 
       case STRAIGHT:
@@ -450,10 +455,11 @@ static void* keyer_thread(void *arg) {
         // Wait for dash paddle being released in "straight key" mode.
         //
         if (! *kdash) {
+          tx_queue_cw_event(0, (int)((loop_delay.tv_sec + 1.0E-9 * loop_delay.tv_nsec - tdown) * 48000.0));
           gpio_set_cw(0);
-          cw_key_down = 0;
-          cw_key_up = 0;
           key_state = CHECK;
+        } else {
+          loop_delay.tv_nsec += 1000000;
         }
 
         break;
@@ -465,111 +471,92 @@ static void* keyer_thread(void *arg) {
         dash_memory = 0;
         dash_held = *kdash;
         gpio_set_cw(1);
-        cw_key_down = dot_samples;
-        cw_key_up = dot_samples;
-        key_state = SENDDOT;
-        break;
-
-      case SENDDOT:
-
-        //
-        // wait for dot being complete
-        //
-        if (cw_key_down == 0) {
-          gpio_set_cw(0);
-          key_state = DOTDELAY;
-        }
-
-        break;
-
-      case DOTDELAY:
-
+        tx_queue_cw_event (1, 0);
+        tx_queue_cw_event (0, dot_samples);
+        tx_queue_cw_event (0, dot_samples);
         //
         // wait for end of inter-element pause
         //
-        if (cw_key_up == 0) {
-          if (cw_keyer_mode == KEYER_STRAIGHT) {
-            // bug mode: continue sending dots or exit, depending on current dot key status
-            key_state = EXITLOOP;
+        loop_delay.tv_nsec += (2 * dot_samples) * 20833;
+        key_state = AFTERDOT;
+        break;
 
-            if (*kdot) { key_state = PREDOT; }
+      case AFTERDOT:
+        //
+        // This is executed at the end of the inter-element dot-following pause
+        //
+        if (cw_keyer_mode == KEYER_STRAIGHT) {
+          // bug mode: continue sending dots or exit, depending on current dot key status
+          key_state = EXITLOOP;
 
-            // end of bug/straight case
+          if (*kdot) { key_state = PREDOT; }
+
+          // end of bug/straight case
+        } else {
+          //
+          // DL1YCF:
+          // This is my understanding where MODE A comes in:
+          // If at the end of the delay, BOTH keys are
+          // released, then do not start the next element.
+          // However, if  the dash has been hit DURING the preceeding
+          // dot, produce a dash in either case
+          //
+          if (cw_keyer_mode == KEYER_MODE_A && !*kdot && !*kdash) { dash_held = 0; }
+
+          if (dash_memory || *kdash || dash_held) {
+            key_state = PREDASH;
+          } else if (*kdot) {                             // dot still held, so send a dot
+            key_state = PREDOT;
+          } else if (cw_keyer_spacing) {
+            dot_memory = dash_memory = 0;
+            key_state = LETTERSPACE;
+            kdelay = 0;
           } else {
-            //
-            //                  DL1YCF:
-            //                  This is my understanding where MODE A comes in:
-            //                  If at the end of the delay, BOTH keys are
-            //                  released, then do not start the next element.
-            //                  However, if  the dash has been hit DURING the preceeding
-            //                  dot, produce a dash in either case
-            //
-            if (cw_keyer_mode == KEYER_MODE_A && !*kdot && !*kdash) { dash_held = 0; }
-
-            if (dash_memory || *kdash || dash_held) {
-              key_state = PREDASH;
-            } else if (*kdot) {                             // dot still held, so send a dot
-              key_state = PREDOT;
-            } else if (cw_keyer_spacing) {
-              dot_memory = dash_memory = 0;
-              key_state = LETTERSPACE;
-              kdelay = 0;
-            } else {
-              key_state = EXITLOOP;
-            }
-
-            // end of iambic case
+            key_state = EXITLOOP;
           }
+          // end of iambic case, key_state has been set
         }
 
         break;
 
       case PREDASH:
+        //
+        // start sending the dot
+        //
         dot_memory =  0;
         dot_held = *kdot;  // remember if dot is still held at beginning of the dash
         gpio_set_cw(1);
-        cw_key_down = dash_samples;
-        cw_key_up = dot_samples;
-        key_state = SENDDASH;
+        tx_queue_cw_event (1, 0);
+        tx_queue_cw_event (0, dash_samples);
+        tx_queue_cw_event (0, dot_samples);
+        loop_delay.tv_nsec += (dash_samples + dot_samples) * 20833;
+        key_state = AFTERDASH;
         break;
 
-      case SENDDASH:
-
+      case AFTERDASH:
         //
-        // wait for dash being complete
+        // This is executed at the end of the inter-element dot-following pause
         //
-        if (cw_key_down == 0) {
-          gpio_set_cw(0);
-          key_state = DASHDELAY;
+        // DL1YCF:
+        // This is my understanding where MODE A comes in:
+        // If at the end of the dash delay, BOTH keys are
+        // released, then do not start the next element.
+        // However, if  the dot has been hit DURING the preceeding
+        // dash, produce a dot in either case
+        //
+        if (cw_keyer_mode == KEYER_MODE_A && !*kdot && !*kdash) { dot_held = 0; }
+
+        if (dot_memory || *kdot || dot_held) {
+          key_state = PREDOT;
+        } else if (*kdash) {
+          key_state = PREDASH;
+        } else if (cw_keyer_spacing) {
+          dot_memory = dash_memory = 0;
+          key_state = LETTERSPACE;
+          kdelay = 0;
+        } else {
+          key_state = EXITLOOP;
         }
-
-        break;
-
-      case DASHDELAY:
-
-        // Wait for the end of the inter-element delay
-        if (cw_key_up == 0) {
-          //
-          //                  DL1YCF:
-          //                  This is my understanding where MODE A comes in:
-          //                  If at the end of the dash delay, BOTH keys are
-          //                  released, then do not start the next element.
-          //                  However, if  the dot has been hit DURING the preceeding
-          //                  dash, produce a dot in either case
-          //
-          if (cw_keyer_mode == KEYER_MODE_A && !*kdot && !*kdash) { dot_held = 0; }
-
-          if (dot_memory || *kdot || dot_held) {
-            key_state = PREDOT;
-          } else if (*kdash) {
-            key_state = PREDASH;
-          } else if (cw_keyer_spacing) {
-            dot_memory = dash_memory = 0;
-            key_state = LETTERSPACE;
-            kdelay = 0;
-          } else { key_state = EXITLOOP; }
-        }
-
         break;
 
       case LETTERSPACE:
@@ -585,15 +572,13 @@ static void* keyer_thread(void *arg) {
           } else { key_state = EXITLOOP; } // no memories set so restart
         }
 
+        loop_delay.tv_nsec += 1000000;
         break;
 
       default:
         t_print("KEYER THREAD: unknown state=%d", (int) key_state);
         key_state = EXITLOOP;
       }
-
-      // Sleep such that the "state machine" loop is executed once per milli-second
-      loop_delay.tv_nsec += interval;
 
       while (loop_delay.tv_nsec >= NSEC_PER_SEC) {
         loop_delay.tv_nsec -= NSEC_PER_SEC;

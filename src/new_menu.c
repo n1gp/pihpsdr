@@ -59,9 +59,7 @@
 #ifdef SATURN
   #include "saturn_menu.h"
 #endif
-#ifdef CLIENT_SERVER
-  #include "server_menu.h"
-#endif
+#include "server_menu.h"
 #include "screen_menu.h"
 #include "store_menu.h"
 #include "switch_menu.h"
@@ -446,7 +444,6 @@ static gboolean ps_cb (GtkWidget *widget, GdkEventButton *event, gpointer data) 
   return TRUE;
 }
 
-#ifdef CLIENT_SERVER
 void start_server() {
   cleanup();
   server_menu(top_window);
@@ -457,8 +454,6 @@ static gboolean server_cb (GtkWidget *widget, GdkEventButton *event, gpointer da
   start_server();
   return TRUE;
 }
-
-#endif
 
 #ifdef MIDI
 void start_midi() {
@@ -552,12 +547,12 @@ void new_menu() {
     }
 
 #endif
-#ifdef CLIENT_SERVER
-    GtkWidget *server_b = gtk_button_new_with_label("Server");
-    g_signal_connect (server_b, "button-press-event", G_CALLBACK(server_cb), NULL);
-    gtk_grid_attach(GTK_GRID(grid), server_b, col, row, 1, 1);
-    row++;
-#endif
+    if (!radio_is_remote) {
+      GtkWidget *server_b = gtk_button_new_with_label("Server");
+      g_signal_connect (server_b, "button-press-event", G_CALLBACK(server_cb), NULL);
+      gtk_grid_attach(GTK_GRID(grid), server_b, col, row, 1, 1);
+      row++;
+    }
 
     // cppcheck-suppress knownConditionTrueFalse
     if (row > maxrow) { maxrow = row; }

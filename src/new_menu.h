@@ -41,9 +41,7 @@ extern void start_rx(void);
 extern void start_tx(void);
 extern void start_diversity(void);
 extern void start_ps(void);
-#ifdef CLIENT_SERVER
-  extern void start_server(void);
-#endif
+extern void start_server(void);
 
 extern void encoder_step(int encoder, int step);
 

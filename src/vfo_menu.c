@@ -82,11 +82,12 @@ static gboolean vfo_num_pad_cb(GtkWidget *widget, GdkEventButton *event, gpointe
   int val = GPOINTER_TO_INT(data);
 
   //
-  // A "double click" with the mouse actually generates THREE button press
-  // events, the third one has event->type == GDK_2BUTTON_PRESS.
-  // This one has to be ignored.
+  // A "double" or "triple" click will generate a GDK_BUTTON_PRESS for each click,
+  // and *additionally** a GDK_2BUTTON_PRESS and possibly a GDK_3BUTTON_PRESS.
+  // Only the  plain vanilla button press should be handeld, the other ignored.
+  // This one has to be ignored, as well as a three-button-press.
   //
-  if (event->type != GDK_2BUTTON_PRESS) {
+  if (event->type == GDK_BUTTON_PRESS) {
     char output[64];
     vfo_num_pad(btn_actions[val], myvfo);
 
@@ -105,15 +106,15 @@ static gboolean vfo_num_pad_cb(GtkWidget *widget, GdkEventButton *event, gpointe
 static void rit_cb(GtkComboBox *widget, gpointer data) {
   switch (gtk_combo_box_get_active(widget)) {
   case 0:
-    rit_increment = 1;
+    vfo_set_rit_step(1);
     break;
 
   case 1:
-    rit_increment = 10;
+    vfo_set_rit_step(10);
     break;
 
   case 2:
-    rit_increment = 100;
+    vfo_set_rit_step(100);
     break;
   }
 
@@ -121,7 +122,7 @@ static void rit_cb(GtkComboBox *widget, gpointer data) {
 }
 
 static void vfo_cb(GtkComboBox *widget, gpointer data) {
-  vfo_set_step_from_index(myvfo, gtk_combo_box_get_active(widget));
+  vfo_id_set_step_from_index(myvfo, gtk_combo_box_get_active(widget));
   g_idle_add(ext_vfo_update, NULL);
 }
 
@@ -140,7 +141,7 @@ static void duplex_cb(GtkWidget *widget, gpointer data) {
 
 static void ctun_cb(GtkWidget *widget, gpointer data) {
   int state = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
-  vfo_ctun_update(myvfo, state);
+  vfo_id_ctun_update(myvfo, state);
   g_idle_add(ext_vfo_update, NULL);
 }
 
@@ -217,7 +218,7 @@ void vfo_menu(GtkWidget *parent, int id) {
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(rit_b), NULL, "10 Hz");
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(rit_b), NULL, "100 Hz");
 
-  switch (rit_increment) {
+  switch (vfo[myvfo].rit_step) {
   case 1:
     gtk_combo_box_set_active(GTK_COMBO_BOX(rit_b), 0);
     break;
@@ -238,7 +239,7 @@ void vfo_menu(GtkWidget *parent, int id) {
   gtk_widget_set_halign(vfo_label, GTK_ALIGN_END);
   gtk_grid_attach(GTK_GRID(grid), vfo_label, 3, 3, 1, 1);
   GtkWidget *vfo_b = gtk_combo_box_text_new();
-  int ind = vfo_get_stepindex(myvfo);
+  int ind = vfo_id_get_stepindex(myvfo);
 
   for (i = 0; i < STEPS; i++) {
     gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(vfo_b), NULL, step_labels[i]);
@@ -342,13 +343,7 @@ void vfo_num_pad(int action, int id) {
     // by hitting the "NUMPAD enter" button.
     //
     if (fl >= 10000ll) {
-      if (radio_is_remote) {
-#ifdef CLIENT_SERVER
-        send_vfo_frequency(client_socket, id, fl);
-#endif
-      } else {
-        vfo_set_frequency(id, fl);
-      }
+        vfo_id_set_frequency(id, fl);
     }
 
     break;

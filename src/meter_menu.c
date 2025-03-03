@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "client_server.h"
 #include "meter_menu.h"
 #include "meter.h"
 #include "new_menu.h"
@@ -58,6 +59,14 @@ static void smeter_select_cb (GtkToggleButton *widget, gpointer        data) {
     active_receiver->smetermode = SMETER_AVERAGE;
     break;
   }
+
+  if (radio_is_remote) {
+    int alcmode = 0;
+    if (can_transmit) {
+      alcmode = transmitter->alcmode;
+    }
+    send_meter(client_socket, active_receiver->smetermode, alcmode);
+  }
 }
 
 static void analog_cb (GtkToggleButton *widget, gpointer        data) {
@@ -79,6 +88,10 @@ static void alc_select_cb(GtkToggleButton *widget, gpointer data) {
   case 2:
     transmitter->alcmode = ALC_GAIN;
     break;
+  }
+
+  if (radio_is_remote) {
+    send_meter(client_socket, active_receiver->smetermode, transmitter->alcmode);
   }
 }
 

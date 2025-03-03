@@ -727,7 +727,7 @@ void band_plus(int id) {
         }
       }
 
-      vfo_band_changed(id, b);
+      vfo_id_band_changed(id, b);
       found = 1;
     }
   }
@@ -754,7 +754,7 @@ void band_minus(int id) {
         }
       }
 
-      vfo_band_changed(id, b);
+      vfo_id_band_changed(id, b);
       found = 1;
     }
   }

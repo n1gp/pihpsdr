@@ -40,7 +40,6 @@ static GtkWidget *set_pk;
 static GtkWidget *tx_att;
 static GtkWidget *tx_att_spin;
 
-static double pk_val;
 static char   pk_text[16];
 
 //
@@ -71,7 +70,7 @@ static void cleanup() {
     usleep(200000);
 
     if (transmitter->twotone) {
-      tx_set_twotone(transmitter, 0);
+      radio_set_twotone(transmitter, 0);
     }
 
     gtk_widget_destroy(tmp);
@@ -86,9 +85,25 @@ static gboolean close_cb () {
   return TRUE;
 }
 
+//  
+// Restart PS:
+// PS reset, wait 100 msec, PS resume
+//  
+static void ps_off_on() {
+  if (transmitter->puresignal) {
+    tx_ps_reset(transmitter);
+    usleep(100000);
+    tx_ps_resume(transmitter);
+  }
+}
+
 static void att_spin_cb(GtkWidget *widget, gpointer data) {
   transmitter->attenuation = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
+  if (radio_is_remote) {
+    send_psatt(client_socket); // this sends auto, attenuation, feedback, and ps antenna
+  } else {
   schedule_high_priority();
+}
 }
 
 static void setpk_cb(GtkWidget *widget, gpointer data) {
@@ -97,13 +112,19 @@ static void setpk_cb(GtkWidget *widget, gpointer data) {
   text = gtk_entry_get_text(GTK_ENTRY(widget));
   sscanf(text, "%lf", &newpk);
 
-  if (newpk > 0.01 && newpk < 1.01 && fabs(newpk - pk_val) > 0.001) {
-    pk_val = newpk;
-    tx_ps_setpk(transmitter, pk_val);
+  if (newpk > 0.01 && newpk < 1.01 && fabs(newpk - transmitter->ps_getpk) > 0.001) {
+    transmitter->ps_setpk = newpk;
+    transmitter->ps_getpk = newpk;
+    if (radio_is_remote) {
+      send_psparams(client_socket, transmitter);
+    } else {
+      tx_ps_setparams(transmitter);
+      ps_off_on();
+    }
   }
 
   // Display new value
-  snprintf(pk_text, 16, "%6.3f", pk_val);
+  snprintf(pk_text, 16, "%6.3f", transmitter->ps_getpk);
   gtk_entry_set_text(GTK_ENTRY(set_pk), pk_text);
 }
 
@@ -165,7 +186,6 @@ int ps_calibration_timer(gpointer arg) {
     int tx_att_min;
     int tx_att_max;
     static int old5 = 0;
-    int info[INFO_SIZE];
 
     if (device == DEVICE_HERMES_LITE2 || device == NEW_DEVICE_HERMES_LITE2) {
       tx_att_min = -29;
@@ -175,15 +195,15 @@ int ps_calibration_timer(gpointer arg) {
       tx_att_max = 31;
     }
 
-    tx_ps_getinfo(transmitter, info);
+    tx_ps_getinfo(transmitter);
     //
     // newcal is set to 1 if we have a new calibration value
     // (info[5] is the calibration counter)
     //
     int newcal = 0;
 
-    if (info[5] !=  old5) {
-      old5 = info[5];
+    if (transmitter->psinfo[5] !=  old5) {
+      old5 = transmitter->psinfo[5];
       newcal = 1;
     }
 
@@ -196,24 +216,24 @@ int ps_calibration_timer(gpointer arg) {
         // A value of 140 means 0.7 dB too weak
         // So everything between 140 and 165 is accepted without changing the attenuation
         //
-        if (newcal && ((info[4] > 165 && transmitter->attenuation < tx_att_max) || (info[4] < 140
+        if (newcal && ((transmitter->psinfo[4] > 165 && transmitter->attenuation < tx_att_max) || (transmitter->psinfo[4] < 140
                        && transmitter->attenuation > tx_att_min))) {
           int delta_att;
           int new_att;
 
-          if (info[4] > 275) {
+          if (transmitter->psinfo[4] > 275) {
             // If signal is very strong, increase attenuation by 15 dB
             // Note the value is limited to about 300-350 due to ADC clipping/IQ overflow,
             // so the feedback level might be much stronger than indicated here
             delta_att = 15;
 
             if (transmitter->attenuation < -15) { delta_att += 15; }
-          } else if (info[4] < 25) {
+          } else if (transmitter->psinfo[4] < 25) {
             // If signal is very weak, decrease attenuation by 15 dB
             delta_att = -15;
           } else {
             // calculate new delta, this mostly succeeds in one step
-            delta_att = (int) lround(20.0 * log10((double)info[4] / 152.293));
+            delta_att = (int) lround(20.0 * log10((double)transmitter->psinfo[4] / 152.293));
           }
 
           new_att = transmitter->attenuation + delta_att;
@@ -264,7 +284,6 @@ int ps_calibration_timer(gpointer arg) {
 // active, then no menu elements are accessed.
 //
 static int info_thread(gpointer arg) {
-  int info[INFO_SIZE];
 
   if (!running) {
     return G_SOURCE_REMOVE;
@@ -272,11 +291,12 @@ static int info_thread(gpointer arg) {
 
   if (transmitter->puresignal) {
     gchar label[20];
-    double pk;
     static int old5 = 0;  // used to detect an increase of the calibration count
     static int old14 = 0; // used to detect change of "Correcting" status
-    tx_ps_getinfo(transmitter, info);
-    pk = tx_ps_getmx(transmitter);
+    if (!radio_is_remote) {
+      tx_ps_getinfo(transmitter);
+      tx_ps_getmx(transmitter);
+    }
     //
     // Set newcal if there is a new calibration
     // Set newcorr if "Correcting" status changed
@@ -284,22 +304,22 @@ static int info_thread(gpointer arg) {
     int newcal = 0;
     int newcorr = 0;
 
-    if (info[5] !=  old5) {
-      old5 = info[5];
+    if (transmitter->psinfo[5] !=  old5) {
+      old5 = transmitter->psinfo[5];
       newcal = 1;
     }
 
-    if (info[14] != old14) {
-      old14 = info[14];
+    if (transmitter->psinfo[14] != old14) {
+      old14 = transmitter->psinfo[14];
       newcorr = 1;
     }
 
     if (newcal) {
-      if (info[4] > 181)  {
+      if (transmitter->psinfo[4] > 181)  {
         gtk_label_set_markup(GTK_LABEL(feedback_l), "<span color='blue'>Feedback Lvl</span>");
-      } else if (info[4] > 128)  {
+      } else if (transmitter->psinfo[4] > 128)  {
         gtk_label_set_markup(GTK_LABEL(feedback_l), "<span color='green'>Feedback Lvl</span>");
-      } else if (info[4] > 90)  {
+      } else if (transmitter->psinfo[4] > 90)  {
         gtk_label_set_markup(GTK_LABEL(feedback_l), "<span color='yellow'>Feedback Lvl</span>");
       } else {
         gtk_label_set_markup(GTK_LABEL(feedback_l), "<span color='red'>Feedback Lvl</span>");
@@ -307,7 +327,7 @@ static int info_thread(gpointer arg) {
     }
 
     if (newcorr) {
-      if (info[14] == 0) {
+      if (transmitter->psinfo[14] == 0) {
         gtk_label_set_markup(GTK_LABEL(correcting_l), "<span color='red'>Correcting</span>");
       } else {
         gtk_label_set_markup(GTK_LABEL(correcting_l), "<span color='green'>Correcting</span>");
@@ -320,13 +340,13 @@ static int info_thread(gpointer arg) {
     for (int i = 0; i < INFO_SIZE; i++) {
       if (entry[i] == NULL) { continue; }
 
-      snprintf(label, 20, "%d", info[i]);
+      snprintf(label, 20, "%d", transmitter->psinfo[i]);
 
       //
       // Translate PS state variable into human-readable string
       //
       if (i == 15) {
-        switch (info[15]) {
+        switch (transmitter->psinfo[15]) {
         case 0:
           STRLCPY(label, "RESET", 20);
           break;
@@ -375,23 +395,11 @@ static int info_thread(gpointer arg) {
     snprintf(label, 20, "%d", transmitter->attenuation);
     gtk_entry_set_text(GTK_ENTRY(tx_att), label);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(tx_att_spin), (double) transmitter->attenuation);
-    snprintf(label, 20, "%6.3f", pk);
+    snprintf(label, 20, "%6.3f", transmitter->ps_getmx);
     gtk_entry_set_text(GTK_ENTRY(get_pk), label);
   }
 
   return G_SOURCE_CONTINUE;
-}
-
-//
-// Restart PS:
-// PS reset, wait 100 msec, PS resume
-//
-static void ps_off_on() {
-  if (transmitter->puresignal) {
-    tx_ps_reset(transmitter);
-    usleep(100000);
-    tx_ps_resume(transmitter);
-  }
 }
 
 //
@@ -414,7 +422,11 @@ static void ps_ant_cb(GtkWidget *widget, gpointer data) {
     break;
   }
 
+  if (radio_is_remote) {
+    send_psatt(client_socket);
+  } else {
   schedule_high_priority();
+}
 }
 
 static void enable_cb(GtkWidget *widget, gpointer data) {
@@ -445,24 +457,39 @@ static void enable_cb(GtkWidget *widget, gpointer data) {
 
 static void tol_cb(GtkWidget *widget, gpointer data) {
   transmitter->ps_ptol = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+  if (radio_is_remote) {
+    send_psparams(client_socket, transmitter);
+  } else {
   tx_ps_setparams(transmitter);
   ps_off_on();
+}
 }
 
 static void oneshot_cb(GtkWidget *widget, gpointer data) {
   transmitter->ps_oneshot = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+  if (radio_is_remote) {
+    send_psparams(client_socket, transmitter);
+  } else {
   tx_ps_setparams(transmitter);
   ps_off_on();
+}
 }
 
 static void map_cb(GtkWidget *widget, gpointer data) {
   transmitter->ps_map = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+  if (radio_is_remote) {
+    send_psparams(client_socket, transmitter);
+  } else {
   tx_ps_setparams(transmitter);
   ps_off_on();
+}
 }
 
 static void auto_cb(GtkWidget *widget, gpointer data) {
   transmitter->auto_on = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (widget));
+  if (radio_is_remote) {
+    send_psatt(client_socket);
+  }
 
   if (transmitter->puresignal) {
     if (transmitter->auto_on) {
@@ -495,21 +522,29 @@ static void auto_cb(GtkWidget *widget, gpointer data) {
 }
 
 static void resume_cb(GtkWidget *widget, gpointer data) {
+  //
   // Set the attenuation to zero if auto-adjusting and resuming.
   // A very high attenuation value here could lead to no PS calculation
   // done in WDSP, and hence no attenuation adjustment.
   // If not auto-adjusting, do not change attenuation value.
-  if (transmitter->auto_on) {
-    transmitter->attenuation = 0;
-  }
-
+  //
   if (transmitter->puresignal) {
+    if (transmitter->auto_on) {
+      transmitter->attenuation = 0;
+        if (radio_is_remote) {
+          send_psatt(client_socket);
+        }
+    }
+
     tx_ps_resume(transmitter);
   }
 }
 
 static void feedback_cb(GtkWidget *widget, gpointer data) {
   transmitter->feedback = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
+  if (radio_is_remote) {
+    send_psatt(client_socket);
+  }
 }
 
 // cppcheck-suppress constParameterCallback
@@ -521,7 +556,7 @@ static void reset_cb(GtkWidget *widget, gpointer data) {
 
 static void twotone_cb(GtkWidget *widget, gpointer data) {
   int state = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget));
-  tx_set_twotone(transmitter, state);
+  radio_set_twotone(transmitter, state);
 }
 
 void ps_menu(GtkWidget *parent) {
@@ -717,8 +752,10 @@ void ps_menu(GtkWidget *parent) {
   gtk_widget_set_name(lbl, "boldlabel");
   gtk_grid_attach(GTK_GRID(grid), lbl, col, row, 1, 1);
   col++;
-  pk_val = tx_ps_getpk(transmitter);
-  snprintf(pk_text, 16, "%6.3f", pk_val);
+  if (!radio_is_remote) {
+    tx_ps_getpk(transmitter);
+  }
+  snprintf(pk_text, 16, "%6.3f", transmitter->ps_getpk);
   set_pk = gtk_entry_new();
   gtk_entry_set_text(GTK_ENTRY(set_pk), pk_text);
   gtk_grid_attach(GTK_GRID(grid), set_pk, col, row, 1, 1);

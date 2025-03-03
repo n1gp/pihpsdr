@@ -41,7 +41,7 @@ void cw_changed() {
   // inform the local keyer about CW parameter changes
   // NewProtocol: rely on periodically sent HighPrio packets
   keyer_update();
-  schedule_transmit_specific();
+  if (!radio_is_remote) { schedule_transmit_specific(); }
   //
   // speed and side tone frequency are displayed in the VFO bar
   //
@@ -113,9 +113,13 @@ static void cw_keyer_sidetone_level_value_changed_cb(GtkWidget *widget, gpointer
 static void cw_keyer_sidetone_frequency_value_changed_cb(GtkWidget *widget, gpointer data) {
   cw_keyer_sidetone_frequency = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(widget));
   cw_changed();
-  rx_filter_changed(active_receiver);
-  // changing the side tone frequency affects BFO frequency offsets
-  schedule_high_priority();
+  if (radio_is_remote) {
+    send_sidetone_freq(client_socket, cw_keyer_sidetone_frequency);
+  } else {
+    rx_filter_changed(active_receiver);
+    // changing the side tone frequency affects BFO frequency offsets
+    schedule_high_priority();
+  }
 }
 
 #if 0
@@ -147,12 +151,14 @@ void cw_menu(GtkWidget *parent) {
   gtk_widget_set_name(close_b, "close_button");
   g_signal_connect (close_b, "button-press-event", G_CALLBACK(close_cb), NULL);
   gtk_grid_attach(GTK_GRID(grid), close_b, 0, col, 1, 1);
-  GtkWidget *cw_keyer_internal_b = gtk_check_button_new_with_label("CW handled in Radio");
-  gtk_widget_set_name(cw_keyer_internal_b, "boldlabel");
-  gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (cw_keyer_internal_b), cw_keyer_internal);
-  gtk_widget_show(cw_keyer_internal_b);
-  gtk_grid_attach(GTK_GRID(grid), cw_keyer_internal_b, 1, col, 1, 1);
-  g_signal_connect(cw_keyer_internal_b, "toggled", G_CALLBACK(cw_keyer_internal_cb), NULL);
+  if (!radio_is_remote) {
+    GtkWidget *cw_keyer_internal_b = gtk_check_button_new_with_label("CW handled in Radio");
+    gtk_widget_set_name(cw_keyer_internal_b, "boldlabel");
+    gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (cw_keyer_internal_b), cw_keyer_internal);
+    gtk_widget_show(cw_keyer_internal_b);
+    gtk_grid_attach(GTK_GRID(grid), cw_keyer_internal_b, 1, col, 1, 1);
+    g_signal_connect(cw_keyer_internal_b, "toggled", G_CALLBACK(cw_keyer_internal_cb), NULL);
+  }
   col++;
   GtkWidget *cw_speed_label = gtk_label_new("CW Speed (WPM)");
   gtk_widget_set_name(cw_speed_label, "boldlabel");

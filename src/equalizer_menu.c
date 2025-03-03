@@ -58,20 +58,15 @@ static gboolean close_cb () {
 
 
 void update_eq() {
-  if (radio_is_remote) {
-    //
-    // insert here any function to inform the client of equalizer setting
-    // changes, if this becomes part of the protocol
-    //
-  } else {
-    if (can_transmit) {
-      tx_set_equalizer(transmitter);
-    }
-
-    for (int id = 0; id < receivers; id++) {
-      rx_set_equalizer(receiver[id]);
-    }
+  if (can_transmit) {
+    tx_set_equalizer(transmitter);
   }
+
+  for (int id = 0; id < receivers; id++) {
+    rx_set_equalizer(receiver[id]);
+  }
+
+  g_idle_add(ext_vfo_update, NULL);
 }
 
 static void enable_cb (GtkWidget *widget, gpointer data) {
@@ -84,7 +79,7 @@ static void enable_cb (GtkWidget *widget, gpointer data) {
       receiver[eqid]->eq_enable = val;
     }
 
-    if (eqid == 0) {
+    if (eqid == 0 && !radio_is_remote) {
       int mode = vfo[eqid].mode;
       mode_settings[mode].en_rxeq = val;
       copy_mode_settings(mode);
@@ -94,17 +89,18 @@ static void enable_cb (GtkWidget *widget, gpointer data) {
 
   case 2:
     if (can_transmit) {
-      int mode = vfo[vfo_get_tx_vfo()].mode;
       transmitter->eq_enable = val;
-      mode_settings[mode].en_txeq = val;
-      copy_mode_settings(mode);
+      if (!radio_is_remote) {
+        int mode = vfo[vfo_get_tx_vfo()].mode;
+        mode_settings[mode].en_txeq = val;
+        copy_mode_settings(mode);
+      }
     }
 
     break;
   }
 
   update_eq();
-  g_idle_add(ext_vfo_update, NULL);
 }
 
 static void freq_changed_cb (GtkWidget *widget, gpointer data) {
@@ -118,7 +114,7 @@ static void freq_changed_cb (GtkWidget *widget, gpointer data) {
     mode = vfo[eqid].mode;
     receiver[eqid]->eq_freq[i] = val;
 
-    if (eqid == 0) {
+    if (eqid == 0 && !radio_is_remote) {
       mode_settings[mode].rx_eq_freq[i] = val;
       copy_mode_settings(mode);
     }
@@ -126,10 +122,14 @@ static void freq_changed_cb (GtkWidget *widget, gpointer data) {
     break;
 
   case 2:
-    mode = vfo[vfo_get_tx_vfo()].mode;
-    transmitter->eq_freq[i] = val;
-    mode_settings[mode].tx_eq_freq[i] = val;
-    copy_mode_settings(mode);
+    if (can_transmit) {
+      transmitter->eq_freq[i] = val;
+      if (!radio_is_remote) {
+        mode = vfo[vfo_get_tx_vfo()].mode;
+        mode_settings[mode].tx_eq_freq[i] = val;
+        copy_mode_settings(mode);
+      }
+    }
     break;
   }
 
@@ -146,7 +146,7 @@ static void gain_changed_cb (GtkWidget *widget, gpointer data) {
   case 1:
     receiver[eqid]->eq_gain[i] = val;
 
-    if (eqid == 0) {
+    if (eqid == 0 && !radio_is_remote) {
       int mode = vfo[eqid].mode;
       mode_settings[mode].rx_eq_gain[i] = val;
       copy_mode_settings(mode);
@@ -156,10 +156,12 @@ static void gain_changed_cb (GtkWidget *widget, gpointer data) {
 
   case 2:
     if (can_transmit) {
-      int mode = vfo[vfo_get_tx_vfo()].mode;
       transmitter->eq_gain[i] = val;
-      mode_settings[mode].tx_eq_gain[i] = val;
-      copy_mode_settings(mode);
+      if (!radio_is_remote) {
+        int mode = vfo[vfo_get_tx_vfo()].mode;
+        mode_settings[mode].tx_eq_gain[i] = val;
+        copy_mode_settings(mode);
+      }
     }
 
     break;

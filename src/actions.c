@@ -24,9 +24,7 @@
 #include "band.h"
 #include "band_menu.h"
 #include "bandstack.h"
-#ifdef CLIENT_SERVER
-  #include "client_server.h"
-#endif
+#include "client_server.h"
 #include "discovery.h"
 #include "diversity_menu.h"
 #include "equalizer_menu.h"
@@ -375,25 +373,45 @@ void schedule_action(enum ACTION action, enum ACTION_MODE mode, int val) {
     keyer_event(action == CW_LEFT, mode == PRESSED);
     break;
 
-  case CW_KEYER_KEYDOWN:
+  case CW_KEYER_KEYDOWN: {
+    static double last = 0.0;
+    double now;
+    int wait;
+    struct timespec ts;
 
     //
     // hard "key-up/down" action WITHOUT break-in
     // intended for external keyers (MIDI or GPIO connected)
     // which take care of PTT themselves.
     //
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    now = ts.tv_sec + 1.0E-9 * ts.tv_nsec;
+    wait = (int) (48000.0 * (now -last) + 0.5);
+    last = now;
+
     if (mode == PRESSED && (!cw_keyer_internal || MIDI_cw_is_active)) {
       gpio_set_cw(1);
-      cw_key_down = 960000; // max. 20 sec to protect hardware
-      cw_key_up = 0;
+      if (wait > 48000) {
+        //
+        // first key-down after a pause: queue without delay if local,
+        // but if remote, queue a no-delay pause that is at least 100 msec
+        // to get some "buffering" on the other side
+        //
+        if (radio_is_remote) {
+          tx_queue_cw_event(0, 0);
+          wait = 4800;
+        } else {
+          wait = 0;
+        }
+      }
+      tx_queue_cw_event(1, wait);
       cw_key_hit = 1;
     } else {
       gpio_set_cw(0);
-      cw_key_down = 0;
-      cw_key_up = 0;
+      tx_queue_cw_event(0, wait);
     }
-
-    break;
+  }
+  break;
 
   default:
     //
@@ -513,154 +531,154 @@ int process_action(void *data) {
 
   case BAND_10:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band10);
+      vfo_id_band_changed(active_receiver->id, band10);
     }
 
     break;
 
   case BAND_12:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band12);
+      vfo_id_band_changed(active_receiver->id, band12);
     }
 
     break;
 
   case BAND_1240:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band1240);
+      vfo_id_band_changed(active_receiver->id, band1240);
     }
 
     break;
 
   case BAND_144:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band144);
+      vfo_id_band_changed(active_receiver->id, band144);
     }
 
     break;
 
   case BAND_15:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band15);
+      vfo_id_band_changed(active_receiver->id, band15);
     }
 
     break;
 
   case BAND_160:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band160);
+      vfo_id_band_changed(active_receiver->id, band160);
     }
 
     break;
 
   case BAND_17:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band17);
+      vfo_id_band_changed(active_receiver->id, band17);
     }
 
     break;
 
   case BAND_20:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band20);
+      vfo_id_band_changed(active_receiver->id, band20);
     }
 
     break;
 
   case BAND_220:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band220);
+      vfo_id_band_changed(active_receiver->id, band220);
     }
 
     break;
 
   case BAND_2300:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band2300);
+      vfo_id_band_changed(active_receiver->id, band2300);
     }
 
     break;
 
   case BAND_30:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band30);
+      vfo_id_band_changed(active_receiver->id, band30);
     }
 
     break;
 
   case BAND_3400:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band3400);
+      vfo_id_band_changed(active_receiver->id, band3400);
     }
 
     break;
 
   case BAND_40:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band40);
+      vfo_id_band_changed(active_receiver->id, band40);
     }
 
     break;
 
   case BAND_430:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band430);
+      vfo_id_band_changed(active_receiver->id, band430);
     }
 
     break;
 
   case BAND_6:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band6);
+      vfo_id_band_changed(active_receiver->id, band6);
     }
 
     break;
 
   case BAND_60:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band60);
+      vfo_id_band_changed(active_receiver->id, band60);
     }
 
     break;
 
   case BAND_70:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band70);
+      vfo_id_band_changed(active_receiver->id, band70);
     }
 
     break;
 
   case BAND_80:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band80);
+      vfo_id_band_changed(active_receiver->id, band80);
     }
 
     break;
 
   case BAND_902:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band902);
+      vfo_id_band_changed(active_receiver->id, band902);
     }
 
     break;
 
   case BAND_AIR:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, bandAIR);
+      vfo_id_band_changed(active_receiver->id, bandAIR);
     }
 
     break;
 
   case BAND_GEN:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, bandGen);
+      vfo_id_band_changed(active_receiver->id, bandGen);
     }
 
     break;
 
   case BAND_136:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, band136);
+      vfo_id_band_changed(active_receiver->id, band136);
     }
 
     break;
@@ -681,7 +699,7 @@ int process_action(void *data) {
 
   case BAND_WWV:
     if (a->mode == PRESSED) {
-      vfo_band_changed(active_receiver->id, bandWWV);
+      vfo_id_band_changed(active_receiver->id, bandWWV);
     }
 
     break;
@@ -814,7 +832,7 @@ int process_action(void *data) {
 
   case CTUN:
     if (a->mode == PRESSED) {
-      vfo_ctun_update(active_receiver->id, NOT(vfo[active_receiver->id].ctun));
+      vfo_id_ctun_update(active_receiver->id, NOT(vfo[active_receiver->id].ctun));
       g_idle_add(ext_vfo_update, NULL);
     }
 
@@ -846,36 +864,33 @@ int process_action(void *data) {
 
   case DIV:
     if (a->mode == PRESSED && n_adc > 1) {
-      TOGGLE(diversity_enabled);
-      schedule_high_priority();
-      schedule_receive_specific();
-      g_idle_add(ext_vfo_update, NULL);
+      set_diversity(NOT(diversity_enabled));
     }
 
     break;
 
   case DIV_GAIN:
-    update_diversity_gain((double)a->val * 0.5);
+    set_diversity_gain(div_gain + (double)a->val * 0.05);
     break;
 
   case DIV_GAIN_COARSE:
-    update_diversity_gain((double)a->val * 2.5);
+    set_diversity_gain(div_gain + (double)a->val * 0.25);
     break;
 
   case DIV_GAIN_FINE:
-    update_diversity_gain((double)a->val * 0.1);
+    set_diversity_gain((double)a->val * 0.01);
     break;
 
   case DIV_PHASE:
-    update_diversity_phase((double)a->val * 0.5);
+    set_diversity_phase(div_phase + (double)a->val * 0.5);
     break;
 
   case DIV_PHASE_COARSE:
-    update_diversity_phase((double)a->val * 2.5);
+    set_diversity_phase(div_phase + (double)a->val * 2.5);
     break;
 
   case DIV_PHASE_FINE:
-    update_diversity_phase((double)a->val * 0.1);
+    set_diversity_phase(div_phase + (double)a->val * 0.1);
     break;
 
   case DRIVE:
@@ -1008,9 +1023,7 @@ int process_action(void *data) {
   case LOCK:
     if (a->mode == PRESSED) {
       if (radio_is_remote) {
-#ifdef CLIENT_SERVER
         send_lock(client_socket, NOT(locked));
-#endif
       } else {
         TOGGLE(locked);
         g_idle_add(ext_vfo_update, NULL);
@@ -1459,26 +1472,30 @@ int process_action(void *data) {
     break;
 
   case RIT:
-    vfo_rit_incr(active_receiver->id, rit_increment * a->val);
+    if (a->mode == RELATIVE) {
+      int id = active_receiver->id;
+      vfo_id_rit_incr(id, vfo[id].rit_step * a->val);
+    }
     break;
 
   case RIT_CLEAR:
     if (a->mode == PRESSED) {
-      vfo_rit_value(active_receiver->id, 0);
+      vfo_id_rit_value(active_receiver->id, 0);
     }
 
     break;
 
   case RIT_ENABLE:
     if (a->mode == PRESSED) {
-      vfo_rit_toggle(active_receiver->id);
+      vfo_id_rit_toggle(active_receiver->id);
     }
 
     break;
 
   case RIT_MINUS:
     if (a->mode == PRESSED) {
-      vfo_rit_incr(active_receiver->id, -rit_increment);
+      int id = active_receiver->id;
+      vfo_id_rit_incr(id, -vfo[id].rit_step);
 
       if (repeat_timer == 0) {
         repeat_action = *a;
@@ -1493,7 +1510,8 @@ int process_action(void *data) {
 
   case RIT_PLUS:
     if (a->mode == PRESSED) {
-      vfo_rit_incr(active_receiver->id, rit_increment);
+      int id = active_receiver->id;
+      vfo_id_rit_incr(id, vfo[id].rit_step);
 
       if (repeat_timer == 0) {
         repeat_action = *a;
@@ -1507,49 +1525,56 @@ int process_action(void *data) {
     break;
 
   case RIT_RX1:
-    vfo_rit_incr(0, rit_increment * a->val);
+    vfo_id_rit_incr(0, vfo[0].rit_step * a->val);
     break;
 
   case RIT_RX2:
-    vfo_rit_incr(1, rit_increment * a->val);
+    vfo_id_rit_incr(1, vfo[1].rit_step * a->val);
     break;
 
   case RIT_STEP:
     if (a->mode == PRESSED) {
-      rit_increment = 10 * rit_increment;
+      int incr = 10 * vfo[active_receiver->id].rit_step;
 
-      if (rit_increment > 100) { rit_increment = 1; }
+      if (incr > 100) { incr = 100; }
+
+      vfo_set_rit_step(incr);
     }
 
-    g_idle_add(ext_vfo_update, NULL);
     break;
 
   case RITXIT:
+
     //
     // a RITXIT encoder automatically switches between RIT or XIT. It does XIT
     // if (and only if) RIT is disabled and XIT is enabled, otherwise it does RIT
     //
-    if ((vfo[active_receiver->id].rit_enabled == 0) && (vfo[vfo_get_tx_vfo()].xit_enabled == 1)) {
-      vfo_xit_incr(rit_increment * a->val);
-    } else {
-      vfo_rit_incr(active_receiver->id, rit_increment * a->val);
+    if (a->mode == RELATIVE) {
+      int id = active_receiver->id;
+      if ((vfo[id].rit_enabled == 0) && (vfo[vfo_get_tx_vfo()].xit_enabled == 1)) {
+        vfo_xit_incr(vfo[id].rit_step * a->val);
+      } else {
+        vfo_id_rit_incr(id, vfo[id].rit_step * a->val);
+      }
     }
+
     break;
 
   case RITSELECT:
+
     //
     // An action which cycles between RIT on, XIT on, and both off.
     // This is intended to be used together with the RITXIT encoder
     //
     if (a->mode == PRESSED) {
       if ((vfo[active_receiver->id].rit_enabled == 0) && (vfo[vfo_get_tx_vfo()].xit_enabled == 0)) {
-        vfo_rit_onoff(active_receiver->id, 1);
+        vfo_id_rit_onoff(active_receiver->id, 1);
         vfo_xit_onoff(0);
       } else if ((vfo[active_receiver->id].rit_enabled == 1) && (vfo[vfo_get_tx_vfo()].xit_enabled == 0)) {
-        vfo_rit_onoff(active_receiver->id, 0);
+        vfo_id_rit_onoff(active_receiver->id, 0);
         vfo_xit_onoff(1);
       } else {
-        vfo_rit_onoff(active_receiver->id, 0);
+        vfo_id_rit_onoff(active_receiver->id, 0);
         vfo_xit_onoff(0);
       }
     }
@@ -1558,7 +1583,7 @@ int process_action(void *data) {
 
   case RITXIT_CLEAR:
     if (a->mode == PRESSED) {
-      vfo_rit_value(active_receiver->id, 0);
+      vfo_id_rit_value(active_receiver->id, 0);
       vfo_xit_value(0);
     }
 
@@ -1598,12 +1623,13 @@ int process_action(void *data) {
     if (a->mode == PRESSED) {
       stop_program();
 #ifdef __APPLE__
-      (void) system("shutdown -h now"); 
+      (void) system("shutdown -h now");
 #else
       (void) system("sudo shutdown -h -P now");
 #endif
       _exit(0);
     }
+
     break;
 
   case SNB:
@@ -1675,36 +1701,36 @@ int process_action(void *data) {
   // with the n-th toolbar button
   //
   case TOOLBAR1:
-     schedule_action(toolbar_switches[0].switch_function, a->mode, a->val);
-     break;
+    schedule_action(toolbar_switches[0].switch_function, a->mode, a->val);
+    break;
 
   case TOOLBAR2:
-     schedule_action(toolbar_switches[1].switch_function, a->mode, a->val);
-     break;
+    schedule_action(toolbar_switches[1].switch_function, a->mode, a->val);
+    break;
 
   case TOOLBAR3:
-     schedule_action(toolbar_switches[2].switch_function, a->mode, a->val);
-     break;
+    schedule_action(toolbar_switches[2].switch_function, a->mode, a->val);
+    break;
 
   case TOOLBAR4:
-     schedule_action(toolbar_switches[3].switch_function, a->mode, a->val);
-     break;
+    schedule_action(toolbar_switches[3].switch_function, a->mode, a->val);
+    break;
 
   case TOOLBAR5:
-     schedule_action(toolbar_switches[4].switch_function, a->mode, a->val);
-     break;
+    schedule_action(toolbar_switches[4].switch_function, a->mode, a->val);
+    break;
 
   case TOOLBAR6:
-     schedule_action(toolbar_switches[5].switch_function, a->mode, a->val);
-     break;
+    schedule_action(toolbar_switches[5].switch_function, a->mode, a->val);
+    break;
 
   case TOOLBAR7:
-     schedule_action(toolbar_switches[6].switch_function, a->mode, a->val);
-     break;
+    schedule_action(toolbar_switches[6].switch_function, a->mode, a->val);
+    break;
 
   case TOOLBAR8:
-     schedule_action(toolbar_switches[7].switch_function, a->mode, a->val);
-     break;
+    schedule_action(toolbar_switches[7].switch_function, a->mode, a->val);
+    break;
 
   case TUNE:
     if (a->mode == PRESSED) {
@@ -1747,7 +1773,7 @@ int process_action(void *data) {
   case TWO_TONE:
     if (a->mode == PRESSED) {
       if (can_transmit) {
-        tx_set_twotone(transmitter, NOT(transmitter->twotone));
+        radio_set_twotone(transmitter, NOT(transmitter->twotone));
       }
     }
 
@@ -1769,8 +1795,8 @@ int process_action(void *data) {
 
   case VFO_STEP_MINUS:
     if (a->mode == PRESSED) {
-      i = vfo_get_stepindex(active_receiver->id);
-      vfo_set_step_from_index(active_receiver->id, --i);
+      i = vfo_id_get_stepindex(active_receiver->id);
+      vfo_id_set_step_from_index(active_receiver->id, --i);
       g_idle_add(ext_vfo_update, NULL);
     }
 
@@ -1778,8 +1804,8 @@ int process_action(void *data) {
 
   case VFO_STEP_PLUS:
     if (a->mode == PRESSED) {
-      i = vfo_get_stepindex(active_receiver->id);
-      vfo_set_step_from_index(active_receiver->id, ++i);
+      i = vfo_id_get_stepindex(active_receiver->id);
+      vfo_id_set_step_from_index(active_receiver->id, ++i);
       g_idle_add(ext_vfo_update, NULL);
     }
 
@@ -1836,7 +1862,7 @@ int process_action(void *data) {
     break;
 
   case XIT:
-    vfo_xit_incr(rit_increment * a->val);
+    vfo_xit_incr(vfo[vfo_get_tx_vfo()].rit_step * a->val);
     break;
 
   case XIT_CLEAR:
@@ -1855,7 +1881,7 @@ int process_action(void *data) {
 
   case XIT_MINUS:
     if (a->mode == PRESSED) {
-      vfo_xit_incr(-10 * rit_increment);
+      vfo_xit_incr(-10 * vfo[vfo_get_tx_vfo()].rit_step);
 
       if (repeat_timer == 0) {
         repeat_action = *a;
@@ -1870,7 +1896,7 @@ int process_action(void *data) {
 
   case XIT_PLUS:
     if (a->mode == PRESSED) {
-      vfo_xit_incr(10 * rit_increment);
+      vfo_xit_incr(10 * vfo[vfo_get_tx_vfo()].rit_step);
 
       if (repeat_timer == 0) {
         repeat_action = *a;
@@ -1923,18 +1949,25 @@ int process_action(void *data) {
     case PRESSED:
       MIDI_cw_is_active = 1;         // disable "CW handled in radio"
       cw_key_hit = 1;                // this tells rigctl to abort CAT CW
-      schedule_transmit_specific();
-      radio_mox_update(1);
+      if (radio_is_remote) {
+        send_ptt(client_socket, 1);
+      } else {
+        schedule_transmit_specific();
+        radio_mox_update(1);
+      }
       break;
 
     case RELEASED:
       MIDI_cw_is_active = 0;         // enable "CW handled in radio", if it was selected
-      schedule_transmit_specific();
+      if (radio_is_remote) {
+        usleep(100000);              // since we delayed the start of the first CW, increase hang time
+        send_ptt(client_socket, 0);
+      } else {
+        schedule_transmit_specific();
 
-      if (!radio_ptt) {
-        radio_mox_update(0);
+        if (!radio_ptt) { radio_mox_update(0); }
+
       }
-
       break;
 
     default:

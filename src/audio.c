@@ -31,6 +31,7 @@
 #include <alsa/asoundlib.h>
 
 #include "audio.h"
+#include "client_server.h"
 #include "message.h"
 #include "mode.h"
 #include "radio.h"
@@ -677,7 +678,15 @@ static void *mic_read_thread(gpointer arg) {
           sample = 0.0;
           break;
         }
-
+        //
+        // If we are a client, simply collect and transfer data
+        // to the server without any buffering
+        //
+        if (radio_is_remote) {
+          short s = sample*32767.0;
+          server_tx_audio(s);
+          continue;
+        }
         //
         // put sample into ring buffer
         // Note check on the mic ring buffer is not necessary
@@ -736,7 +745,6 @@ void audio_get_cards() {
   snd_pcm_info_t *pcminfo;
   snd_ctl_card_info_alloca(&info);
   snd_pcm_info_alloca(&pcminfo);
-  int i;
   char *device_id;
   int card = -1;
   t_print("%s\n", __FUNCTION__);
@@ -827,7 +835,7 @@ void audio_get_cards() {
         output_devices[n_output_devices].name = g_strdup(name);
         output_devices[n_output_devices].description = g_strdup(descr);
 
-        for (i = 0; i < strlen(descr); i++) {
+        for (unsigned int i = 0; i < strlen(descr); i++) {
           if (output_devices[n_output_devices].description[i] == '\n') {
             output_devices[n_output_devices].description[i] = '\0';
             break;

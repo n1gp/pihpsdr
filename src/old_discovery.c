@@ -380,13 +380,16 @@ static gpointer discover_receive_thread(gpointer data) {
             // DEVICE_HERMES_LITE as the ID and a software version
             // that is larger or equal to 40, while the original
             // (V1) HermesLite boards have software versions up to 31.
+            // Furthermode, HL2 uses a minor version in buffer[21]
+            // so the official version number e.g. 73.2 stems from buf9=73 and buf21=2
             //
-            if (discovered[devices].software_version < 40) {
+            discovered[devices].software_version = 10*(buffer[9] & 0xFF) + (buffer[21] & 0xFF);
+            if (discovered[devices].software_version < 400) {
               STRLCPY(discovered[devices].name, "HermesLite V1", sizeof(discovered[devices].name));
             } else {
               STRLCPY(discovered[devices].name, "HermesLite V2", sizeof(discovered[devices].name));
               discovered[devices].device = DEVICE_HERMES_LITE2;
-              t_print("discovered HL2: Gateware Major Version=%d Minor Version=%d\n", buffer[9], buffer[15]);
+              t_print("discovered HL2: Gateware Major Version=%d Minor Version=%d\n", buffer[9], buffer[21]);
             }
 
             discovered[devices].frequency_min = 0.0;
@@ -498,13 +501,13 @@ void old_discovery() {
       //
       if (ifa->ifa_addr) {
         if (
-        ifa->ifa_addr->sa_family == AF_INET
-        && (ifa->ifa_flags & IFF_UP) == IFF_UP
-        && (ifa->ifa_flags & IFF_RUNNING) == IFF_RUNNING
-        //&& (ifa->ifa_flags & IFF_LOOPBACK) != IFF_LOOPBACK
-        && strncmp("veth", ifa->ifa_name, 4)
-        && strncmp("dock", ifa->ifa_name, 4)
-        && strncmp("hass", ifa->ifa_name, 4)
+          ifa->ifa_addr->sa_family == AF_INET
+          && (ifa->ifa_flags & IFF_UP) == IFF_UP
+          && (ifa->ifa_flags & IFF_RUNNING) == IFF_RUNNING
+          //&& (ifa->ifa_flags & IFF_LOOPBACK) != IFF_LOOPBACK
+          && strncmp("veth", ifa->ifa_name, 4)
+          && strncmp("dock", ifa->ifa_name, 4)
+          && strncmp("hass", ifa->ifa_name, 4)
         ) {
           discover(ifa, 1);   // send UDP broadcast packet to interface
         }
@@ -525,7 +528,7 @@ void old_discovery() {
 
   for (i = 0; i < devices; i++) {
     if (!strncmp(inet_ntoa(discovered[i].info.network.address.sin_addr), ipaddr_radio, 20)
-    && discovered[i].protocol == ORIGINAL_PROTOCOL) {
+        && discovered[i].protocol == ORIGINAL_PROTOCOL) {
       is_local = 1;
     }
   }
